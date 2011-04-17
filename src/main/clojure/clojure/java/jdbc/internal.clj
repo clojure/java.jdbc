@@ -12,10 +12,6 @@
 ;;  Created 3 October 2008
 
 (ns clojure.java.jdbc.internal
-  (:use
-   (clojure.contrib
-    [except :only (throwf throw-arg)]
-    [seq :only (indexed)]))
   (:import
    (clojure.lang RT)
    (java.sql BatchUpdateException DriverManager SQLException Statement)
@@ -38,7 +34,7 @@
   "Returns the current database connection (or throws if there is none)"
   []
   (or (find-connection*)
-      (throwf "no current database connection")))
+      (throw (Exception. "no current database connection"))))
 
 (defn rollback
   "Accessor for the rollback flag on the current connection"
@@ -108,7 +104,7 @@
          datasource (.lookup context name)]
      (.getConnection datasource))
    :else
-   (throw-arg "db-spec %s is missing a required parameter" db-spec)))
+   (throw (IllegalArgumentException. (format "db-spec %s is missing a required parameter" db-spec)))))
 
 (defn with-connection*
   "Evaluates func in the context of a new connection to a database then
@@ -145,7 +141,7 @@
   "Prints the update counts from a BatchUpdateException to stream"
   [stream exception]
   (.println stream "Update counts:")
-  (doseq [[index count] (indexed (.getUpdateCounts exception))]
+  (doseq [[index count] (map vector (iterate inc 0) (.getUpdateCounts exception))]
     (.println stream (format " Statement %d: %s"
                              index
                              (get special-counts count count)))))
@@ -154,7 +150,7 @@
   "Sets rollback and throws a wrapped exception"
   [e]
   (rollback true)
-  (throwf e "transaction rolled back: %s" (.getMessage e)))
+  (throw (Exception. (format "transaction rolled back: %s" (.getMessage e)) e)))
 
 (defn transaction*
   "Evaluates func as a transaction on the open database connection. Any
@@ -196,12 +192,12 @@
   parameterized) sql query string followed by values for any parameters."
   [[sql & params :as sql-params] func]
   (when-not (vector? sql-params)
-    (throw-arg "\"%s\" expected %s %s, found %s %s"
+    (throw (IllegalArgumentException. (format "\"%s\" expected %s %s, found %s %s"
                "sql-params"
                "vector"
                "[sql param*]"
                (.getName (class sql-params))
-               (pr-str sql-params)))
+               (pr-str sql-params)))))
   (with-open [stmt (.prepareStatement (connection*) sql)]
     (doseq [[index value] (map vector (iterate inc 1) params)]
       (.setObject stmt index value))
