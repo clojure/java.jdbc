@@ -21,11 +21,10 @@
      :see-also [["http://github.com/clojure/java.jdbc/blob/master/src/test/clojure/clojure/java/test_jdbc.clj"
                  "Example code"]]}
   clojure.java.jdbc
-  (:use (clojure.contrib [def :only (defalias)])
-        clojure.java.jdbc.internal))
+  (:use clojure.java.jdbc.internal))
 
-(defalias find-connection find-connection*)
-(defalias connection connection*)
+(def find-connection find-connection*)
+(def connection connection*)
 
 (defmacro with-connection
   "Evaluates body in the context of a new connection to a database then
