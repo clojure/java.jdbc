@@ -141,10 +141,14 @@
   "Prints the update counts from a BatchUpdateException to stream"
   [stream exception]
   (.println stream "Update counts:")
-  (doseq [[index count] (map vector (iterate inc 0) (.getUpdateCounts exception))]
-    (.println stream (format " Statement %d: %s"
-                             index
-                             (get special-counts count count)))))
+  (dorun 
+    (map-indexed 
+      (fn [index count] 
+        (.println stream 
+                  (format " Statement %d: %s"
+                          index
+                          (get special-counts count count)))) 
+      (.getUpdateCounts exception))))
 
 (defn throw-rollback
   "Sets rollback and throws a wrapped exception"
@@ -199,7 +203,10 @@
                (.getName (class sql-params))
                (pr-str sql-params)))))
   (with-open [stmt (.prepareStatement (connection*) sql)]
-    (doseq [[index value] (map vector (iterate inc 1) params)]
-      (.setObject stmt index value))
+    (dorun 
+      (map-indexed
+        (fn [index value] 
+          (.setObject stmt (inc index) value)) 
+        params))
     (with-open [rset (.executeQuery stmt)]
       (func (resultset-seq rset)))))
