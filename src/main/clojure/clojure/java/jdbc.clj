@@ -10,10 +10,13 @@
 ;;
 ;;  A Clojure interface to sql databases via jdbc
 ;;
-;;  See clojure.contrib.sql.test for an example
+;;  See clojure.java.test-jdbc for an example
 ;;
 ;;  scgilardi (gmail)
 ;;  Created 2 April 2008
+;;
+;;  seancorfield (gmail)
+;;  Migrated from clojure.contrib.sql 17 April 2011
 
 (ns
   ^{:author "Stephen C. Gilardi",

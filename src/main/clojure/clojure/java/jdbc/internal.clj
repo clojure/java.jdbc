@@ -6,10 +6,13 @@
 ;;  terms of this license.  You must not remove this notice, or any other,
 ;;  from this software.
 ;;
-;;  internal definitions for clojure.contrib.sql
+;;  internal definitions for clojure.java.jdbc
 ;;
 ;;  scgilardi (gmail)
 ;;  Created 3 October 2008
+;;
+;;  seancorfield (gmail)
+;;  Migrated from clojure.contrib.sql.internal 17 April 2011
 
 (ns clojure.java.jdbc.internal
   (:import

@@ -8,17 +8,20 @@
 ;;
 ;;  test.clj
 ;;
-;;  test/example for clojure.contrib.sql
+;;  test/example for clojure.java.jdbc
 ;;
 ;;  scgilardi (gmail)
 ;;  Created 13 September 2008
+;;
+;;  seancorfield (gmail)
+;;  Migrated from clojure.contrib.test-sql 17 April 2011
 
 (ns clojure.java.test-jdbc
   (:use [clojure.java.jdbc :as sql :only ()]))
 
 (def db {:classname "org.apache.derby.jdbc.EmbeddedDriver"
          :subprotocol "derby"
-         :subname "/tmp/clojure.contrib.sql.test.db"
+         :subname "/tmp/clojure.java.test-jdbc.db"
          :create true})
 
 (defn create-fruit
