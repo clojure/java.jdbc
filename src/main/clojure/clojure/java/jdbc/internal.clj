@@ -22,7 +22,7 @@
    (javax.naming InitialContext Name)
    (javax.sql DataSource)))
 
-(def *db* {:connection nil :level 0})
+(def ^:dynamic *db* {:connection nil :level 0})
 
 (def special-counts
      {Statement/EXECUTE_FAILED "EXECUTE_FAILED"
