@@ -92,13 +92,15 @@
   open database connection. Each param-group is a seq of values for all of
   the parameters."
   [sql & param-groups]
-  (with-open [stmt (.prepareStatement (connection) sql)]
+  (with-open [stmt (.prepareStatement (connection) sql java.sql.Statement/RETURN_GENERATED_KEYS)]
     (doseq [param-group param-groups]
       (doseq [[index value] (map vector (iterate inc 1) param-group)]
         (.setObject stmt index value))
       (.addBatch stmt))
     (transaction
-     (seq (.executeBatch stmt)))))
+     (let [counts (seq (.executeBatch stmt))
+           ks (resultset-seq (.getGeneratedKeys stmt))]
+       (map vector counts ks)))))
 
 (defn- as-str
   [x]
@@ -157,8 +159,8 @@
   "Inserts records into a table. records are maps from strings or
   keywords (identifying columns) to values."
   [table & records]
-  (doseq [record records]
-    (insert-values table (keys record) (vals record))))
+  (let [ins-v (fn [record] (insert-values table (keys record) (vals record)))]
+    (doall (mapcat ins-v records))))
 
 (defn delete-rows
   "Deletes rows from a table. where-params is a vector containing a string
