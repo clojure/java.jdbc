@@ -132,12 +132,13 @@
   [table column-names & value-groups]
   (let [column-strs (map as-str column-names)
         n (count (first value-groups))
+        return-keys (= 1 (count value-groups))
         template (apply str (interpose "," (replicate n "?")))
         columns (if (seq column-names)
                   (format "(%s)" (apply str (interpose "," column-strs)))
                   "")]
     (apply do-prepared*
-           true
+           return-keys
            (format "INSERT INTO %s %s VALUES (%s)"
                    (as-str table) columns template)
            value-groups)))
