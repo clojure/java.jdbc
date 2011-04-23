@@ -85,25 +85,14 @@
     (doseq [cmd commands]
       (.addBatch stmt cmd))
     (transaction
-     (seq (.executeBatch stmt)))))
+      (seq (.executeBatch stmt)))))
 
 (defn do-prepared
   "Executes an (optionally parameterized) SQL prepared statement on the
   open database connection. Each param-group is a seq of values for all of
   the parameters."
   [sql & param-groups]
-  (with-open [stmt (.prepareStatement (connection) sql java.sql.Statement/RETURN_GENERATED_KEYS)]
-    (doseq [param-group param-groups]
-      (dorun 
-        (map-indexed 
-          (fn [index value] 
-            (.setObject stmt (inc index) value)) 
-          param-group))
-      (.addBatch stmt))
-    (transaction
-     (let [counts (seq (.executeBatch stmt))
-           ks (resultset-seq (.getGeneratedKeys stmt))]
-       (map vector counts ks)))))
+  (apply do-prepared* false sql param-groups))
 
 (defn- as-str
   [x]
@@ -147,7 +136,8 @@
         columns (if (seq column-names)
                   (format "(%s)" (apply str (interpose "," column-strs)))
                   "")]
-    (apply do-prepared
+    (apply do-prepared*
+           true
            (format "INSERT INTO %s %s VALUES (%s)"
                    (as-str table) columns template)
            value-groups)))
@@ -163,7 +153,7 @@
   keywords (identifying columns) to values."
   [table & records]
   (let [ins-v (fn [record] (insert-values table (keys record) (vals record)))]
-    (doall (mapcat ins-v records))))
+    (doall (map ins-v records))))
 
 (defn delete-rows
   "Deletes rows from a table. where-params is a vector containing a string
@@ -171,10 +161,11 @@
   values for any parameters."
   [table where-params]
   (let [[where & params] where-params]
-    (do-prepared
-     (format "DELETE FROM %s WHERE %s"
-             (as-str table) where)
-     params)))
+    (do-prepared*
+      false
+      (format "DELETE FROM %s WHERE %s"
+              (as-str table) where)
+      params)))
 
 (defn update-values
   "Updates values on selected rows in a table. where-params is a vector
@@ -185,10 +176,11 @@
   (let [[where & params] where-params
         column-strs (map as-str (keys record))
         columns (apply str (concat (interpose "=?, " column-strs) "=?"))]
-    (do-prepared
-     (format "UPDATE %s SET %s WHERE %s"
-             (as-str table) columns where)
-     (concat (vals record) params))))
+    (do-prepared*
+      false
+      (format "UPDATE %s SET %s WHERE %s"
+              (as-str table) columns where)
+      (concat (vals record) params))))
 
 (defn update-or-insert-values
   "Updates values on selected rows in a table, or inserts a new row when no

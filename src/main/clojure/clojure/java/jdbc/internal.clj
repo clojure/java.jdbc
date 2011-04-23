@@ -173,25 +173,44 @@
       (let [con (connection*)
             auto-commit (.getAutoCommit con)]
         (io!
-         (.setAutoCommit con false)
-         (try
-          (func)
-          (catch BatchUpdateException e
-            (print-update-counts *err* e)
-            (print-sql-exception-chain *err* e)
-            (throw-rollback e))
-          (catch SQLException e
-            (print-sql-exception-chain *err* e)
-            (throw-rollback e))
-          (catch Exception e
-            (throw-rollback e))
-          (finally
-           (if (rollback)
-             (.rollback con)
-             (.commit con))
-           (rollback false)
-           (.setAutoCommit con auto-commit)))))
+          (.setAutoCommit con false)
+          (try
+            (func)
+            (catch BatchUpdateException e
+              (print-update-counts *err* e)
+              (print-sql-exception-chain *err* e)
+              (throw-rollback e))
+            (catch SQLException e
+              (print-sql-exception-chain *err* e)
+              (throw-rollback e))
+            (catch Exception e
+              (throw-rollback e))
+            (finally
+              (if (rollback)
+                (.rollback con)
+                (.commit con))
+              (rollback false)
+              (.setAutoCommit con auto-commit)))))
       (func))))
+
+(defn do-prepared*
+  "Executes an (optionally parameterized) SQL prepared statement on the
+  open database connection. Each param-group is a seq of values for all of
+  the parameters."
+  [return-keys sql & param-groups]
+  (with-open [stmt (if return-keys 
+                     (.prepareStatement (connection*) sql java.sql.Statement/RETURN_GENERATED_KEYS)
+                     (.prepareStatement (connection*) sql))]
+    (doseq [param-group param-groups]
+      (dorun 
+        (map-indexed 
+          (fn [index value] 
+            (.setObject stmt (inc index) value)) 
+          param-group))
+      (.addBatch stmt))
+    (transaction* (fn [] 
+                    (let [rs (seq (.executeBatch stmt))]
+                      (if return-keys (first (resultset-seq (.getGeneratedKeys stmt))) rs))))))
 
 (defn with-query-results*
   "Executes a query, then evaluates func passing in a seq of the results as
