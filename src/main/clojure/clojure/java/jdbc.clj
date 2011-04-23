@@ -94,8 +94,11 @@
   [sql & param-groups]
   (with-open [stmt (.prepareStatement (connection) sql java.sql.Statement/RETURN_GENERATED_KEYS)]
     (doseq [param-group param-groups]
-      (doseq [[index value] (map vector (iterate inc 1) param-group)]
-        (.setObject stmt index value))
+      (dorun 
+        (map-indexed 
+          (fn [index value] 
+            (.setObject stmt (inc index) value)) 
+          param-group))
       (.addBatch stmt))
     (transaction
      (let [counts (seq (.executeBatch stmt))
