@@ -128,7 +128,8 @@
   column-names is a vector of strings or keywords identifying columns. Each
   value-group is a vector containing a values for each column in
   order. When inserting complete rows (all columns), consider using
-  insert-rows instead."
+  insert-rows instead.
+  If a single set of values is inserted, returns a map of the generated keys."
   [table column-names & value-groups]
   (let [column-strs (map as-str column-names)
         n (count (first value-groups))
@@ -145,20 +146,23 @@
 
 (defn insert-rows
   "Inserts complete rows into a table. Each row is a vector of values for
-  each of the table's columns in order."
+  each of the table's columns in order.
+  If a single row is inserted, returns a map of the generated keys."
   [table & rows]
   (apply insert-values table nil rows))
 
 (defn insert-records
-  "Inserts records into a table. records are maps from strings or
-  keywords (identifying columns) to values."
+  "Inserts records into a table. records are maps from strings or keywords
+  (identifying columns) to values. Inserts the records one at a time.
+  Returns a sequence of maps containing the generated keys for each record."
   [table & records]
   (let [ins-v (fn [record] (insert-values table (keys record) (vals record)))]
     (doall (map ins-v records))))
 
 (defn insert-record
   "Inserts a single record into a table. A record is a map from strings or
-  keywords (identifying columns) to values."
+  keywords (identifying columns) to values.
+  Returns a map of the generated keys."
   [table record]
   (let [keys (insert-records table record)]
     (first keys)))
