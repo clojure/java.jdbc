@@ -20,10 +20,10 @@
 
 (ns
   ^{:author "Stephen C. Gilardi",
-     :doc "A Clojure interface to sql databases via jdbc."
-     :see-also [["http://github.com/clojure/java.jdbc/blob/master/src/test/clojure/clojure/java/test_jdbc.clj"
-                 "Example code"]]}
-  clojure.java.jdbc
+    :doc "A Clojure interface to sql databases via jdbc."
+    :see-also [["http://github.com/clojure/java.jdbc/blob/master/src/test/clojure/clojure/java/test_jdbc.clj"
+                "Example code"]]}
+   clojure.java.jdbc
   (:use clojure.java.jdbc.internal))
 
 (def find-connection find-connection*)
@@ -108,20 +108,20 @@
   words used to describe the table may be supplied as strings or keywords."
   [name & specs]
   (do-commands
-   (format "CREATE TABLE %s (%s)"
-           (as-str name)
-           (apply str
-             (map as-str
-              (apply concat
-               (interpose [", "]
-                (map (partial interpose " ") specs))))))))
+    (format "CREATE TABLE %s (%s)"
+            (as-str name)
+            (apply str
+                   (map as-str
+                        (apply concat
+                               (interpose [", "]
+                                          (map (partial interpose " ") specs))))))))
 
 (defn drop-table
   "Drops a table on the open database connection given its name, a string
   or keyword"
   [name]
   (do-commands
-   (format "DROP TABLE %s" (as-str name))))
+    (format "DROP TABLE %s" (as-str name))))
 
 (defn insert-values
   "Inserts rows into a table with values for specified columns only.

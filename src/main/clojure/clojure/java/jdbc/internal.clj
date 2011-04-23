@@ -16,17 +16,17 @@
 
 (ns clojure.java.jdbc.internal
   (:import
-   (clojure.lang RT)
-   (java.sql BatchUpdateException DriverManager SQLException Statement)
-   (java.util Hashtable Map Properties)
-   (javax.naming InitialContext Name)
-   (javax.sql DataSource)))
+    (clojure.lang RT)
+    (java.sql BatchUpdateException DriverManager SQLException Statement)
+    (java.util Hashtable Map Properties)
+    (javax.naming InitialContext Name)
+    (javax.sql DataSource)))
 
 (def ^:dynamic *db* {:connection nil :level 0})
 
 (def special-counts
-     {Statement/EXECUTE_FAILED "EXECUTE_FAILED"
-      Statement/SUCCESS_NO_INFO "SUCCESS_NO_INFO"})
+  {Statement/EXECUTE_FAILED "EXECUTE_FAILED"
+   Statement/SUCCESS_NO_INFO "SUCCESS_NO_INFO"})
 
 (defn find-connection*
   "Returns the current database connection (or nil if there is none)"
@@ -42,9 +42,9 @@
 (defn rollback
   "Accessor for the rollback flag on the current connection"
   ([]
-     (deref (:rollback *db*)))
+    (deref (:rollback *db*)))
   ([val]
-     (swap! (:rollback *db*) (fn [_] val))))
+    (swap! (:rollback *db*) (fn [_] val))))
 
 (defn- as-str
   [x]
@@ -90,47 +90,46 @@
            name environment]
     :as db-spec}]
   (cond
-   factory
-   (factory (dissoc db-spec :factory))
-   (and classname subprotocol subname)
-   (let [url (format "jdbc:%s:%s" subprotocol subname)
-         etc (dissoc db-spec :classname :subprotocol :subname)]
-     (RT/loadClassForName classname)
-     (DriverManager/getConnection url (as-properties etc)))
-   (and datasource username password)
-   (.getConnection datasource username password)
-   datasource
-   (.getConnection datasource)
-   name
-   (let [env (and environment (Hashtable. environment))
-         context (InitialContext. env)
-         datasource (.lookup context name)]
-     (.getConnection datasource))
-   :else
-   (throw (IllegalArgumentException. (format "db-spec %s is missing a required parameter" db-spec)))))
+    factory
+    (factory (dissoc db-spec :factory))
+    (and classname subprotocol subname)
+    (let [url (format "jdbc:%s:%s" subprotocol subname)
+          etc (dissoc db-spec :classname :subprotocol :subname)]
+      (RT/loadClassForName classname)
+      (DriverManager/getConnection url (as-properties etc)))
+    (and datasource username password)
+    (.getConnection datasource username password)
+    datasource
+    (.getConnection datasource)
+    name
+    (let [env (and environment (Hashtable. environment))
+          context (InitialContext. env)
+          datasource (.lookup context name)]
+      (.getConnection datasource))
+    :else
+    (throw (IllegalArgumentException. (format "db-spec %s is missing a required parameter" db-spec)))))
 
 (defn with-connection*
   "Evaluates func in the context of a new connection to a database then
   closes the connection."
   [db-spec func]
   (with-open [con (get-connection db-spec)]
-    (binding [*db* (assoc *db*
-                     :connection con :level 0 :rollback (atom false))]
+    (binding [*db* (assoc *db* :connection con :level 0 :rollback (atom false))]
       (func))))
 
 (defn print-sql-exception
   "Prints the contents of an SQLException to stream"
   [stream exception]
   (.println
-   stream
-   (format (str "%s:" \newline
-                " Message: %s" \newline
-                " SQLState: %s" \newline
-                " Error Code: %d")
-           (.getSimpleName (class exception))
-           (.getMessage exception)
-           (.getSQLState exception)
-           (.getErrorCode exception))))
+    stream
+    (format (str "%s:" \newline
+                 " Message: %s" \newline
+                 " SQLState: %s" \newline
+                 " Error Code: %d")
+            (.getSimpleName (class exception))
+            (.getMessage exception)
+            (.getSQLState exception)
+            (.getErrorCode exception))))
 
 (defn print-sql-exception-chain
   "Prints a chain of SQLExceptions to stream"
@@ -219,11 +218,11 @@
   [[sql & params :as sql-params] func]
   (when-not (vector? sql-params)
     (throw (IllegalArgumentException. (format "\"%s\" expected %s %s, found %s %s"
-               "sql-params"
-               "vector"
-               "[sql param*]"
-               (.getName (class sql-params))
-               (pr-str sql-params)))))
+                                              "sql-params"
+                                              "vector"
+                                              "[sql param*]"
+                                              (.getName (class sql-params))
+                                              (pr-str sql-params)))))
   (with-open [stmt (.prepareStatement (connection*) sql)]
     (dorun 
       (map-indexed
