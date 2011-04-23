@@ -156,6 +156,13 @@
   (let [ins-v (fn [record] (insert-values table (keys record) (vals record)))]
     (doall (map ins-v records))))
 
+(defn insert-record
+  "Inserts a single record into a table. A record is a map from strings or
+  keywords (identifying columns) to values."
+  [table record]
+  (let [keys (insert-records table record)]
+    (first keys)))
+
 (defn delete-rows
   "Deletes rows from a table. where-params is a vector containing a string
   providing the (optionally parameterized) selection criteria followed by
