@@ -19,7 +19,7 @@
 ;;  Migrated from clojure.contrib.sql 17 April 2011
 
 (ns
-  ^{:author "Stephen C. Gilardi",
+  ^{:author "Stephen C. Gilardi, Sean Corfield",
     :doc "A Clojure interface to sql databases via jdbc."
     :see-also [["http://github.com/clojure/java.jdbc/blob/master/src/test/clojure/clojure/java/test_jdbc.clj"
                 "Example code"]]}
