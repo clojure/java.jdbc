@@ -6,11 +6,9 @@
 ;;  terms of this license.  You must not remove this notice, or any other,
 ;;  from this software.
 ;;
-;;  sql.clj
+;;  jdbc.clj
 ;;
 ;;  A Clojure interface to sql databases via jdbc
-;;
-;;  See clojure.java.test-jdbc for an example
 ;;
 ;;  scgilardi (gmail)
 ;;  Created 2 April 2008
@@ -19,15 +17,90 @@
 ;;  Migrated from clojure.contrib.sql 17 April 2011
 
 (ns
-  ^{:author "Stephen C. Gilardi, Sean Corfield",
-    :doc "A Clojure interface to sql databases via jdbc."
-    :see-also [["http://github.com/clojure/java.jdbc/blob/master/src/test/clojure/clojure/java/test_jdbc.clj"
-                "Example code"]]}
+  ^{
+    :author "Stephen C. Gilardi, Sean Corfield",
+    :doc "A Clojure interface to SQL databases via JDBC
+
+clojure.java.jdbc provides a simple abstraction for CRUD (create, read, update, delete) operations
+on a SQL database, along with basic transaction support.
+Basic DDL operations are also supported (create table, drop table, access to table metadata).
+
+Maps are used to represent records, making it easy to store and retrieve data.
+Results can be processed using any standard sequence operations.
+
+For most operations, Java's PreparedStatement is used so your SQL and parameters can be represented
+as simple vectors where the first element is the SQL string, with ? for each parameter, and the
+remaining elements are the parameter values to be substituted. In general, operations return the
+number of rows affected, except for a single record insert where any generated keys are returned
+(as a map)." }
    clojure.java.jdbc
+  (:require clojure.string)
   (:use clojure.java.jdbc.internal))
+
+(def as-identifier 
+  "Given a string, return it as-is.
+   Given a keyword, return it as a string using the current naming strategy."
+  as-identifier*)
+
+(def as-keyword 
+  "Given a string, return it as a keyword using the current naming strategy.
+   Given a keyword, return it as-is."
+  as-keyword*)
 
 (def find-connection find-connection*)
 (def connection connection*)
+
+(defn as-quoted-str
+  "Given a quoting pattern - either a single character or a vector pair of characters -
+   and a string, return the quoted string:
+     (as-quoted-str X foo) will return XfooX
+     (as-quoted-str [A B] foo) will return AfooB"
+  [q x]
+  (if (vector? q)
+    (str (first q) x (last q))
+    (str q x q)))
+
+(defn as-named-identifier
+  "Given a naming strategy and a keyword, return the keyword as a string using the 
+   entity naming strategy.
+   Given a naming strategy and a string, return the string as-is.
+   The naming strategy should either be a function (the entity naming strategy) or 
+   a map containing :entity and/or :keyword keys which provide the entity naming
+   strategy and/or keyword naming strategy respectively."
+  [naming-strategy x]
+  (binding [*as-str* (if (map? naming-strategy) (or (:entity naming-strategy) identity) naming-strategy)] (as-identifier x)))
+
+(defn as-named-keyword
+  "Given a naming strategy and a string, return the string as a keyword using the 
+   keyword naming strategy.
+   Given a naming strategy and a keyword, return the keyword as-is.
+   The naming strategy should either be a function (the entity naming strategy) or 
+   a map containing :entity and/or :keyword keys which provide the entity naming
+   strategy and/or keyword naming strategy respectively.
+   Note that providing a single function will cause the default keyword naming
+   strategy to be used!"
+  [naming-strategy x]
+  (binding [*as-key* (if (and (map? naming-strategy) (:keyword naming-strategy)) (:keyword naming-strategy) clojure.string/lower-case)] (as-keyword x)))
+
+(defn as-quoted-identifier
+  "Given a quote pattern - either a single character or a pair of characters in a vector -
+   and a keyword, return the keyword as a string using a simple quoting naming strategy.
+   Given a qote pattern and a string, return the string as-is.
+     (as-quoted-identifier X :name) will return XnameX as a string.
+     (as-quoted-identifier [A B] :name) will return AnameB as a string."
+  [q x]
+  (binding [*as-str* (partial as-quoted-str q)] (as-identifier x)))
+
+(defmacro with-naming-strategy
+  "Evaluates body in the context of a naming strategy."
+  [naming-strategy & body ]
+  `(binding [*as-str* (if (map? ~naming-strategy) (or (:entity ~naming-strategy) identity) ~naming-strategy)
+             *as-key* (if (map? ~naming-strategy) (or (:keyword ~naming-strategy) clojure.string/lower-case))] ~@body))
+
+(defmacro with-quoted-identifiers
+  "Evaluates body in the context of a simple quoting naming strategy."
+  [q & body ]
+  `(binding [*as-str* (partial as-quoted-str ~q)] ~@body))
 
 (defmacro with-connection
   "Evaluates body in the context of a new connection to a database then
@@ -94,12 +167,6 @@
   [sql & param-groups]
   (apply do-prepared* false sql param-groups))
 
-(defn- as-str
-  [x]
-  (if (instance? clojure.lang.Named x)
-    (name x)
-    (str x)))
-
 (defn create-table
   "Creates a table on the open database connection given a table name and
   specs. Each spec is either a column spec: a vector containing a column
@@ -109,9 +176,9 @@
   [name & specs]
   (do-commands
     (format "CREATE TABLE %s (%s)"
-            (as-str name)
+            (as-identifier name)
             (apply str
-                   (map as-str
+                   (map as-identifier
                         (apply concat
                                (interpose [", "]
                                           (map (partial interpose " ") specs))))))))
@@ -121,7 +188,7 @@
   or keyword"
   [name]
   (do-commands
-    (format "DROP TABLE %s" (as-str name))))
+    (format "DROP TABLE %s" (as-identifier name))))
 
 (defn insert-values
   "Inserts rows into a table with values for specified columns only.
@@ -131,7 +198,7 @@
   insert-rows instead.
   If a single set of values is inserted, returns a map of the generated keys."
   [table column-names & value-groups]
-  (let [column-strs (map as-str column-names)
+  (let [column-strs (map as-identifier column-names)
         n (count (first value-groups))
         return-keys (= 1 (count value-groups))
         template (apply str (interpose "," (replicate n "?")))
@@ -141,7 +208,7 @@
     (apply do-prepared*
            return-keys
            (format "INSERT INTO %s %s VALUES (%s)"
-                   (as-str table) columns template)
+                   (as-identifier table) columns template)
            value-groups)))
 
 (defn insert-rows
@@ -176,7 +243,7 @@
     (do-prepared*
       false
       (format "DELETE FROM %s WHERE %s"
-              (as-str table) where)
+              (as-identifier table) where)
       params)))
 
 (defn update-values
@@ -186,12 +253,12 @@
   strings or keywords (identifying columns) to updated values."
   [table where-params record]
   (let [[where & params] where-params
-        column-strs (map as-str (keys record))
+        column-strs (map as-identifier (keys record))
         columns (apply str (concat (interpose "=?, " column-strs) "=?"))]
     (do-prepared*
       false
       (format "UPDATE %s SET %s WHERE %s"
-              (as-str table) columns where)
+              (as-identifier table) columns where)
       (concat (vals record) params))))
 
 (defn update-or-insert-values

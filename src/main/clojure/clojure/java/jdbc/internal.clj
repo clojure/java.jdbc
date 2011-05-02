@@ -15,6 +15,7 @@
 ;;  Migrated from clojure.contrib.sql.internal 17 April 2011
 
 (ns clojure.java.jdbc.internal
+  (:require clojure.string)
   (:import
     (clojure.lang RT)
     (java.sql BatchUpdateException DriverManager SQLException Statement)
@@ -46,20 +47,50 @@
   ([val]
     (swap! (:rollback *db*) (fn [_] val))))
 
-(defn- as-str
-  [x]
+(def ^:dynamic *as-str* 
+  "The default entity naming strategy is to do nothing."
+  identity)
+
+(def ^:dynamic *as-key*
+  "The default keyword naming strategy is to lowercase the entity."
+  clojure.string/lower-case)
+
+(defn as-str
+  "Given a naming strategy and a keyword, return the keyword as a string per
+   that naming strategy. Given (a naming strategy and) a string, return it as-is."
+  [f x]
   (if (instance? clojure.lang.Named x)
-    (name x)
+    (f (name x))
     (str x)))
+
+(defn as-key
+  "Given a naming strategy and a string, return the string as a keyword per
+   that naming strategy. Given (a naming strategy and) a keyword, return it as-is."
+  [f x]
+  (if (instance? clojure.lang.Named x)
+    x
+    (keyword (f (str x)))))
+
+(defn as-identifier*
+  "Given a keyword, convert it to a string using the current naming strategy.
+   Given a string, return it as-is."
+  [x]
+  (as-str *as-str* x))
+
+(defn as-keyword*
+  "Given an entity name (string), convert it to a keyword using the current naming strategy.
+   Given a keyword, return it as-is."
+  [x]
+  (as-key *as-key* x))
 
 (defn- ^Properties as-properties
   "Convert any seq of pairs to a java.utils.Properties instance.
    Uses as-str to convert both keys and values into strings."
-  {:tag Properties}
+  { :tag Properties }
   [m]
   (let [p (Properties.)]
     (doseq [[k v] m]
-      (.setProperty p (as-str k) (as-str v)))
+      (.setProperty p (as-str identity k) (as-str identity v)))
     p))
 
 (defn get-connection
@@ -192,6 +223,25 @@
               (.setAutoCommit con auto-commit)))))
       (func))))
 
+(defn resultset-seq*
+  "Creates and returns a lazy sequence of structmaps corresponding to
+   the rows in the java.sql.ResultSet rs. Based on clojure.core/resultset-seq
+   but it respects the current naming strategy."
+  [^java.sql.ResultSet rs]
+    (let [rsmeta (.getMetaData rs)
+          idxs (range 1 (inc (.getColumnCount rsmeta)))
+          keys (map (comp keyword *as-key*)
+                    (map (fn [^Integer i] (.getColumnLabel rsmeta i)) idxs))
+          check-keys
+                (or (apply distinct? keys)
+                    (throw (Exception. "ResultSet must have unique column labels")))
+          row-struct (apply create-struct keys)
+          row-values (fn [] (map (fn [^Integer i] (.getObject rs i)) idxs))
+          rows (fn thisfn []
+                 (when (.next rs)
+                   (cons (apply struct row-struct (row-values)) (lazy-seq (thisfn)))))]
+      (rows)))
+
 (defn do-prepared*
   "Executes an (optionally parameterized) SQL prepared statement on the
   open database connection. Each param-group is a seq of values for all of
@@ -209,7 +259,7 @@
       (.addBatch stmt))
     (transaction* (fn [] 
                     (let [rs (seq (.executeBatch stmt))]
-                      (if return-keys (first (resultset-seq (.getGeneratedKeys stmt))) rs))))))
+                      (if return-keys (first (resultset-seq* (.getGeneratedKeys stmt))) rs))))))
 
 (defn with-query-results*
   "Executes a query, then evaluates func passing in a seq of the results as
@@ -230,4 +280,4 @@
           (.setObject stmt (inc index) value)) 
         params))
     (with-open [rset (.executeQuery stmt)]
-      (func (resultset-seq rset)))))
+      (func (resultset-seq* rset)))))

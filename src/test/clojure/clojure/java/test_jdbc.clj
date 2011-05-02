@@ -6,9 +6,13 @@
 ;;  terms of this license.  You must not remove this notice, or any other,
 ;;  from this software.
 ;;
-;;  test.clj
+;;  test_jdbc.clj
 ;;
 ;;  test/example for clojure.java.jdbc
+;;
+;;  most of this file is still example code (which has been duplicated to
+;;  the documentation in doc/clojure/java/jdbc/) but actual tests are being
+;;  added near the top of the file
 ;;
 ;;  scgilardi (gmail)
 ;;  Created 13 September 2008
@@ -17,7 +21,53 @@
 ;;  Migrated from clojure.contrib.test-sql 17 April 2011
 
 (ns clojure.java.test-jdbc
+  (:use clojure.test)
   (:use [clojure.java.jdbc :as sql :only ()]))
+
+;; basic tests for keyword / entity conversion
+
+(deftest test-as-identifier
+  (is (= "kw" (sql/as-identifier "kw")))
+  (is (= "kw" (sql/as-identifier :kw)))
+  (is (= "KW" (sql/as-identifier "KW")))
+  (is (= "KW" (sql/as-identifier :KW))))
+
+(deftest test-as-keyword
+  (is (= :kw (sql/as-keyword "kw")))
+  (is (= :kw (sql/as-keyword :kw)))
+  (is (= :kw (sql/as-keyword "KW")))
+  (is (= :KW (sql/as-keyword :KW))))
+
+(deftest test-quoted
+  (is (= "kw" (sql/as-quoted-identifier [ \[ \] ] "kw")))
+  (is (= "[kw]" (sql/as-quoted-identifier [ \[ \] ] :kw)))
+  (is (= "KW" (sql/as-quoted-identifier \` "KW")))
+  (is (= "`KW`" (sql/as-quoted-identifier \` :KW))))
+
+(def quote-dash { :entity (partial sql/as-quoted-str \`) :keyword #(.replace % "_" "-") })
+
+(deftest test-named
+  (is (= "kw" (sql/as-named-identifier quote-dash "kw")))
+  (is (= "`kw`" (sql/as-named-identifier quote-dash :kw)))
+  (is (= :K-W (sql/as-named-keyword quote-dash "K_W")))
+  (is (= :K_W (sql/as-named-keyword quote-dash :K_W))))
+
+(deftest test-with-quote
+  (sql/with-quoted-identifiers [ \[ \] ]
+    (is (= "kw" (sql/as-identifier "kw")))
+    (is (= "[kw]" (sql/as-identifier :kw)))
+    (is (= "KW" (sql/as-identifier "KW")))
+    (is (= "[KW]" (sql/as-identifier :KW)))))
+
+(deftest test-with-naming
+  (sql/with-naming-strategy quote-dash
+    (is (= "kw" (sql/as-identifier "kw")))
+    (is (= "`kw`" (sql/as-identifier :kw)))
+    (is (= :K-W (sql/as-keyword "K_W")))
+    (is (= :K_W) (sql/as-keyword :K_W))))
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; old example code below here - will eventually be removed once proper tests are written!
 
 (def db {:classname "org.apache.derby.jdbc.EmbeddedDriver"
          :subprotocol "derby"
