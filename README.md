@@ -5,6 +5,7 @@ The library formerly know as clojure.contrib.sql.
 ## Depending on java.jdbc
 
 In Maven:
+
 ```xml
 <dependency>
   <groupId>org.clojure</groupId>
@@ -14,6 +15,7 @@ In Maven:
 ```
 
 In Leiningen (you will need to specify the Sonatype OSS repository to pick up the snapshot):
+
 ```clj
   :repositories { "sonatype" "https://oss.sonatype.org/content/repositories/snapshots" }
   :dependencies [...
