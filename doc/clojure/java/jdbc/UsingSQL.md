@@ -1,6 +1,6 @@
 # Manipulating Data with SQL
 Here are some examples of using clojure.java.jdbc to manipulate data with SQL.
-These examples assume a simple table called fruit (see [[UsingDDL.md|Manipulating Tables with DDL]]).
+These examples assume a simple table called fruit (see [Manipulating Tables with DDL](https://github.com/clojure/java.jdbc/blob/master/doc/clojure/java/jdbc/UsingDDL.md)).
 ## Inserting multiple rows
 If you want to insert complete rows, you can use *insert-rows* and provide the values as a simple vector for each row. Every column's value must be present in the same order the columns are declared in the table. This performs a single insert statement. If you attempt to insert a single row, a map of the generated keys will be returned.
 
