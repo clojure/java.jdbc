@@ -1,6 +1,8 @@
 # Manipulating Tables with DDL
-Currently you can create and drop tables using clojure.java.jdbc. To see how to manipulate data with SQL, see [Manipulating Data with SQL](https://github.com/clojure/java.jdbc/blob/master/doc/clojure/java/jdbc/UsingSQL.md)
+Currently you can create and drop tables using clojure.java.jdbc. To see how to manipulate data with SQL, see [Manipulating Data with SQL](https://github.com/clojure/java.jdbc/blob/master/doc/clojure/java/jdbc/UsingSQL.md).
 ## Creating a table
+To create a table, use *create-table* with the table name and a vector for each column spec. Currently, table-level specifications are not supported.
+
 ```clj
 (defn create-fruit
   "Create a table"
@@ -13,6 +15,8 @@ Currently you can create and drop tables using clojure.java.jdbc. To see how to 
     [:grade :real]))
 ```
 ## Dropping a table
+To drop a table, use *drop-table* with the table name.
+
 ```clj
 (defn drop-fruit
   "Drop a table"
@@ -22,6 +26,8 @@ Currently you can create and drop tables using clojure.java.jdbc. To see how to 
     (catch Exception _)))
 ```
 ## Accessing table metadata
+To retrieve the metadata for a table, you can operate on the connection itself. In future, functions may be added to make this easier. Note that this uses *clojure.core.resultset-seq* which produces lowercase keywords from entity names.
+
 ```clj
 (defn db-get-tables
   "Demonstrate getting table info"
