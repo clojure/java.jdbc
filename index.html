@@ -1,0 +1,541 @@
+<html>
+  <head>
+    <title>clojure.java.jdbc - JDBC-based SQL Interface 0.0.1 API documentation</title>
+    <link href="static/favicon.png" rel="icon" />
+    <link href="static/favicon.png" rel="shortcut icon" />
+    <link media="all" type="text/css" href="static/clojure.css" rel="stylesheet" />
+    <link media="all" type="text/css" href="static/wiki.css" rel="stylesheet" />
+    <link media="all" type="text/css" href="static/internal.css" rel="stylesheet" />
+    <style>.menuWrapper{height: 36px;}</style>
+    <!--[if lte IE 6]>
+    <link rel="stylesheet" href="http://www.wikispaces.com/_/2009051601/s/internal_ie.css" type="text/css" />
+    <![endif]-->
+  </head>
+<!--
+This document was auto-generated from the source by the clojure autodoc system.
+To report errors or ask questions about the overall documentation structure, formatting,
+etc., contact Tom Faulhaber (google mail name: tomfaulhaber).
+For errors in the documentation of a particular namespace, contact the author of that
+namespace.
+-->
+  <body>
+    <div id="AllContentContainer">
+      <div id="Header">
+	<a id="Logo" href="index.html"><img alt="Clojure" height="100" width="100" src="static/clojure-icon.gif" /></a>
+	<h1><a title="page header title" id="page-header" href="index.html">JDBC-based SQL Interface</a></h1>
+      </div>
+      <div id="leftcolumn"><div style="text-align: center;"></div>
+<div class="menu">
+  <div class="WikiCustomNav WikiElement wiki">
+    <span class="toc-header"><span id="project-name">JDBC-based SQL Interface</span> <span id="version">0.0.1</span> API</span><br />
+    <ul>
+      <li><a class="wiki_link" href="index.html">Overview</a></li>
+      <li><a class="wiki_link" href="api-index.html">API Index</a></li>
+    </ul>
+    
+    
+    <a href="http://clojure.org" class="wiki_link">Clojure Home</a>
+  </div>
+</div>
+</div>
+      <div id="rightcolumn">
+	<div id="Content">
+	  <div class="contentBox"><div class="innerContentBox">
+              <div id="content_view" class="wiki wikiPage">
+                <div id="right-sidebar"><div id="toc">
+  <h1 class="nopad">Table of Contents</h1>
+  <div style="margin-left: 1em;" class="toc-section">
+    <a href="#toc0">Overview</a>
+    <div style="margin-left: 1em;" class="toc-entry">
+      <a href="#clojure.java.jdbc/create-table">create-table</a>
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a href="#clojure.java.jdbc/delete-rows">delete-rows</a>
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a href="#clojure.java.jdbc/do-commands">do-commands</a>
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a href="#clojure.java.jdbc/do-prepared">do-prepared</a>
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a href="#clojure.java.jdbc/drop-table">drop-table</a>
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a href="#clojure.java.jdbc/insert-record">insert-record</a>
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a href="#clojure.java.jdbc/insert-records">insert-records</a>
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a href="#clojure.java.jdbc/insert-rows">insert-rows</a>
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a href="#clojure.java.jdbc/insert-values">insert-values</a>
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a href="#clojure.java.jdbc/is-rollback-only">is-rollback-only</a>
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a href="#clojure.java.jdbc/set-rollback-only">set-rollback-only</a>
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a href="#clojure.java.jdbc/transaction">transaction</a>
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a href="#clojure.java.jdbc/update-or-insert-values">update-or-insert-values</a>
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a href="#clojure.java.jdbc/update-values">update-values</a>
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a href="#clojure.java.jdbc/with-connection">with-connection</a>
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a href="#clojure.java.jdbc/with-query-results">with-query-results</a>
+    </div>
+    <br />
+  </div><div style="margin-left: 1em;" class="toc-section">
+    <a href="#clojure.java.jdbc.internal">clojure.java.jdbc.internal</a>
+    <div style="margin-left: 1em;" class="toc-entry">
+      <a href="#clojure.java.jdbc.internal/connection*">connection*</a>
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a href="#clojure.java.jdbc.internal/do-prepared*">do-prepared*</a>
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a href="#clojure.java.jdbc.internal/find-connection*">find-connection*</a>
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a href="#clojure.java.jdbc.internal/get-connection">get-connection</a>
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a href="#clojure.java.jdbc.internal/print-sql-exception">print-sql-exception</a>
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a href="#clojure.java.jdbc.internal/print-sql-exception-chain">print-sql-exception-chain</a>
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a href="#clojure.java.jdbc.internal/print-update-counts">print-update-counts</a>
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a href="#clojure.java.jdbc.internal/rollback">rollback</a>
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a href="#clojure.java.jdbc.internal/throw-rollback">throw-rollback</a>
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a href="#clojure.java.jdbc.internal/transaction*">transaction*</a>
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a href="#clojure.java.jdbc.internal/with-connection*">with-connection*</a>
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a href="#clojure.java.jdbc.internal/with-query-results*">with-query-results*</a>
+    </div>
+    <br />
+  </div>
+</div>
+</div>
+                <div id="content-tag"><h1 id="overview">API for <span id="namespace-name">clojure.java.jdbc</span>
+  - <span id="header-project">JDBC-based SQL Interface</span> <span id="header-version">0.0.1</span> (<span id="header-status">in development</span>)
+  </h1>
+<span id="author-line">by <span id="author-name">Stephen C. Gilardi, Sean Corfield</span><br /></span>
+<br />Full namespace name: <span id="long-name">clojure.java.jdbc</span>
+<p></p>
+<h2>Overview</h2>
+<pre id="namespace-docstr">A Clojure interface to sql databases via jdbc.</pre>
+
+
+<span id="see-also">See also: 
+  <span id="see-also-link">
+    <a href="http://github.com/clojure/java.jdbc/blob/master/src/test/clojure/clojure/java/test_jdbc.clj">Example code</a>
+  </span><br />
+</span><br />
+<h2>Public Variables and Functions</h2>
+<div id="var-entry">
+  <br />
+  <hr />
+  <h2 id="clojure.java.jdbc/create-table">create-table</h2>
+  <span id="var-type">function</span><br />
+  <pre id="var-usage">Usage: (create-table name &amp; specs)
+</pre>
+  <pre id="var-docstr">Creates a table on the open database connection given a table name and
+specs. Each spec is either a column spec: a vector containing a column
+name and optionally a type and other constraints, or a table-level
+constraint: a vector containing words that express the constraint. All
+words used to describe the table may be supplied as strings or keywords.</pre>
+  
+  
+  <a href="https://github.com/clojure/java.jdbc/blob/eb6ab97e9d402a1f981ea0dc21d23410fcd27f12/src/main/clojure/clojure/java/jdbc.clj#L103" id="var-source">Source</a>
+</div><div id="var-entry">
+  <br />
+  <hr />
+  <h2 id="clojure.java.jdbc/delete-rows">delete-rows</h2>
+  <span id="var-type">function</span><br />
+  <pre id="var-usage">Usage: (delete-rows table where-params)
+</pre>
+  <pre id="var-docstr">Deletes rows from a table. where-params is a vector containing a string
+providing the (optionally parameterized) selection criteria followed by
+values for any parameters.</pre>
+  
+  
+  <a href="https://github.com/clojure/java.jdbc/blob/eb6ab97e9d402a1f981ea0dc21d23410fcd27f12/src/main/clojure/clojure/java/jdbc.clj#L170" id="var-source">Source</a>
+</div><div id="var-entry">
+  <br />
+  <hr />
+  <h2 id="clojure.java.jdbc/do-commands">do-commands</h2>
+  <span id="var-type">function</span><br />
+  <pre id="var-usage">Usage: (do-commands &amp; commands)
+</pre>
+  <pre id="var-docstr">Executes SQL commands on the open database connection.</pre>
+  
+  
+  <a href="https://github.com/clojure/java.jdbc/blob/eb6ab97e9d402a1f981ea0dc21d23410fcd27f12/src/main/clojure/clojure/java/jdbc.clj#L81" id="var-source">Source</a>
+</div><div id="var-entry">
+  <br />
+  <hr />
+  <h2 id="clojure.java.jdbc/do-prepared">do-prepared</h2>
+  <span id="var-type">function</span><br />
+  <pre id="var-usage">Usage: (do-prepared sql &amp; param-groups)
+</pre>
+  <pre id="var-docstr">Executes an (optionally parameterized) SQL prepared statement on the
+open database connection. Each param-group is a seq of values for all of
+the parameters.</pre>
+  
+  
+  <a href="https://github.com/clojure/java.jdbc/blob/eb6ab97e9d402a1f981ea0dc21d23410fcd27f12/src/main/clojure/clojure/java/jdbc.clj#L90" id="var-source">Source</a>
+</div><div id="var-entry">
+  <br />
+  <hr />
+  <h2 id="clojure.java.jdbc/drop-table">drop-table</h2>
+  <span id="var-type">function</span><br />
+  <pre id="var-usage">Usage: (drop-table name)
+</pre>
+  <pre id="var-docstr">Drops a table on the open database connection given its name, a string
+or keyword</pre>
+  
+  
+  <a href="https://github.com/clojure/java.jdbc/blob/eb6ab97e9d402a1f981ea0dc21d23410fcd27f12/src/main/clojure/clojure/java/jdbc.clj#L119" id="var-source">Source</a>
+</div><div id="var-entry">
+  <br />
+  <hr />
+  <h2 id="clojure.java.jdbc/insert-record">insert-record</h2>
+  <span id="var-type">function</span><br />
+  <pre id="var-usage">Usage: (insert-record table record)
+</pre>
+  <pre id="var-docstr">Inserts a single record into a table. A record is a map from strings or
+keywords (identifying columns) to values.
+Returns a map of the generated keys.</pre>
+  
+  
+  <a href="https://github.com/clojure/java.jdbc/blob/eb6ab97e9d402a1f981ea0dc21d23410fcd27f12/src/main/clojure/clojure/java/jdbc.clj#L162" id="var-source">Source</a>
+</div><div id="var-entry">
+  <br />
+  <hr />
+  <h2 id="clojure.java.jdbc/insert-records">insert-records</h2>
+  <span id="var-type">function</span><br />
+  <pre id="var-usage">Usage: (insert-records table &amp; records)
+</pre>
+  <pre id="var-docstr">Inserts records into a table. records are maps from strings or keywords
+(identifying columns) to values. Inserts the records one at a time.
+Returns a sequence of maps containing the generated keys for each record.</pre>
+  
+  
+  <a href="https://github.com/clojure/java.jdbc/blob/eb6ab97e9d402a1f981ea0dc21d23410fcd27f12/src/main/clojure/clojure/java/jdbc.clj#L154" id="var-source">Source</a>
+</div><div id="var-entry">
+  <br />
+  <hr />
+  <h2 id="clojure.java.jdbc/insert-rows">insert-rows</h2>
+  <span id="var-type">function</span><br />
+  <pre id="var-usage">Usage: (insert-rows table &amp; rows)
+</pre>
+  <pre id="var-docstr">Inserts complete rows into a table. Each row is a vector of values for
+each of the table's columns in order.
+If a single row is inserted, returns a map of the generated keys.</pre>
+  
+  
+  <a href="https://github.com/clojure/java.jdbc/blob/eb6ab97e9d402a1f981ea0dc21d23410fcd27f12/src/main/clojure/clojure/java/jdbc.clj#L147" id="var-source">Source</a>
+</div><div id="var-entry">
+  <br />
+  <hr />
+  <h2 id="clojure.java.jdbc/insert-values">insert-values</h2>
+  <span id="var-type">function</span><br />
+  <pre id="var-usage">Usage: (insert-values table column-names &amp; value-groups)
+</pre>
+  <pre id="var-docstr">Inserts rows into a table with values for specified columns only.
+column-names is a vector of strings or keywords identifying columns. Each
+value-group is a vector containing a values for each column in
+order. When inserting complete rows (all columns), consider using
+insert-rows instead.
+If a single set of values is inserted, returns a map of the generated keys.</pre>
+  
+  
+  <a href="https://github.com/clojure/java.jdbc/blob/eb6ab97e9d402a1f981ea0dc21d23410fcd27f12/src/main/clojure/clojure/java/jdbc.clj#L126" id="var-source">Source</a>
+</div><div id="var-entry">
+  <br />
+  <hr />
+  <h2 id="clojure.java.jdbc/is-rollback-only">is-rollback-only</h2>
+  <span id="var-type">function</span><br />
+  <pre id="var-usage">Usage: (is-rollback-only)
+</pre>
+  <pre id="var-docstr">Returns true if the outermost transaction will rollback rather than
+commit when complete</pre>
+  
+  
+  <a href="https://github.com/clojure/java.jdbc/blob/eb6ab97e9d402a1f981ea0dc21d23410fcd27f12/src/main/clojure/clojure/java/jdbc.clj#L75" id="var-source">Source</a>
+</div><div id="var-entry">
+  <br />
+  <hr />
+  <h2 id="clojure.java.jdbc/set-rollback-only">set-rollback-only</h2>
+  <span id="var-type">function</span><br />
+  <pre id="var-usage">Usage: (set-rollback-only)
+</pre>
+  <pre id="var-docstr">Marks the outermost transaction such that it will rollback rather than
+commit when complete</pre>
+  
+  
+  <a href="https://github.com/clojure/java.jdbc/blob/eb6ab97e9d402a1f981ea0dc21d23410fcd27f12/src/main/clojure/clojure/java/jdbc.clj#L69" id="var-source">Source</a>
+</div><div id="var-entry">
+  <br />
+  <hr />
+  <h2 id="clojure.java.jdbc/transaction">transaction</h2>
+  <span id="var-type">macro</span><br />
+  <pre id="var-usage">Usage: (transaction &amp; body)
+</pre>
+  <pre id="var-docstr">Evaluates body as a transaction on the open database connection. Any
+nested transactions are absorbed into the outermost transaction. By
+default, all database updates are committed together as a group after
+evaluating the outermost body, or rolled back on any uncaught
+exception. If set-rollback-only is called within scope of the outermost
+transaction, the entire transaction will be rolled back rather than
+committed when complete.</pre>
+  
+  
+  <a href="https://github.com/clojure/java.jdbc/blob/eb6ab97e9d402a1f981ea0dc21d23410fcd27f12/src/main/clojure/clojure/java/jdbc.clj#L58" id="var-source">Source</a>
+</div><div id="var-entry">
+  <br />
+  <hr />
+  <h2 id="clojure.java.jdbc/update-or-insert-values">update-or-insert-values</h2>
+  <span id="var-type">function</span><br />
+  <pre id="var-usage">Usage: (update-or-insert-values table where-params record)
+</pre>
+  <pre id="var-docstr">Updates values on selected rows in a table, or inserts a new row when no
+existing row matches the selection criteria. where-params is a vector
+containing a string providing the (optionally parameterized) selection
+criteria followed by values for any parameters. record is a map from
+strings or keywords (identifying columns) to updated values.</pre>
+  
+  
+  <a href="https://github.com/clojure/java.jdbc/blob/eb6ab97e9d402a1f981ea0dc21d23410fcd27f12/src/main/clojure/clojure/java/jdbc.clj#L197" id="var-source">Source</a>
+</div><div id="var-entry">
+  <br />
+  <hr />
+  <h2 id="clojure.java.jdbc/update-values">update-values</h2>
+  <span id="var-type">function</span><br />
+  <pre id="var-usage">Usage: (update-values table where-params record)
+</pre>
+  <pre id="var-docstr">Updates values on selected rows in a table. where-params is a vector
+containing a string providing the (optionally parameterized) selection
+criteria followed by values for any parameters. record is a map from
+strings or keywords (identifying columns) to updated values.</pre>
+  
+  
+  <a href="https://github.com/clojure/java.jdbc/blob/eb6ab97e9d402a1f981ea0dc21d23410fcd27f12/src/main/clojure/clojure/java/jdbc.clj#L182" id="var-source">Source</a>
+</div><div id="var-entry">
+  <br />
+  <hr />
+  <h2 id="clojure.java.jdbc/with-connection">with-connection</h2>
+  <span id="var-type">macro</span><br />
+  <pre id="var-usage">Usage: (with-connection db-spec &amp; body)
+</pre>
+  <pre id="var-docstr">Evaluates body in the context of a new connection to a database then
+closes the connection. db-spec is a map containing values for one of the
+following parameter sets:
+
+Factory:
+  :factory     (required) a function of one argument, a map of params
+  (others)     (optional) passed to the factory function in a map
+
+DriverManager:
+  :classname   (required) a String, the jdbc driver class name
+  :subprotocol (required) a String, the jdbc subprotocol
+  :subname     (required) a String, the jdbc subname
+  (others)     (optional) passed to the driver as properties.
+
+DataSource:
+  :datasource  (required) a javax.sql.DataSource
+  :username    (optional) a String
+  :password    (optional) a String, required if :username is supplied
+
+JNDI:
+  :name        (required) a String or javax.naming.Name
+  :environment (optional) a java.util.Map</pre>
+  
+  
+  <a href="https://github.com/clojure/java.jdbc/blob/eb6ab97e9d402a1f981ea0dc21d23410fcd27f12/src/main/clojure/clojure/java/jdbc.clj#L32" id="var-source">Source</a>
+</div><div id="var-entry">
+  <br />
+  <hr />
+  <h2 id="clojure.java.jdbc/with-query-results">with-query-results</h2>
+  <span id="var-type">macro</span><br />
+  <pre id="var-usage">Usage: (with-query-results results sql-params &amp; body)
+</pre>
+  <pre id="var-docstr">Executes a query, then evaluates body with results bound to a seq of the
+results. sql-params is a vector containing a string providing
+the (optionally parameterized) SQL query followed by values for any
+parameters.</pre>
+  
+  
+  <a href="https://github.com/clojure/java.jdbc/blob/eb6ab97e9d402a1f981ea0dc21d23410fcd27f12/src/main/clojure/clojure/java/jdbc.clj#L210" id="var-source">Source</a>
+</div>
+<h2 id="namespace-name">clojure.java.jdbc.internal</h2>
+<pre id="namespace-docstr"></pre>
+
+
+<br />
+<div id="var-entry">
+  <hr />
+  <h2 id="clojure.java.jdbc.internal/connection*">connection*</h2>
+  <span id="var-type">function</span><br />
+  <pre id="var-usage">Usage: (connection*)
+</pre>
+  <pre id="var-docstr">Returns the current database connection (or throws if there is none)</pre>
+  
+  
+  <a href="https://github.com/clojure/java.jdbc/blob/72c1b8f74ab4d3810162a84fef52fa55468a5bdf/src/main/clojure/clojure/java/jdbc/internal.clj#L36" id="var-source">Source</a>
+</div><div id="var-entry">
+  <hr />
+  <h2 id="clojure.java.jdbc.internal/do-prepared*">do-prepared*</h2>
+  <span id="var-type">function</span><br />
+  <pre id="var-usage">Usage: (do-prepared* return-keys sql &amp; param-groups)
+</pre>
+  <pre id="var-docstr">Executes an (optionally parameterized) SQL prepared statement on the
+open database connection. Each param-group is a seq of values for all of
+the parameters.</pre>
+  
+  
+  <a href="https://github.com/clojure/java.jdbc/blob/72c1b8f74ab4d3810162a84fef52fa55468a5bdf/src/main/clojure/clojure/java/jdbc/internal.clj#L195" id="var-source">Source</a>
+</div><div id="var-entry">
+  <hr />
+  <h2 id="clojure.java.jdbc.internal/find-connection*">find-connection*</h2>
+  <span id="var-type">function</span><br />
+  <pre id="var-usage">Usage: (find-connection*)
+</pre>
+  <pre id="var-docstr">Returns the current database connection (or nil if there is none)</pre>
+  
+  
+  <a href="https://github.com/clojure/java.jdbc/blob/72c1b8f74ab4d3810162a84fef52fa55468a5bdf/src/main/clojure/clojure/java/jdbc/internal.clj#L31" id="var-source">Source</a>
+</div><div id="var-entry">
+  <hr />
+  <h2 id="clojure.java.jdbc.internal/get-connection">get-connection</h2>
+  <span id="var-type">function</span><br />
+  <pre id="var-usage">Usage: (get-connection {:keys [factory classname subprotocol subname datasource username password name environment], :as db-spec})
+</pre>
+  <pre id="var-docstr">Creates a connection to a database. db-spec is a map containing values
+for one of the following parameter sets:
+
+Factory:
+  :factory     (required) a function of one argument, a map of params
+  (others)     (optional) passed to the factory function in a map
+
+DriverManager:
+  :classname   (required) a String, the jdbc driver class name
+  :subprotocol (required) a String, the jdbc subprotocol
+  :subname     (required) a String, the jdbc subname
+  (others)     (optional) passed to the driver as properties.
+
+DataSource:
+  :datasource  (required) a javax.sql.DataSource
+  :username    (optional) a String
+  :password    (optional) a String, required if :username is supplied
+
+JNDI:
+  :name        (required) a String or javax.naming.Name
+  :environment (optional) a java.util.Map</pre>
+  
+  
+  <a href="https://github.com/clojure/java.jdbc/blob/72c1b8f74ab4d3810162a84fef52fa55468a5bdf/src/main/clojure/clojure/java/jdbc/internal.clj#L65" id="var-source">Source</a>
+</div><div id="var-entry">
+  <hr />
+  <h2 id="clojure.java.jdbc.internal/print-sql-exception">print-sql-exception</h2>
+  <span id="var-type">function</span><br />
+  <pre id="var-usage">Usage: (print-sql-exception stream exception)
+</pre>
+  <pre id="var-docstr">Prints the contents of an SQLException to stream</pre>
+  
+  
+  <a href="https://github.com/clojure/java.jdbc/blob/72c1b8f74ab4d3810162a84fef52fa55468a5bdf/src/main/clojure/clojure/java/jdbc/internal.clj#L120" id="var-source">Source</a>
+</div><div id="var-entry">
+  <hr />
+  <h2 id="clojure.java.jdbc.internal/print-sql-exception-chain">print-sql-exception-chain</h2>
+  <span id="var-type">function</span><br />
+  <pre id="var-usage">Usage: (print-sql-exception-chain stream exception)
+</pre>
+  <pre id="var-docstr">Prints a chain of SQLExceptions to stream</pre>
+  
+  
+  <a href="https://github.com/clojure/java.jdbc/blob/72c1b8f74ab4d3810162a84fef52fa55468a5bdf/src/main/clojure/clojure/java/jdbc/internal.clj#L134" id="var-source">Source</a>
+</div><div id="var-entry">
+  <hr />
+  <h2 id="clojure.java.jdbc.internal/print-update-counts">print-update-counts</h2>
+  <span id="var-type">function</span><br />
+  <pre id="var-usage">Usage: (print-update-counts stream exception)
+</pre>
+  <pre id="var-docstr">Prints the update counts from a BatchUpdateException to stream</pre>
+  
+  
+  <a href="https://github.com/clojure/java.jdbc/blob/72c1b8f74ab4d3810162a84fef52fa55468a5bdf/src/main/clojure/clojure/java/jdbc/internal.clj#L142" id="var-source">Source</a>
+</div><div id="var-entry">
+  <hr />
+  <h2 id="clojure.java.jdbc.internal/rollback">rollback</h2>
+  <span id="var-type">function</span><br />
+  <pre id="var-usage">Usage: (rollback)
+       (rollback val)
+</pre>
+  <pre id="var-docstr">Accessor for the rollback flag on the current connection</pre>
+  
+  
+  <a href="https://github.com/clojure/java.jdbc/blob/72c1b8f74ab4d3810162a84fef52fa55468a5bdf/src/main/clojure/clojure/java/jdbc/internal.clj#L42" id="var-source">Source</a>
+</div><div id="var-entry">
+  <hr />
+  <h2 id="clojure.java.jdbc.internal/throw-rollback">throw-rollback</h2>
+  <span id="var-type">function</span><br />
+  <pre id="var-usage">Usage: (throw-rollback e)
+</pre>
+  <pre id="var-docstr">Sets rollback and throws a wrapped exception</pre>
+  
+  
+  <a href="https://github.com/clojure/java.jdbc/blob/72c1b8f74ab4d3810162a84fef52fa55468a5bdf/src/main/clojure/clojure/java/jdbc/internal.clj#L155" id="var-source">Source</a>
+</div><div id="var-entry">
+  <hr />
+  <h2 id="clojure.java.jdbc.internal/transaction*">transaction*</h2>
+  <span id="var-type">function</span><br />
+  <pre id="var-usage">Usage: (transaction* func)
+</pre>
+  <pre id="var-docstr">Evaluates func as a transaction on the open database connection. Any
+nested transactions are absorbed into the outermost transaction. By
+default, all database updates are committed together as a group after
+evaluating the outermost body, or rolled back on any uncaught
+exception. If rollback is set within scope of the outermost transaction,
+the entire transaction will be rolled back rather than committed when
+complete.</pre>
+  
+  
+  <a href="https://github.com/clojure/java.jdbc/blob/72c1b8f74ab4d3810162a84fef52fa55468a5bdf/src/main/clojure/clojure/java/jdbc/internal.clj#L161" id="var-source">Source</a>
+</div><div id="var-entry">
+  <hr />
+  <h2 id="clojure.java.jdbc.internal/with-connection*">with-connection*</h2>
+  <span id="var-type">function</span><br />
+  <pre id="var-usage">Usage: (with-connection* db-spec func)
+</pre>
+  <pre id="var-docstr">Evaluates func in the context of a new connection to a database then
+closes the connection.</pre>
+  
+  
+  <a href="https://github.com/clojure/java.jdbc/blob/72c1b8f74ab4d3810162a84fef52fa55468a5bdf/src/main/clojure/clojure/java/jdbc/internal.clj#L112" id="var-source">Source</a>
+</div><div id="var-entry">
+  <hr />
+  <h2 id="clojure.java.jdbc.internal/with-query-results*">with-query-results*</h2>
+  <span id="var-type">function</span><br />
+  <pre id="var-usage">Usage: (with-query-results* [sql &amp; params :as sql-params] func)
+</pre>
+  <pre id="var-docstr">Executes a query, then evaluates func passing in a seq of the results as
+an argument. The first argument is a vector containing the (optionally
+parameterized) sql query string followed by values for any parameters.</pre>
+  
+  
+  <a href="https://github.com/clojure/java.jdbc/blob/72c1b8f74ab4d3810162a84fef52fa55468a5bdf/src/main/clojure/clojure/java/jdbc/internal.clj#L214" id="var-source">Source</a>
+</div>
+
+
+</div>
+              </div>
+            </div>
+          </div>
+	</div>
+	<div id="foot">
+	  <div style="text-align: center;" id="copyright">No copyright info </div>
+	</div>
+      </div>
+      <div id="DesignedBy">Logo &amp; site design by <a title="Visit Tom Hickey's website." href="http://www.tomhickey.com">Tom Hickey</a>.<br />
+      Clojure auto-documentation system by Tom Faulhaber.</div>
+    </div>
+    <!-- /AllContentContainer -->
+  </body>
+
+</html>
