@@ -1,5 +1,5 @@
 # Manipulating Tables with DDL
-Currently you can create and drop tables using clojure.java.jdbc.
+Currently you can create and drop tables using clojure.java.jdbc. To see how to manipulate data with SQL, see [Manipulating Data with SQL](https://github.com/clojure/java.jdbc/blob/master/doc/clojure/java/jdbc/UsingSQL.md)
 ## Creating a table
 ```clj
 (defn create-fruit
