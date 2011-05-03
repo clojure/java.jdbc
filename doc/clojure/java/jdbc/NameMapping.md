@@ -23,7 +23,7 @@ Note that if a string is used for an entity name, rather than a keyword, it is p
 ## Naming Strategies
 The second problem with the old approach was that in returned results, all entity names were mapped to lowercase so any case sensitivity in the original entity names was lost. In addition to the option to determine a quoting strategy, clojure.java.jdbc now has functions *as-named-identifier*, *as-named-keyword* and a macro *with-naming-strategy* to allow you to specify how entity name / keyword mapping should be performed in both directions.
 
-A naming strategy may be a single function or a map containing the keys `:entity` and/or `:keyword`, whose values are functions. If a single function `f` is provided, it is treated as `{ :entity f }`, i.e., a mapping from entity names to keywords. The `:entity` mapping is used on keywords that need to be converted to entity names. The `:keyword` mapping is used on entity names that need to be converted to keywords.
+A naming strategy may be a single function or a map containing the keys `:entity` and/or `:keyword`, whose values are functions. If a single function `f` is provided, it is treated as `{ :entity f }`, i.e., an entity naming strategy. The `:entity` mapping is used on keywords that need to be converted to entity names. The `:keyword` mapping is used on entity names that need to be converted to keywords.
 
 ```clj
 (as-named-identifier clojure.string/upper-case :name) ;; produces "NAME"

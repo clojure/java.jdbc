@@ -1,6 +1,6 @@
 # java.jdbc
 
-The library formerly know as clojure.contrib.sql.
+The library formerly known as clojure.contrib.sql.
 
 ## Depending on java.jdbc
 
