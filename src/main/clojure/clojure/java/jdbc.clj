@@ -21,18 +21,20 @@
     :author "Stephen C. Gilardi, Sean Corfield",
     :doc "A Clojure interface to SQL databases via JDBC
 
-clojure.java.jdbc provides a simple abstraction for CRUD (create, read, update, delete) operations
-on a SQL database, along with basic transaction support.
-Basic DDL operations are also supported (create table, drop table, access to table metadata).
+clojure.java.jdbc provides a simple abstraction for CRUD (create, read,
+update, delete) operations on a SQL database, along with basic transaction
+support. Basic DDL operations are also supported (create table, drop table,
+access to table metadata).
 
-Maps are used to represent records, making it easy to store and retrieve data.
-Results can be processed using any standard sequence operations.
+Maps are used to represent records, making it easy to store and retrieve
+data. Results can be processed using any standard sequence operations.
 
-For most operations, Java's PreparedStatement is used so your SQL and parameters can be represented
-as simple vectors where the first element is the SQL string, with ? for each parameter, and the
-remaining elements are the parameter values to be substituted. In general, operations return the
-number of rows affected, except for a single record insert where any generated keys are returned
-(as a map)." }
+For most operations, Java's PreparedStatement is used so your SQL and
+parameters can be represented as simple vectors where the first element
+is the SQL string, with ? for each parameter, and the remaining elements
+are the parameter values to be substituted. In general, operations return
+the number of rows affected, except for a single record insert where any
+generated keys are returned (as a map)." }
    clojure.java.jdbc
   (:require clojure.string)
   (:use clojure.java.jdbc.internal))
@@ -51,8 +53,8 @@ number of rows affected, except for a single record insert where any generated k
 (def connection connection*)
 
 (defn as-quoted-str
-  "Given a quoting pattern - either a single character or a vector pair of characters -
-   and a string, return the quoted string:
+  "Given a quoting pattern - either a single character or a vector pair of
+   characters - and a string, return the quoted string:
      (as-quoted-str X foo) will return XfooX
      (as-quoted-str [A B] foo) will return AfooB"
   [q x]
@@ -83,8 +85,9 @@ number of rows affected, except for a single record insert where any generated k
   (binding [*as-key* (if (and (map? naming-strategy) (:keyword naming-strategy)) (:keyword naming-strategy) clojure.string/lower-case)] (as-keyword x)))
 
 (defn as-quoted-identifier
-  "Given a quote pattern - either a single character or a pair of characters in a vector -
-   and a keyword, return the keyword as a string using a simple quoting naming strategy.
+  "Given a quote pattern - either a single character or a pair of characters in
+   a vector - and a keyword, return the keyword as a string using a simple
+   quoting naming strategy.
    Given a qote pattern and a string, return the string as-is.
      (as-quoted-identifier X :name) will return XnameX as a string.
      (as-quoted-identifier [A B] :name) will return AnameB as a string."

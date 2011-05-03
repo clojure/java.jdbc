@@ -56,29 +56,33 @@
   clojure.string/lower-case)
 
 (defn as-str
-  "Given a naming strategy and a keyword, return the keyword as a string per
-   that naming strategy. Given (a naming strategy and) a string, return it as-is."
+  "Given a naming strategy and a keyword, return the keyword as a
+   string per that naming strategy. Given (a naming strategy and)
+   a string, return it as-is."
   [f x]
   (if (instance? clojure.lang.Named x)
     (f (name x))
     (str x)))
 
 (defn as-key
-  "Given a naming strategy and a string, return the string as a keyword per
-   that naming strategy. Given (a naming strategy and) a keyword, return it as-is."
+  "Given a naming strategy and a string, return the string as a
+   keyword per that naming strategy. Given (a naming strategy and)
+   a keyword, return it as-is."
   [f x]
   (if (instance? clojure.lang.Named x)
     x
     (keyword (f (str x)))))
 
 (defn as-identifier*
-  "Given a keyword, convert it to a string using the current naming strategy.
+  "Given a keyword, convert it to a string using the current naming
+   strategy.
    Given a string, return it as-is."
   [x]
   (as-str *as-str* x))
 
 (defn as-keyword*
-  "Given an entity name (string), convert it to a keyword using the current naming strategy.
+  "Given an entity name (string), convert it to a keyword using the
+   current naming strategy.
    Given a keyword, return it as-is."
   [x]
   (as-key *as-key* x))
