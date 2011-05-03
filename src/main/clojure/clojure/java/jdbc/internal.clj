@@ -152,41 +152,6 @@
     (binding [*db* (assoc *db* :connection con :level 0 :rollback (atom false))]
       (func))))
 
-(defn print-sql-exception
-  "Prints the contents of an SQLException to stream"
-  [stream exception]
-  (.println
-    stream
-    (format (str "%s:" \newline
-                 " Message: %s" \newline
-                 " SQLState: %s" \newline
-                 " Error Code: %d")
-            (.getSimpleName (class exception))
-            (.getMessage exception)
-            (.getSQLState exception)
-            (.getErrorCode exception))))
-
-(defn print-sql-exception-chain
-  "Prints a chain of SQLExceptions to stream"
-  [stream exception]
-  (loop [e exception]
-    (when e
-      (print-sql-exception stream e)
-      (recur (.getNextException e)))))
-
-(defn print-update-counts
-  "Prints the update counts from a BatchUpdateException to stream"
-  [stream exception]
-  (.println stream "Update counts:")
-  (dorun 
-    (map-indexed 
-      (fn [index count] 
-        (.println stream 
-                  (format " Statement %d: %s"
-                          index
-                          (get special-counts count count)))) 
-      (.getUpdateCounts exception))))
-
 (defn throw-rollback
   "Sets rollback and throws a wrapped exception"
   [e]
@@ -210,13 +175,6 @@
           (.setAutoCommit con false)
           (try
             (func)
-            (catch BatchUpdateException e
-              (print-update-counts *err* e)
-              (print-sql-exception-chain *err* e)
-              (throw-rollback e))
-            (catch SQLException e
-              (print-sql-exception-chain *err* e)
-              (throw-rollback e))
             (catch Exception e
               (throw-rollback e))
             (finally

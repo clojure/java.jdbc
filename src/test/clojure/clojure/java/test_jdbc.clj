@@ -66,6 +66,25 @@
     (is (= :K-W (sql/as-keyword "K_W")))
     (is (= :K_W) (sql/as-keyword :K_W))))
 
+(deftest test-print-update-counts
+  (let [bu-ex (java.sql.BatchUpdateException. (int-array [1 2 3]))]
+    (let [e (is (thrown? java.sql.BatchUpdateException (throw bu-ex)))
+          counts-str (with-out-str (sql/print-update-counts e))]
+      (is (re-find #"^Update counts" counts-str))
+      (is (re-find #"Statement 0: 1" counts-str))
+      (is (re-find #"Statement 2: 3" counts-str)))))
+
+(deftest test-print-exception-chain
+  (let [base-ex (java.sql.SQLException. "Base Message" "Base State")
+        test-ex (java.sql.BatchUpdateException. "Test Message" "Test State" (int-array [1 2 3]))]
+    (.setNextException test-ex base-ex)
+    (let [e (is (thrown? java.sql.BatchUpdateException (throw test-ex)))
+          except-str (with-out-str (sql/print-sql-exception-chain e))
+          pattern (fn [s] (java.util.regex.Pattern/compile s java.util.regex.Pattern/DOTALL))]
+      (is (re-find (pattern "^BatchUpdateException:.*SQLException:") except-str))
+      (is (re-find (pattern "Message: Test Message.*Message: Base Message") except-str))
+      (is (re-find (pattern "SQLState: Test State.*SQLState: Base State") except-str)))))
+
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; old example code below here - will eventually be removed once proper tests are written!
 

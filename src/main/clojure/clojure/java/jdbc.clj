@@ -284,3 +284,36 @@ generated keys are returned (as a map)." }
   parameters."
   [results sql-params & body]
   `(with-query-results* ~sql-params (fn [~results] ~@body)))
+
+(defn print-sql-exception
+  "Prints the contents of an SQLException to *out*"
+  [exception]
+  (println
+    (format (str "%s:" \newline
+                 " Message: %s" \newline
+                 " SQLState: %s" \newline
+                 " Error Code: %d")
+            (.getSimpleName (class exception))
+            (.getMessage exception)
+            (.getSQLState exception)
+            (.getErrorCode exception))))
+
+(defn print-sql-exception-chain
+  "Prints a chain of SQLExceptions to *out*"
+  [exception]
+  (loop [e exception]
+    (when e
+      (print-sql-exception e)
+      (recur (.getNextException e)))))
+
+(defn print-update-counts
+  "Prints the update counts from a BatchUpdateException to *out*"
+  [exception]
+  (println "Update counts:")
+  (dorun 
+    (map-indexed 
+      (fn [index count] 
+        (println (format " Statement %d: %s"
+                         index
+                         (get special-counts count count)))) 
+      (.getUpdateCounts exception))))
