@@ -26,7 +26,7 @@ To drop a table, use *drop-table* with the table name.
     (catch Exception _)))
 ```
 ## Accessing table metadata
-To retrieve the metadata for a table, you can operate on the connection itself. In future, functions may be added to make this easier. Note that this uses *clojure.core.resultset-seq* which produces lowercase keywords from entity names.
+To retrieve the metadata for a table, you can operate on the connection itself. In future, functions may be added to make this easier.
 
 ```clj
 (defn db-get-tables
@@ -34,7 +34,7 @@ To retrieve the metadata for a table, you can operate on the connection itself. 
   []
   (sql/with-connection db
     (into []
-          (resultset-seq
+          (sql/resultset-seq
            (-> (sql/connection)
                (.getMetaData)
                (.getTables nil nil nil (into-array ["TABLE" "VIEW"])))))))

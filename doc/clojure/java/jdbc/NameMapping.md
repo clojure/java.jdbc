@@ -33,7 +33,7 @@ A naming strategy may be a single function or a map containing the keys `:entity
 (as-named-keyword quote-dash "item_id") ;; produces :item-id
 ```
 
-The default naming strategy is `{ :entity identity :keyword clojure.string/lower-case }`. clojure.java.jdbc uses its own version of *resultset-seq* that respects the current naming strategy (for entity names mapped to keywords). That is not currently exposed as a public function. You cannot specify a naming strategy that produces strings instead of keywords (but you could use a keyword naming strategy of *identity* to preserve case and spelling).
+The default naming strategy is `{ :entity identity :keyword clojure.string/lower-case }`. clojure.java.jdbc provides its own version of *resultset-seq* that respects the current naming strategy (for entity names mapped to keywords). You cannot specify a naming strategy that produces strings instead of keywords (but you could use a keyword naming strategy of *identity* to preserve case and spelling).
 ## Convenience Functions
 In addition to *as-quoted-identifier*, *as-named-identifier* and *as-named-keyword* described above, clojure.java.jdbc exposes *as-identifier* which maps strings/keywords to entity names under the current naming strategy and *as-keyword* which maps strings/keywords to keywords under the current naming strategy.
 

@@ -36,6 +36,7 @@ are the parameter values to be substituted. In general, operations return
 the number of rows affected, except for a single record insert where any
 generated keys are returned (as a map)." }
    clojure.java.jdbc
+  (:refer-clojure :exclude [resultset-seq])
   (:require clojure.string)
   (:use clojure.java.jdbc.internal))
 
@@ -49,8 +50,19 @@ generated keys are returned (as a map)." }
    Given a keyword, return it as-is."
   as-keyword*)
 
-(def find-connection find-connection*)
-(def connection connection*)
+(def find-connection 
+  "Returns the current database connection (or nil if there is none)"
+  find-connection*)
+
+(def connection 
+  "Returns the current database connection (or throws if there is none)"
+  connection*)
+
+(def resultset-seq
+  "Creates and returns a lazy sequence of structmaps corresponding to
+   the rows in the java.sql.ResultSet rs. Based on clojure.core/resultset-seq
+   but it respects the current naming strategy."
+  resultset-seq*)
 
 (defn as-quoted-str
   "Given a quoting pattern - either a single character or a vector pair of

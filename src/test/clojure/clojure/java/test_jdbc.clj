@@ -214,7 +214,7 @@
   []
   (sql/with-connection db
     (into []
-          (resultset-seq
+          (sql/resultset-seq
            (-> (sql/connection)
                (.getMetaData)
                (.getTables nil nil nil (into-array ["TABLE" "VIEW"])))))))
