@@ -10,16 +10,15 @@ In Maven:
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>java.jdbc</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>0.0.1</version>
 </dependency>
 ```
 
-In Leiningen (you will need to specify the Sonatype OSS repository to pick up the snapshot):
+In Leiningen:
 
 ```clj
-  :repositories { "sonatype" "https://oss.sonatype.org/content/repositories/snapshots" }
   :dependencies [...
-                 ["org.clojure/java.jdbc" "0.0.1-SNAPSHOT"]
+                 ["org.clojure/java.jdbc" "0.0.1"]
                  ...]
 ```
 
