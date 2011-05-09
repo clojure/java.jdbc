@@ -18,7 +18,7 @@ In Leiningen:
 
 ```clj
   :dependencies [...
-                 ["org.clojure/java.jdbc" "0.0.1"]
+                 [org.clojure/java.jdbc "0.0.1"]
                  ...]
 ```
 
