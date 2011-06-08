@@ -40,28 +40,31 @@ generated keys are returned (as a map)." }
   (:require clojure.string)
   (:use clojure.java.jdbc.internal))
 
-(def as-identifier 
-  "Given a string, return it as-is.
-   Given a keyword, return it as a string using the current naming strategy."
+(def ^{:doc "Given a string, return it as-is.  Given a keyword, return
+            it as a string using the current naming strategy."}
+  as-identifier
   as-identifier*)
 
-(def as-keyword 
-  "Given a string, return it as a keyword using the current naming strategy.
-   Given a keyword, return it as-is."
+(def ^{:doc "Given a string, return it as a keyword using the current
+            naming strategy.  Given a keyword, return it as-is."}
+  as-keyword
   as-keyword*)
 
-(def find-connection 
-  "Returns the current database connection (or nil if there is none)"
+(def ^{:doc "Returns the current database connection (or nil if there
+            is none)"}
+  find-connection
   find-connection*)
 
-(def connection 
-  "Returns the current database connection (or throws if there is none)"
+(def ^{:doc "Returns the current database connection (or throws if
+            there is none)"}
+  connection
   connection*)
 
-(def resultset-seq
-  "Creates and returns a lazy sequence of structmaps corresponding to
-   the rows in the java.sql.ResultSet rs. Based on clojure.core/resultset-seq
-   but it respects the current naming strategy."
+(def ^{:doc "Creates and returns a lazy sequence of structmaps
+            corresponding to the rows in the java.sql.ResultSet
+            rs. Based on clojure.core/resultset-seq but it respects
+            the current naming strategy."}
+  resultset-seq
   resultset-seq*)
 
 (defn as-quoted-str

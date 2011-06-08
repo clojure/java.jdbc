@@ -23,7 +23,7 @@
     (javax.naming InitialContext Name)
     (javax.sql DataSource)))
 
-(def ^:dynamic *db* {:connection nil :level 0})
+(def ^{:dynamic true} *db* {:connection nil :level 0})
 
 (def special-counts
   {Statement/EXECUTE_FAILED "EXECUTE_FAILED"
@@ -47,12 +47,14 @@
   ([val]
     (swap! (:rollback *db*) (fn [_] val))))
 
-(def ^:dynamic *as-str* 
-  "The default entity naming strategy is to do nothing."
+(def ^{:dynamic true
+       :doc "The default entity naming strategy is to do nothing."}
+  *as-str* 
   identity)
 
-(def ^:dynamic *as-key*
-  "The default keyword naming strategy is to lowercase the entity."
+(def ^{:dynamic true
+       :doc "The default keyword naming strategy is to lowercase the entity."}
+  *as-key*
   clojure.string/lower-case)
 
 (defn as-str
