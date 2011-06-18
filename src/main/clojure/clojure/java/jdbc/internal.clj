@@ -225,6 +225,21 @@
                     (let [rs (seq (.executeBatch stmt))]
                       (if return-keys (first (resultset-seq* (.getGeneratedKeys stmt))) rs))))))
 
+(defn do-single-prepared-get-keys*
+  "Execute an (optionally parameterized) SQL prepared statement on the
+open database connection. Accepts a single param-group as in
+do-prepared* function. The main difference of this function with
+do-prepared* is that it avoids to execute batch of statements."
+  [sql param-group]
+  (with-open [stmt (.prepareStatement (connection*) sql java.sql.Statement/RETURN_GENERATED_KEYS)]
+    (dorun
+     (map-indexed
+      (fn [index value]
+        (.setObject stmt (inc index) value))
+      param-group))
+    (transaction* (fn [] (let [r (.execute stmt)]
+                          (first (resultset-seq* (.getGeneratedKeys stmt))))))))
+
 (defn with-query-results*
   "Executes a query, then evaluates func passing in a seq of the results as
   an argument. The first argument is a vector containing the (optionally

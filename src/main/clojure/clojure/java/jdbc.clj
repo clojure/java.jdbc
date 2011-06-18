@@ -222,12 +222,15 @@ generated keys are returned (as a map)." }
         template (apply str (interpose "," (replicate n "?")))
         columns (if (seq column-names)
                   (format "(%s)" (apply str (interpose "," column-strs)))
-                  "")]
-    (apply do-prepared*
-           return-keys
-           (format "INSERT INTO %s %s VALUES (%s)"
-                   (as-identifier table) columns template)
-           value-groups)))
+                  "")
+        sql-template (format "INSERT INTO %s %s VALUES (%s)"
+                             (as-identifier table) columns template)]
+    (if return-keys
+      (do-single-prepared-get-keys* sql-template (first value-groups))
+      (apply do-prepared*
+             return-keys
+             sql-template
+             value-groups))))
 
 (defn insert-rows
   "Inserts complete rows into a table. Each row is a vector of values for
