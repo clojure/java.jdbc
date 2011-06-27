@@ -209,7 +209,9 @@
 (defn do-prepared*
   "Executes an (optionally parameterized) SQL prepared statement on the
   open database connection. Each param-group is a seq of values for all of
-  the parameters."
+  the parameters.
+  If return-keys, return the generated keys for the (single) update/insert.
+  else return a seq of update counts (one count for each param-group)."
   [return-keys sql & param-groups]
   (with-open [stmt (if return-keys 
                      (.prepareStatement (connection*) sql java.sql.Statement/RETURN_GENERATED_KEYS)
@@ -222,8 +224,10 @@
           param-group))
       (.addBatch stmt))
     (transaction* (fn [] 
-                    (let [rs (seq (.executeBatch stmt))]
-                      (if return-keys (first (resultset-seq* (.getGeneratedKeys stmt))) rs))))))
+                    (if return-keys
+                      (do (.executeUpdate stmt)
+                        (first (resultset-seq* (.getGeneratedKeys stmt))))
+                      (seq (.executeBatch stmt)))))))
 
 (defn with-query-results*
   "Executes a query, then evaluates func passing in a seq of the results as
