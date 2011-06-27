@@ -10,7 +10,7 @@ In Maven:
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>java.jdbc</artifactId>
-  <version>0.0.1</version>
+  <version>0.0.2</version>
 </dependency>
 ```
 
@@ -18,7 +18,7 @@ In Leiningen:
 
 ```clj
   :dependencies [...
-                 [org.clojure/java.jdbc "0.0.1"]
+                 [org.clojure/java.jdbc "0.0.2"]
                  ...]
 ```
 
