@@ -83,7 +83,7 @@ Note that if a string is used for an entity name, rather than a keyword, it is p
 (as-named-keyword quote-dash "item_id") ;; produces :item-id
 </code></p>
 
-<p>The default naming strategy is <code>{ :entity identity :keyword clojure.string/lower-case }</code>. clojure.java.jdbc uses its own version of <em>resultset-seq</em> that respects the current naming strategy (for entity names mapped to keywords). That is not currently exposed as a public function. You cannot specify a naming strategy that produces strings instead of keywords (but you could use a keyword naming strategy of <em>identity</em> to preserve case and spelling).</p>
+<p>The default naming strategy is <code>{ :entity identity :keyword clojure.string/lower-case }</code>. clojure.java.jdbc provides its own version of <em>resultset-seq</em> that respects the current naming strategy (for entity names mapped to keywords). You cannot specify a naming strategy that produces strings instead of keywords (but you could use a keyword naming strategy of <em>identity</em> to preserve case and spelling).</p>
 
 <h2>Convenience Functions</h2>
 

@@ -78,7 +78,7 @@ namespace.
 
 <h2>Accessing table metadata</h2>
 
-<p>To retrieve the metadata for a table, you can operate on the connection itself. In future, functions may be added to make this easier. Note that this uses <em>clojure.core.resultset-seq</em> which produces lowercase keywords from entity names.</p>
+<p>To retrieve the metadata for a table, you can operate on the connection itself. In future, functions may be added to make this easier.</p>
 
 <p><code>clj
 (defn db-get-tables
@@ -86,7 +86,7 @@ namespace.
   []
   (sql/with-connection db
     (into []
-          (resultset-seq
+          (sql/resultset-seq
            (-&gt; (sql/connection)
                (.getMetaData)
                (.getTables nil nil nil (into-array ["TABLE" "VIEW"])))))))
