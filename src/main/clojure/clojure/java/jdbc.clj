@@ -185,21 +185,35 @@ generated keys are returned (as a map)." }
   [sql & param-groups]
   (apply do-prepared* false sql param-groups))
 
+(defn create-table-ddl
+  "Given a table name and column specs with an optional table-spec
+   return the DDL string for creating a table based on that."
+  [name & specs]
+  (let [split-specs (partition-by #(= :table-spec %) specs)
+        col-specs (first split-specs)
+        table-spec (first (second (rest split-specs)))
+        table-spec-str (or (and table-spec (str " " table-spec)) "")
+        specs-to-string (fn [specs]
+                          (apply str
+                                 (map as-identifier
+                                      (apply concat
+                                             (interpose [", "]
+                                                        (map (partial interpose " ") specs))))))]
+    (format "CREATE TABLE %s (%s)%s"
+            (as-identifier name)
+            (specs-to-string col-specs)
+            table-spec-str)))
+
 (defn create-table
   "Creates a table on the open database connection given a table name and
   specs. Each spec is either a column spec: a vector containing a column
   name and optionally a type and other constraints, or a table-level
-  constraint: a vector containing words that express the constraint. All
-  words used to describe the table may be supplied as strings or keywords."
+  constraint: a vector containing words that express the constraint. An
+  optional suffix to the CREATE TABLE DDL describing table attributes may
+  by provided as :table-spec {table-attributes-string}. All words used to
+  describe the table may be supplied as strings or keywords."
   [name & specs]
-  (do-commands
-    (format "CREATE TABLE %s (%s)"
-            (as-identifier name)
-            (apply str
-                   (map as-identifier
-                        (apply concat
-                               (interpose [", "]
-                                          (map (partial interpose " ") specs))))))))
+  (do-commands (apply create-table-ddl name specs)))
 
 (defn drop-table
   "Drops a table on the open database connection given its name, a string

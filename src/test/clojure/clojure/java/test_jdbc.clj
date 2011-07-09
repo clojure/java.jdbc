@@ -22,7 +22,7 @@
 
 (ns clojure.java.test-jdbc
   (:use clojure.test)
-  (:use [clojure.java.jdbc :as sql :only ()]))
+  (:require [clojure.java.jdbc :as sql]))
 
 ;; basic tests for keyword / entity conversion
 
@@ -84,6 +84,14 @@
       (is (re-find (pattern "^BatchUpdateException:.*SQLException:") except-str))
       (is (re-find (pattern "Message: Test Message.*Message: Base Message") except-str))
       (is (re-find (pattern "SQLState: Test State.*SQLState: Base State") except-str)))))
+
+;; DDL tests
+
+(deftest test-create-table-ddl
+  (is (= "CREATE TABLE table (col1 int, col2 int)"
+         (sql/create-table-ddl :table ["col1 int"] [:col2 :int])))
+  (is (= "CREATE TABLE table (col1 int, col2 int) ENGINE=MyISAM"
+         (sql/create-table-ddl :table [:col1 "int"] ["col2" :int] :table-spec "ENGINE=MyISAM"))))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; old example code below here - will eventually be removed once proper tests are written!
