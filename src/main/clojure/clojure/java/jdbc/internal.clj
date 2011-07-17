@@ -154,12 +154,6 @@
     (binding [*db* (assoc *db* :connection con :level 0 :rollback (atom false))]
       (func))))
 
-(defn throw-rollback
-  "Sets rollback and throws a wrapped exception"
-  [e]
-  (rollback true)
-  (throw (Exception. (format "transaction rolled back: %s" (.getMessage e)) e)))
-
 (defn transaction*
   "Evaluates func as a transaction on the open database connection. Any
   nested transactions are absorbed into the outermost transaction. By
@@ -176,13 +170,15 @@
         (io!
           (.setAutoCommit con false)
           (try
-            (func)
-            (catch Exception e
-              (throw-rollback e))
-            (finally
+            (let [result (func)]
               (if (rollback)
                 (.rollback con)
                 (.commit con))
+              result)
+            (catch Exception e
+              (.rollback con)
+              (throw e))
+            (finally
               (rollback false)
               (.setAutoCommit con auto-commit)))))
       (func))))
