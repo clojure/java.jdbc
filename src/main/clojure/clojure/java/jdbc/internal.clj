@@ -79,15 +79,15 @@
   "Given a keyword, convert it to a string using the current naming
    strategy.
    Given a string, return it as-is."
-  [x]
-  (as-str *as-str* x))
+  ([x] (as-identifier* x *as-str*))
+  ([x f-entity] (as-str f-entity x)))
 
 (defn as-keyword*
   "Given an entity name (string), convert it to a keyword using the
    current naming strategy.
    Given a keyword, return it as-is."
-  [x]
-  (as-key *as-key* x))
+  ([x] (as-keyword* x *as-key*))
+  ([x f-keyword] (as-key f-keyword x)))
 
 (defn- ^Properties as-properties
   "Convert any seq of pairs to a java.utils.Properties instance.

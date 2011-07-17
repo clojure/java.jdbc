@@ -85,7 +85,7 @@ generated keys are returned (as a map)." }
    a map containing :entity and/or :keyword keys which provide the entity naming
    strategy and/or keyword naming strategy respectively."
   [naming-strategy x]
-  (binding [*as-str* (if (map? naming-strategy) (or (:entity naming-strategy) identity) naming-strategy)] (as-identifier x)))
+  (as-identifier x (if (map? naming-strategy) (or (:entity naming-strategy) identity) naming-strategy)))
 
 (defn as-named-keyword
   "Given a naming strategy and a string, return the string as a keyword using the 
@@ -97,7 +97,7 @@ generated keys are returned (as a map)." }
    Note that providing a single function will cause the default keyword naming
    strategy to be used!"
   [naming-strategy x]
-  (binding [*as-key* (if (and (map? naming-strategy) (:keyword naming-strategy)) (:keyword naming-strategy) clojure.string/lower-case)] (as-keyword x)))
+  (as-keyword x (if (and (map? naming-strategy) (:keyword naming-strategy)) (:keyword naming-strategy) clojure.string/lower-case)))
 
 (defn as-quoted-identifier
   "Given a quote pattern - either a single character or a pair of characters in
@@ -107,7 +107,7 @@ generated keys are returned (as a map)." }
      (as-quoted-identifier X :name) will return XnameX as a string.
      (as-quoted-identifier [A B] :name) will return AnameB as a string."
   [q x]
-  (binding [*as-str* (partial as-quoted-str q)] (as-identifier x)))
+  (as-identifier x (partial as-quoted-str q)))
 
 (defmacro with-naming-strategy
   "Evaluates body in the context of a naming strategy."
