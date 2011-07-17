@@ -36,6 +36,7 @@ are the parameter values to be substituted. In general, operations return
 the number of rows affected, except for a single record insert where any
 generated keys are returned (as a map)." }
    clojure.java.jdbc
+  (:import [java.sql BatchUpdateException Connection SQLException Statement])
   (:refer-clojure :exclude [resultset-seq])
   (:require clojure.string)
   (:use clojure.java.jdbc.internal))
@@ -172,8 +173,8 @@ generated keys are returned (as a map)." }
 (defn do-commands
   "Executes SQL commands on the open database connection."
   [& commands]
-  (with-open [stmt (.createStatement (connection))]
-    (doseq [cmd commands]
+  (with-open [^Statement stmt (let [^Connection con (connection)] (.createStatement con))]
+    (doseq [^String cmd commands]
       (.addBatch stmt cmd))
     (transaction
       (seq (.executeBatch stmt)))))
@@ -314,20 +315,21 @@ generated keys are returned (as a map)." }
 
 (defn print-sql-exception
   "Prints the contents of an SQLException to *out*"
-  [exception]
-  (println
-    (format (str "%s:" \newline
-                 " Message: %s" \newline
-                 " SQLState: %s" \newline
-                 " Error Code: %d")
-            (.getSimpleName (class exception))
-            (.getMessage exception)
-            (.getSQLState exception)
-            (.getErrorCode exception))))
+  [^SQLException exception]
+  (let [^Class exception-class (class exception)]
+    (println
+      (format (str "%s:" \newline
+                   " Message: %s" \newline
+                   " SQLState: %s" \newline
+                   " Error Code: %d")
+              (.getSimpleName exception-class)
+              (.getMessage exception)
+              (.getSQLState exception)
+              (.getErrorCode exception)))))
 
 (defn print-sql-exception-chain
   "Prints a chain of SQLExceptions to *out*"
-  [exception]
+  [^SQLException exception]
   (loop [e exception]
     (when e
       (print-sql-exception e)
@@ -335,7 +337,7 @@ generated keys are returned (as a map)." }
 
 (defn print-update-counts
   "Prints the update counts from a BatchUpdateException to *out*"
-  [exception]
+  [^BatchUpdateException exception]
   (println "Update counts:")
   (dorun 
     (map-indexed 

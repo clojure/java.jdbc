@@ -18,7 +18,7 @@
   (:require clojure.string)
   (:import
     (clojure.lang RT)
-    (java.sql BatchUpdateException DriverManager SQLException Statement)
+    (java.sql BatchUpdateException Connection DriverManager PreparedStatement ResultSet SQLException Statement)
     (java.util Hashtable Map Properties)
     (javax.naming InitialContext Name)
     (javax.sql DataSource)))
@@ -36,7 +36,7 @@
 
 (defn connection*
   "Returns the current database connection (or throws if there is none)"
-  []
+  ^Connection []
   (or (find-connection*)
       (throw (Exception. "no current database connection"))))
 
@@ -135,22 +135,23 @@
       (RT/loadClassForName classname)
       (DriverManager/getConnection url (as-properties etc)))
     (and datasource username password)
-    (.getConnection datasource username password)
+    (.getConnection ^DataSource datasource ^String username ^String password)
     datasource
-    (.getConnection datasource)
+    (.getConnection ^DataSource datasource)
     name
-    (let [env (and environment (Hashtable. environment))
+    (let [env (and environment (Hashtable. ^Map environment))
           context (InitialContext. env)
-          datasource (.lookup context name)]
+          ^DataSource datasource (.lookup context ^String name)]
       (.getConnection datasource))
     :else
-    (throw (IllegalArgumentException. (format "db-spec %s is missing a required parameter" db-spec)))))
+    (let [^String msg (format "db-spec %s is missing a required parameter" db-spec)]
+      (throw (IllegalArgumentException. msg)))))
 
 (defn with-connection*
   "Evaluates func in the context of a new connection to a database then
   closes the connection."
   [db-spec func]
-  (with-open [con (get-connection db-spec)]
+  (with-open [^Connection con (get-connection db-spec)]
     (binding [*db* (assoc *db* :connection con :level 0 :rollback (atom false))]
       (func))))
 
@@ -165,7 +166,7 @@
   [func]
   (binding [*db* (update-in *db* [:level] inc)]
     (if (= (:level *db*) 1)
-      (let [con (connection*)
+      (let [^Connection con (connection*)
             auto-commit (.getAutoCommit con)]
         (io!
           (.setAutoCommit con false)
@@ -187,7 +188,7 @@
   "Creates and returns a lazy sequence of structmaps corresponding to
    the rows in the java.sql.ResultSet rs. Based on clojure.core/resultset-seq
    but it respects the current naming strategy."
-  [^java.sql.ResultSet rs]
+  [^ResultSet rs]
     (let [rsmeta (.getMetaData rs)
           idxs (range 1 (inc (.getColumnCount rsmeta)))
           keys (map (comp keyword *as-key*)
@@ -204,7 +205,7 @@
 
 (defn- set-parameters
   "Add the parameters to the given statement."
-  [stmt params]
+  [^PreparedStatement stmt params]
   (dorun
     (map-indexed
       (fn [ix value]
@@ -216,8 +217,8 @@
   open database connection. Each param-group is a seq of values for all of
   the parameters.
   Return the generated keys for the (single) update/insert."
-  [sql & param-groups]
-  (with-open [stmt (.prepareStatement (connection*) sql java.sql.Statement/RETURN_GENERATED_KEYS)]
+  [^String sql & param-groups]
+  (with-open [^PreparedStatement stmt (let [^Connection con (connection*)] (.prepareStatement con sql java.sql.Statement/RETURN_GENERATED_KEYS))]
     (doseq [param-group param-groups]
       (set-parameters stmt param-group)
       (.addBatch stmt))
@@ -230,7 +231,7 @@
   the parameters.
   Return a seq of update counts (one count for each param-group)."
   [sql & param-groups]
-  (with-open [stmt (.prepareStatement (connection*) sql)]
+  (with-open [^PreparedStatement stmt (let [^Connection con (connection*)] (.prepareStatement con sql))]
     (doseq [param-group param-groups]
       (set-parameters stmt param-group)
       (.addBatch stmt))
@@ -242,13 +243,15 @@
   parameterized) sql query string followed by values for any parameters."
   [[sql & params :as sql-params] func]
   (when-not (vector? sql-params)
-    (throw (IllegalArgumentException. (format "\"%s\" expected %s %s, found %s %s"
-                                              "sql-params"
-                                              "vector"
-                                              "[sql param*]"
-                                              (.getName (class sql-params))
-                                              (pr-str sql-params)))))
-  (with-open [stmt (.prepareStatement (connection*) sql)]
+    (let [^Class sql-params-class (class sql-params)
+          ^String msg (format "\"%s\" expected %s %s, found %s %s"
+                              "sql-params"
+                              "vector"
+                              "[sql param*]"
+                              (.getName sql-params-class)
+                              (pr-str sql-params))] 
+      (throw (IllegalArgumentException. msg))))
+  (with-open [^PreparedStatement stmt (let [^Connection con (connection*)] (.prepareStatement con sql))]
     (set-parameters stmt params)
     (with-open [rset (.executeQuery stmt)]
       (func (resultset-seq* rset)))))
