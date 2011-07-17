@@ -183,7 +183,7 @@ generated keys are returned (as a map)." }
   open database connection. Each param-group is a seq of values for all of
   the parameters."
   [sql & param-groups]
-  (apply do-prepared* false sql param-groups))
+  (apply do-prepared* sql param-groups))
 
 (defn create-table-ddl
   "Given a table name and column specs with an optional table-spec
@@ -233,12 +233,12 @@ generated keys are returned (as a map)." }
   (let [column-strs (map as-identifier column-names)
         n (count (first value-groups))
         return-keys (= 1 (count value-groups))
+        prepared-statement (if return-keys do-prepared-return-keys* do-prepared*)
         template (apply str (interpose "," (replicate n "?")))
         columns (if (seq column-names)
                   (format "(%s)" (apply str (interpose "," column-strs)))
                   "")]
-    (apply do-prepared*
-           return-keys
+    (apply prepared-statement
            (format "INSERT INTO %s %s VALUES (%s)"
                    (as-identifier table) columns template)
            value-groups)))
@@ -273,7 +273,6 @@ generated keys are returned (as a map)." }
   [table where-params]
   (let [[where & params] where-params]
     (do-prepared*
-      false
       (format "DELETE FROM %s WHERE %s"
               (as-identifier table) where)
       params)))
@@ -288,7 +287,6 @@ generated keys are returned (as a map)." }
         column-strs (map as-identifier (keys record))
         columns (apply str (concat (interpose "=?, " column-strs) "=?"))]
     (do-prepared*
-      false
       (format "UPDATE %s SET %s WHERE %s"
               (as-identifier table) columns where)
       (concat (vals record) params))))

@@ -206,28 +206,39 @@
                    (cons (apply struct row-struct (row-values)) (lazy-seq (thisfn)))))]
       (rows)))
 
+(defn- set-parameters
+  "Add the parameters to the given statement."
+  [stmt params]
+  (dorun
+    (map-indexed
+      (fn [ix value]
+        (.setObject stmt (inc ix) value))
+      params)))
+
+(defn do-prepared-return-keys*
+  "Executes an (optionally parameterized) SQL prepared statement on the
+  open database connection. Each param-group is a seq of values for all of
+  the parameters.
+  Return the generated keys for the (single) update/insert."
+  [sql & param-groups]
+  (with-open [stmt (.prepareStatement (connection*) sql java.sql.Statement/RETURN_GENERATED_KEYS)]
+    (doseq [param-group param-groups]
+      (set-parameters stmt param-group)
+      (.addBatch stmt))
+    (transaction* (fn [] (do (.executeUpdate stmt)
+                           (first (resultset-seq* (.getGeneratedKeys stmt))))))))
+
 (defn do-prepared*
   "Executes an (optionally parameterized) SQL prepared statement on the
   open database connection. Each param-group is a seq of values for all of
   the parameters.
-  If return-keys, return the generated keys for the (single) update/insert.
-  else return a seq of update counts (one count for each param-group)."
-  [return-keys sql & param-groups]
-  (with-open [stmt (if return-keys 
-                     (.prepareStatement (connection*) sql java.sql.Statement/RETURN_GENERATED_KEYS)
-                     (.prepareStatement (connection*) sql))]
+  Return a seq of update counts (one count for each param-group)."
+  [sql & param-groups]
+  (with-open [stmt (.prepareStatement (connection*) sql)]
     (doseq [param-group param-groups]
-      (dorun 
-        (map-indexed 
-          (fn [index value] 
-            (.setObject stmt (inc index) value)) 
-          param-group))
+      (set-parameters stmt param-group)
       (.addBatch stmt))
-    (transaction* (fn [] 
-                    (if return-keys
-                      (do (.executeUpdate stmt)
-                        (first (resultset-seq* (.getGeneratedKeys stmt))))
-                      (seq (.executeBatch stmt)))))))
+    (transaction* (fn [] (seq (.executeBatch stmt))))))
 
 (defn with-query-results*
   "Executes a query, then evaluates func passing in a seq of the results as
@@ -242,10 +253,6 @@
                                               (.getName (class sql-params))
                                               (pr-str sql-params)))))
   (with-open [stmt (.prepareStatement (connection*) sql)]
-    (dorun 
-      (map-indexed
-        (fn [index value] 
-          (.setObject stmt (inc index) value)) 
-        params))
+    (set-parameters stmt params)
     (with-open [rset (.executeQuery stmt)]
       (func (resultset-seq* rset)))))
