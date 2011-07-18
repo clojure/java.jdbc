@@ -183,6 +183,17 @@ generated keys are returned (as a map)." }
     (transaction
       (seq (.executeBatch stmt)))))
 
+(defn prepare-statement
+  "Create a prepared statement from a connection, a SQL string and an
+   optional list of parameters:
+     :return-keys true | false - default false
+     :result-type :forward-only | :scroll-insensitive | :scroll-sensitive
+     :concurrency :read-only | :updatable
+     :fetch-size n
+     :max-rows n"
+  [con sql & options]
+  (apply prepare-statement* con sql options))
+
 (defn do-prepared
   "Executes an (optionally parameterized) SQL prepared statement on the
   open database connection. Each param-group is a seq of values for all of
