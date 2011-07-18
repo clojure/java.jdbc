@@ -24,6 +24,18 @@
   (:use clojure.test)
   (:require [clojure.java.jdbc :as sql]))
 
+;; set these true/false depending on whether you have the local database available:
+
+(def test-mysql false)
+
+;; database connections used for testing:
+
+(def mysql-db {:classname "com.mysql.jdbc.Driver"
+               :subprotocol "mysql"
+               :subname "//127.0.0.1:3306/clojure_test"
+               :user "clojure_test"
+               :password "clojure_test"})
+
 ;; basic tests for keyword / entity conversion
 
 (deftest test-as-identifier
@@ -92,6 +104,26 @@
          (sql/create-table-ddl :table ["col1 int"] [:col2 :int])))
   (is (= "CREATE TABLE table (col1 int, col2 int) ENGINE=MyISAM"
          (sql/create-table-ddl :table [:col1 "int"] ["col2" :int] :table-spec "ENGINE=MyISAM"))))
+
+(deftest test-create-drop-table
+  (when test-mysql
+    (sql/with-connection mysql-db
+      (try
+        (sql/create-table :fruit
+                          [:name "VARCHAR(32)" "PRIMARY KEY"]
+                          [:appearance "VARCHAR(32)"]
+                          [:cost :int]
+                          [:grade :real]
+                          :table-spec "ENGINE=MyISAM")
+        (is (= 0 (sql/with-connection
+                   mysql-db
+                   (sql/with-query-results res ["SELECT * FROM fruit"] (count res)))))
+        (catch Exception _
+          (println "Unable to create/read :fruit")))
+      (try
+        (sql/drop-table :fruit)
+        (catch Exception _
+          (println "Unable to drop :fruit"))))))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; old example code below here - will eventually be removed once proper tests are written!
