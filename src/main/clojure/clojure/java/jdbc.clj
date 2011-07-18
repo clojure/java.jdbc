@@ -111,7 +111,11 @@ generated keys are returned (as a map)." }
   (as-identifier x (partial as-quoted-str q)))
 
 (defmacro with-naming-strategy
-  "Evaluates body in the context of a naming strategy."
+  "Evaluates body in the context of a naming strategy.
+   The naming strategy is either a function - the entity naming strategy - or
+   a map containing :entity and/or :keyword keys which provide the entity naming
+   strategy and/or the keyword naming strategy respectively. The default entity
+   naming strategy is identity; the default keyword naming strategy is lower-case."
   [naming-strategy & body ]
   `(binding [*as-str* (if (map? ~naming-strategy) (or (:entity ~naming-strategy) identity) ~naming-strategy)
              *as-key* (if (map? ~naming-strategy) (or (:keyword ~naming-strategy) clojure.string/lower-case))] ~@body))
