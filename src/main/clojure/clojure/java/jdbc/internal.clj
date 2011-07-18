@@ -212,13 +212,56 @@
         (.setObject stmt (inc ix) value))
       params)))
 
+(def ^{:private true
+       :doc "Map friendly :type values to ResultSet constants."} 
+  result-set-type
+  {:forward-only ResultSet/TYPE_FORWARD_ONLY
+   :scroll-insensitive ResultSet/TYPE_SCROLL_INSENSITIVE
+   :scroll-sensitive ResultSet/TYPE_SCROLL_SENSITIVE})
+
+(def ^{:private true
+       :doc "Map friendly :concurrency values to ResultSet constants."} 
+  result-set-concurrency
+  {:read-only ResultSet/CONCUR_READ_ONLY
+   :updatable ResultSet/CONCUR_UPDATABLE})
+
+(def ^{:private true
+       :doc "Map friendly :cursors values to ResultSet constants."} 
+  result-set-holdability
+  {:hold ResultSet/HOLD_CURSORS_OVER_COMMIT
+   :close ResultSet/CLOSE_CURSORS_AT_COMMIT})
+
+(defn prepare-statement*
+  "Create a prepared statement from a connection, a SQL string and an
+   optional list of parameters:
+     :return-keys true | false - default false
+     :result-type :forward-only | :scroll-insensitive | :scroll-sensitive
+     :concurrency :read-only | :updatable
+     :fetch-size n
+     :max-rows n"
+  [^Connection con ^String sql & {:keys [return-keys result-type concurrency cursors fetch-size max-rows]}]
+  (let [^PreparedStatement stmt (cond
+                                  return-keys (.prepareStatement con sql java.sql.Statement/RETURN_GENERATED_KEYS)
+                                  (and result-type concurrency) (if cursors
+                                                                  (.prepareStatement con sql 
+                                                                                     (result-type result-set-type)
+                                                                                     (concurrency result-set-concurrency)
+                                                                                     (cursors result-set-holdability))
+                                                                  (.prepareStatement con sql 
+                                                                                     (result-type result-set-type)
+                                                                                     (concurrency result-set-concurrency)))
+                                  :else (.prepareStatement con sql))]
+    (when fetch-size (.setFetchSize stmt fetch-size))
+    (when max-rows (.setMaxRows stmt max-rows))
+    stmt))
+
 (defn do-prepared-return-keys*
   "Executes an (optionally parameterized) SQL prepared statement on the
   open database connection. Each param-group is a seq of values for all of
   the parameters.
   Return the generated keys for the (single) update/insert."
   [^String sql & param-groups]
-  (with-open [^PreparedStatement stmt (let [^Connection con (connection*)] (.prepareStatement con sql java.sql.Statement/RETURN_GENERATED_KEYS))]
+  (with-open [^PreparedStatement stmt (prepare-statement* (connection*) sql :return-keys true)]
     (doseq [param-group param-groups]
       (set-parameters stmt param-group)
       (.addBatch stmt))
@@ -231,7 +274,7 @@
   the parameters.
   Return a seq of update counts (one count for each param-group)."
   [sql & param-groups]
-  (with-open [^PreparedStatement stmt (let [^Connection con (connection*)] (.prepareStatement con sql))]
+  (with-open [^PreparedStatement stmt (prepare-statement* (connection*) sql)]
     (doseq [param-group param-groups]
       (set-parameters stmt param-group)
       (.addBatch stmt))
@@ -239,9 +282,11 @@
 
 (defn with-query-results*
   "Executes a query, then evaluates func passing in a seq of the results as
-  an argument. The first argument is a vector containing the (optionally
-  parameterized) sql query string followed by values for any parameters."
-  [[sql & params :as sql-params] func]
+  an argument. The first argument is a vector containing, an optional map of
+  arguments for preparing the statement from the connection (or a PreparedStatement
+  object directly), followed by the (optionally parameterized) sql query string
+  followed by values for any parameters."
+  [sql-params func]
   (when-not (vector? sql-params)
     (let [^Class sql-params-class (class sql-params)
           ^String msg (format "\"%s\" expected %s %s, found %s %s"
@@ -251,7 +296,12 @@
                               (.getName sql-params-class)
                               (pr-str sql-params))] 
       (throw (IllegalArgumentException. msg))))
-  (with-open [^PreparedStatement stmt (let [^Connection con (connection*)] (.prepareStatement con sql))]
-    (set-parameters stmt params)
-    (with-open [rset (.executeQuery stmt)]
-      (func (resultset-seq* rset)))))
+  (let [special (first sql-params)
+        sql-is-first (string? special)
+        sql (if sql-is-first special (second sql-params))
+        params (vec (if sql-is-first (rest sql-params) (rest (rest sql-params))))
+        prepare-args (when (map? special) (flatten (seq special)))]
+    (with-open [^PreparedStatement stmt (if (instance? PreparedStatement special) special (apply prepare-statement* (connection*) sql prepare-args))]
+      (set-parameters stmt params)
+      (with-open [rset (.executeQuery stmt)]
+        (func (resultset-seq* rset))))))
