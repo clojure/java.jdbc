@@ -241,7 +241,11 @@
      :max-rows n"
   [^Connection con ^String sql & {:keys [return-keys result-type concurrency cursors fetch-size max-rows]}]
   (let [^PreparedStatement stmt (cond
-                                  return-keys (.prepareStatement con sql java.sql.Statement/RETURN_GENERATED_KEYS)
+                                  return-keys (try
+                                                (.prepareStatement con sql java.sql.Statement/RETURN_GENERATED_KEYS)
+                                                (catch Exception _
+                                                  ;; assume it is unsupported and try basic PreparedStatement:
+                                                  (.prepareStatement con sql)))
                                   (and result-type concurrency) (if cursors
                                                                   (.prepareStatement con sql 
                                                                                      (result-type result-set-type)
@@ -265,8 +269,12 @@
     (doseq [param-group param-groups]
       (set-parameters stmt param-group)
       (.addBatch stmt))
-    (transaction* (fn [] (do (.executeUpdate stmt)
-                           (first (resultset-seq* (.getGeneratedKeys stmt))))))))
+    (transaction* (fn [] (let [counts (.executeUpdate stmt)]
+                           (try
+                             (first (resultset-seq* (.getGeneratedKeys stmt)))
+                             (catch Exception _
+                               ;; assume generated keys is unsupported and return counts instead: 
+                               counts)))))))
 
 (defn do-prepared*
   "Executes an (optionally parameterized) SQL prepared statement on the
