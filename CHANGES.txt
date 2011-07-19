@@ -1,3 +1,15 @@
+Changes in 0.0.5-SNAPSHOT:
+
+* Add prepare-statement function to ease creation of PreparedStatement with common options:
+  - see docstring for details
+* with-query-results now allows the first item in the SQL/params vector to be either:
+  - a PreparedStatement object, followed by any parameters it needs
+  - a SQL query string, followed by any parameters it needs
+  - options (for prepareStatement), a SQL query string, followed by any parameters it needs
+* Add support for databases that cannot return generated keys (e.g., HSQLDB)
+  - insert operations silently return the insert counts instead of generated keys
+  - it is the user's responsibility to handle this if you're using such a database!
+ 
 Changes in 0.0.4:
 
 * Fix JDBC-2 by allowing :table-spec {string} at the end of create-table arguments:
