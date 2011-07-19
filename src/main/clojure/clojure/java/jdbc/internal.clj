@@ -290,10 +290,13 @@
 
 (defn with-query-results*
   "Executes a query, then evaluates func passing in a seq of the results as
-  an argument. The first argument is a vector containing, an optional map of
-  arguments for preparing the statement from the connection (or a PreparedStatement
-  object directly), followed by the (optionally parameterized) sql query string
-  followed by values for any parameters."
+  an argument. The first argument is a vector containing either:
+    [sql & params] - a SQL query, followed by any parameters it needs
+    [stmt & params] - a PreparedStatement, followed by any parameters it needs
+                      (the PreparedStatement already contains the SQL query)
+    [options sql & params] - options and a SQL query for creating a
+                      PreparedStatement, follwed by any parameters it needs
+  See prepare-statement* for supported options."
   [sql-params func]
   (when-not (vector? sql-params)
     (let [^Class sql-params-class (class sql-params)
@@ -306,7 +309,12 @@
       (throw (IllegalArgumentException. msg))))
   (let [special (first sql-params)
         sql-is-first (string? special)
-        sql (if sql-is-first special (second sql-params))
+        options-are-first (map? special)
+        sql (cond sql-is-first special 
+                  options-are-first (second sql-params))
+        params (vec (cond sql-is-first (rest sql-params)
+                          options-are-first (rest (rest sql-params))
+                          :else (rest sql-params)))
         params (vec (if sql-is-first (rest sql-params) (rest (rest sql-params))))
         prepare-args (when (map? special) (flatten (seq special)))]
     (with-open [^PreparedStatement stmt (if (instance? PreparedStatement special) special (apply prepare-statement* (connection*) sql prepare-args))]

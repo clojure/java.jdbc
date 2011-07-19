@@ -322,9 +322,13 @@ generated keys are returned (as a map)." }
 
 (defmacro with-query-results
   "Executes a query, then evaluates body with results bound to a seq of the
-  results. sql-params is a vector containing a string providing
-  the (optionally parameterized) SQL query followed by values for any
-  parameters."
+  results. sql-params is a vector containing either:
+    [sql & params] - a SQL query, followed by any parameters it needs
+    [stmt & params] - a PreparedStatement, followed by any parameters it needs
+                      (the PreparedStatement already contains the SQL query)
+    [options sql & params] - options and a SQL query for creating a
+                      PreparedStatement, follwed by any parameters it needs
+  See prepare-statement for supported options."
   [results sql-params & body]
   `(with-query-results* ~sql-params (fn [~results] ~@body)))
 
