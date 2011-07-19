@@ -1,4 +1,4 @@
-Changes in 0.0.5-SNAPSHOT:
+Changes in 0.0.5:
 
 * Add prepare-statement function to ease creation of PreparedStatement with common options:
   - see docstring for details
