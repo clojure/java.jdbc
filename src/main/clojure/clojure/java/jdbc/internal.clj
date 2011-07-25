@@ -178,7 +178,15 @@
               result)
             (catch Exception e
               (.rollback con)
-              (throw e))
+              ;; This ugliness makes it easier to catch SQLException objects
+              ;; rather than something wrapped in a RuntimeException which
+              ;; can really obscure your code when working with JDBC from
+              ;; Clojure... :(
+              (letfn [(throw-non-rte [ex]
+                        (cond (instance? java.sql.SQLException ex) (throw ex)
+                              (and (instance? RuntimeException ex) (.getCause ex)) (throw-non-rte (.getCause ex))
+                              :else (throw ex)))]
+                     (throw-non-rte e)))
             (finally
               (rollback false)
               (.setAutoCommit con auto-commit)))))
