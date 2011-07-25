@@ -2,8 +2,8 @@ Changes in 0.0.5:
 
 * Add prepare-statement function to ease creation of PreparedStatement with common options:
   - see docstring for details
-* with-query-results now allows the first item in the SQL/params vector to be either:
-  - a PreparedStatement object, followed by any parameters it needs
+* with-query-results now allows the SQL/params vector to be:
+  - a PreparedStatement object, followed by any parameters the SQL needs
   - a SQL query string, followed by any parameters it needs
   - options (for prepareStatement), a SQL query string, followed by any parameters it needs
 * Add support for databases that cannot return generated keys (e.g., HSQLDB)
