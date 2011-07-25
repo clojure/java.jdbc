@@ -1,3 +1,13 @@
+Changes in 0.0.6-SNAPSHOT:
+
+* Move former tests to test-utilities namespace - these do not touch a database
+* Convert old "test" examples into real tests against real databases
+  - tested locally against MySQL, Apache Derby, HSQLDB
+  - build system should run against Apache Derby, HSQLSB
+  - will add additional databases later
+ * Fix JDBC-12 by removing batch when doing a single update
+ * Remove wrapping of exceptions in transactions to make it easier to work with SQLExceptions
+
 Changes in 0.0.5:
 
 * Add prepare-statement function to ease creation of PreparedStatement with common options:
