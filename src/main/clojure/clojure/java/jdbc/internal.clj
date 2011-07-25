@@ -261,14 +261,12 @@
 
 (defn do-prepared-return-keys*
   "Executes an (optionally parameterized) SQL prepared statement on the
-  open database connection. Each param-group is a seq of values for all of
+  open database connection. The param-group is a seq of values for all of
   the parameters.
   Return the generated keys for the (single) update/insert."
-  [^String sql & param-groups]
+  [^String sql param-group]
   (with-open [^PreparedStatement stmt (prepare-statement* (connection*) sql :return-keys true)]
-    (doseq [param-group param-groups]
-      (set-parameters stmt param-group)
-      (.addBatch stmt))
+    (set-parameters stmt param-group)
     (transaction* (fn [] (let [counts (.executeUpdate stmt)]
                            (try
                              (first (resultset-seq* (.getGeneratedKeys stmt)))
