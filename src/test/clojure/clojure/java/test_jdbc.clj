@@ -8,11 +8,11 @@
 ;;
 ;;  test_jdbc.clj
 ;;
-;;  test/example for clojure.java.jdbc
-;;
-;;  most of this file is still example code (which has been duplicated to
-;;  the documentation in doc/clojure/java/jdbc/) but actual tests are being
-;;  added near the top of the file
+;;  This namespace contains tests that exercise the JDBC portion of java.jdbc
+;;  so these tests expect databases to be available. Embedded databases can
+;;  be tested without external infrastructure (Apache Derby, HSQLDB). Other
+;;  databases will be available for testing in different environments. The
+;;  available databases for testing can be configured below.
 ;;
 ;;  scgilardi (gmail)
 ;;  Created 13 September 2008
@@ -24,9 +24,12 @@
   (:use clojure.test)
   (:require [clojure.java.jdbc :as sql]))
 
-;; set these true/false depending on whether you have the local database available:
+;; Set test-databases according to whether you have the local database available:
+;; Possible values so far: [:mysql :derby :hsqldb]
+;; Apache Derby and HSQLDB can run without an external setup.
 
-(def test-mysql false)
+;; The build system does not yet have MySQL available :(
+(def test-databases [:derby :hsqldb])
 
 ;; database connections used for testing:
 
@@ -36,284 +39,204 @@
                :user "clojure_test"
                :password "clojure_test"})
 
-;; basic tests for keyword / entity conversion
+(def derby-db {:classname "org.apache.derby.jdbc.EmbeddedDriver"
+               :subprotocol "derby"
+               :subname "clojure_test_derby"
+               :create true})
 
-(deftest test-as-identifier
-  (is (= "kw" (sql/as-identifier "kw")))
-  (is (= "kw" (sql/as-identifier :kw)))
-  (is (= "KW" (sql/as-identifier "KW")))
-  (is (= "KW" (sql/as-identifier :KW))))
+(def hsqldb-db {:classname "org.hsqldb.jdbcDriver"
+                :subprotocol "hsqldb"
+                :subname "clojure_test_hsqldb"})
 
-(deftest test-as-keyword
-  (is (= :kw (sql/as-keyword "kw")))
-  (is (= :kw (sql/as-keyword :kw)))
-  (is (= :kw (sql/as-keyword "KW")))
-  (is (= :KW (sql/as-keyword :KW))))
-
-(deftest test-quoted
-  (is (= "kw" (sql/as-quoted-identifier [ \[ \] ] "kw")))
-  (is (= "[kw]" (sql/as-quoted-identifier [ \[ \] ] :kw)))
-  (is (= "KW" (sql/as-quoted-identifier \` "KW")))
-  (is (= "`KW`" (sql/as-quoted-identifier \` :KW))))
-
-(def quote-dash { :entity (partial sql/as-quoted-str \`) :keyword #(.replace % "_" "-") })
-
-(deftest test-named
-  (is (= "kw" (sql/as-named-identifier quote-dash "kw")))
-  (is (= "`kw`" (sql/as-named-identifier quote-dash :kw)))
-  (is (= :K-W (sql/as-named-keyword quote-dash "K_W")))
-  (is (= :K_W (sql/as-named-keyword quote-dash :K_W))))
-
-(deftest test-with-quote
-  (sql/with-quoted-identifiers [ \[ \] ]
-    (is (= "kw" (sql/as-identifier "kw")))
-    (is (= "[kw]" (sql/as-identifier :kw)))
-    (is (= "KW" (sql/as-identifier "KW")))
-    (is (= "[KW]" (sql/as-identifier :KW)))))
-
-(deftest test-with-naming
-  (sql/with-naming-strategy quote-dash
-    (is (= "kw" (sql/as-identifier "kw")))
-    (is (= "`kw`" (sql/as-identifier :kw)))
-    (is (= :K-W (sql/as-keyword "K_W")))
-    (is (= :K_W) (sql/as-keyword :K_W))))
-
-(deftest test-print-update-counts
-  (let [bu-ex (java.sql.BatchUpdateException. (int-array [1 2 3]))]
-    (let [e (is (thrown? java.sql.BatchUpdateException (throw bu-ex)))
-          counts-str (with-out-str (sql/print-update-counts e))]
-      (is (re-find #"^Update counts" counts-str))
-      (is (re-find #"Statement 0: 1" counts-str))
-      (is (re-find #"Statement 2: 3" counts-str)))))
-
-(deftest test-print-exception-chain
-  (let [base-ex (java.sql.SQLException. "Base Message" "Base State")
-        test-ex (java.sql.BatchUpdateException. "Test Message" "Test State" (int-array [1 2 3]))]
-    (.setNextException test-ex base-ex)
-    (let [e (is (thrown? java.sql.BatchUpdateException (throw test-ex)))
-          except-str (with-out-str (sql/print-sql-exception-chain e))
-          pattern (fn [s] (java.util.regex.Pattern/compile s java.util.regex.Pattern/DOTALL))]
-      (is (re-find (pattern "^BatchUpdateException:.*SQLException:") except-str))
-      (is (re-find (pattern "Message: Test Message.*Message: Base Message") except-str))
-      (is (re-find (pattern "SQLState: Test State.*SQLState: Base State") except-str)))))
-
-;; DDL tests
-
-(deftest test-create-table-ddl
-  (is (= "CREATE TABLE table (col1 int, col2 int)"
-         (sql/create-table-ddl :table ["col1 int"] [:col2 :int])))
-  (is (= "CREATE TABLE table (col1 int, col2 int) ENGINE=MyISAM"
-         (sql/create-table-ddl :table [:col1 "int"] ["col2" :int] :table-spec "ENGINE=MyISAM"))))
-
-(deftest test-create-drop-table
-  (when test-mysql
-    (sql/with-connection mysql-db
-      (try
-        (sql/create-table :fruit
-                          [:name "VARCHAR(32)" "PRIMARY KEY"]
-                          [:appearance "VARCHAR(32)"]
-                          [:cost :int]
-                          [:grade :real]
-                          :table-spec "ENGINE=MyISAM")
-        (is (= 0 (sql/with-connection
-                   mysql-db
-                   (sql/with-query-results res ["SELECT * FROM fruit"] (count res)))))
-        (catch Exception _
-          (println "Unable to create/read :fruit")))
-      (try
-        (sql/drop-table :fruit)
-        (catch Exception _
-          (println "Unable to drop :fruit"))))))
-
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; old example code below here - will eventually be removed once proper tests are written!
-
-(def db {:classname "org.apache.derby.jdbc.EmbeddedDriver"
-         :subprotocol "derby"
-         :subname "/tmp/clojure.java.test-jdbc.db"
-         :create true})
-
-(defn create-fruit
-  "Create a table"
+(defn- test-specs
+  "Return a sequence of db-spec maps that should be used for tests"
   []
+  (map (fn [db] 
+         (deref (resolve (symbol (str "clojure.java.test-jdbc/" (name db) "-db"))))) 
+       test-databases))
+
+(defn- clean-up
+  "Attempt to drop any test tables before we start a test."
+  [t]
+  (doseq [db (test-specs)]
+    (sql/with-connection
+      db
+      (doseq [table [:fruit :fruit2]]
+        (try
+          (sql/drop-table table)
+          (catch Exception _
+            ;; ignore
+            )))))
+  (t))
+
+(use-fixtures
+  :each clean-up)
+
+;; We start with all tables dropped and each test has to create the tables
+;; necessary for it to do its job, and populate it as needed...
+
+(defn- create-test-table
+  "Create a standard test table. Must be inside with-connection.
+   For MySQL, ensure table uses an engine that supports transactions!"
+  [table db]
   (sql/create-table
-   :fruit
-   [:name "varchar(32)" "PRIMARY KEY"]
-   [:appearance "varchar(32)"]
-   [:cost :int]
-   [:grade :real]))
+    table
+    [:name "VARCHAR(32)" "PRIMARY KEY"]
+    [:appearance "VARCHAR(32)"]
+    [:cost :int]
+    [:grade :real]
+    :table-spec (if (= "mysql" (:subprotocol db)) "ENGINE=InnoDB" "")))
 
-(defn drop-fruit
-  "Drop a table"
-  []
-  (try
-   (sql/drop-table :fruit)
-   (catch Exception _)))
+(deftest test-create-table
+  (doseq [db (test-specs)]
+    (sql/with-connection db
+      (create-test-table :fruit db)
+      (is (= 0 (sql/with-query-results res ["SELECT * FROM fruit"] (count res)))))))
 
-(defn insert-rows-fruit
-  "Insert complete rows"
-  []
-  (sql/insert-rows
-   :fruit
-   ["Apple" "red" 59 87]
-   ["Banana" "yellow" 29 92.2]
-   ["Peach" "fuzzy" 139 90.0]
-   ["Orange" "juicy" 89 88.6]))
+(deftest test-drop-table
+  (doseq [db (test-specs)]
+    (sql/with-connection db
+      (create-test-table :fruit2 db)
+      (sql/drop-table :fruit2)
+      (is (thrown? java.sql.SQLException (sql/with-query-results res ["SELECT * FROM fruit2"] (count res)))))))
 
-(defn insert-values-fruit
-  "Insert rows with values for only specific columns"
-  []
-  (sql/insert-values
-   :fruit
-   [:name :cost]
-   ["Mango" 722]
-   ["Feijoa" 441]))
+(deftest test-insert-rows
+  (doseq [db (test-specs)]
+    (sql/with-connection db
+      (create-test-table :fruit db)
+      (sql/insert-rows
+        :fruit
+        ["Apple" "red" 59 87]
+        ["Banana" "yellow" 29 92.2]
+        ["Peach" "fuzzy" 139 90.0]
+        ["Orange" "juicy" 89 88.6])
+      (is (= 4 (sql/with-query-results res ["SELECT * FROM fruit"] (count res))))
+      (is (= "Apple" (sql/with-query-results res ["SELECT * FROM fruit WHERE appearance = ?" "red"] (:name (first res)))))
+      (is (= "juicy" (sql/with-query-results res ["SELECT * FROM fruit WHERE name = ?" "Orange"] (:appearance (first res))))))))
 
-(defn insert-records-fruit
-  "Insert records, maps from keys specifying columns to values"
-  []
-  (sql/insert-records
-   :fruit
-   {:name "Pomegranate" :appearance "fresh" :cost 585}
-   {:name "Kiwifruit" :grade 93}))
+(deftest test-insert-values
+  (doseq [db (test-specs)]
+    (sql/with-connection db
+      (create-test-table :fruit db)
+      (sql/insert-values
+        :fruit
+        [:name :cost]
+        ["Mango" 722]
+        ["Feijoa" 441])
+      (is (= 2 (sql/with-query-results res ["SELECT * FROM fruit"] (count res))))
+      (is (= "Mango" (sql/with-query-results res ["SELECT * FROM fruit WHERE cost = ?" 722] (:name (first res))))))))
 
-(defn db-write
-  "Write initial values to the database as a transaction"
-  []
-  (sql/with-connection db
-    (sql/transaction
-     (drop-fruit)
-     (create-fruit)
-     (insert-rows-fruit)
-     (insert-values-fruit)
-     (insert-records-fruit)))
-  nil)
+(deftest test-insert-records
+  (doseq [db (test-specs)]
+    (sql/with-connection db
+      (create-test-table :fruit db)
+      (sql/insert-records
+        :fruit
+        {:name "Pomegranate" :appearance "fresh" :cost 585}
+        {:name "Kiwifruit" :grade 93})
+      (is (= 2 (sql/with-query-results res ["SELECT * FROM fruit"] (count res))))
+      (is (= "Pomegranate" (sql/with-query-results res ["SELECT * FROM fruit WHERE cost = ?" 585] (:name (first res))))))))
 
-(defn db-read
-  "Read the entire fruit table"
-  []
-  (sql/with-connection db
-    (sql/with-query-results res
-      ["SELECT * FROM fruit"]
-      (doseq [rec res]
-        (println rec)))))
+(deftest test-update-values
+  (doseq [db (test-specs)]
+    (sql/with-connection db
+      (create-test-table :fruit db)
+      (sql/insert-rows
+        :fruit
+        ["Apple" "red" 59 87]
+        ["Banana" "yellow" 29 92.2]
+        ["Peach" "fuzzy" 139 90.0]
+        ["Orange" "juicy" 89 88.6])
+      (sql/update-values
+        :fruit
+        ["name=?" "Banana"]
+        {:appearance "bruised" :cost 14})
+      (is (= 4 (sql/with-query-results res ["SELECT * FROM fruit"] (count res))))
+      (is (= "Apple" (sql/with-query-results res ["SELECT * FROM fruit WHERE appearance = ?" "red"] (:name (first res)))))
+      (is (= "Banana" (sql/with-query-results res ["SELECT * FROM fruit WHERE appearance = ?" "bruised"] (:name (first res)))))
+      (is (= 14 (sql/with-query-results res ["SELECT * FROM fruit WHERE name = ?" "Banana"] (:cost (first res))))))))
 
-(defn db-update-appearance-cost
-  "Update the appearance and cost of the named fruit"
-  [name appearance cost]
-  (sql/update-values
-   :fruit
-   ["name=?" name]
-   {:appearance appearance :cost cost}))
+(deftest test-update-or-insert-values
+  (doseq [db (test-specs)]
+    (sql/with-connection db
+      (create-test-table :fruit db)
+      (sql/update-or-insert-values
+        :fruit
+        ["name=?" "Pomegranate"]
+        {:name "Pomegranate" :appearance "fresh" :cost 585})
+      (is (= 1 (sql/with-query-results res ["SELECT * FROM fruit"] (count res))))
+      (is (= 585 (sql/with-query-results res ["SELECT * FROM fruit WHERE appearance = ?" "fresh"] (:cost (first res)))))
+      (sql/update-or-insert-values
+        :fruit
+        ["name=?" "Pomegranate"]
+        {:name "Pomegranate" :appearance "ripe" :cost 565})
+      (is (= 1 (sql/with-query-results res ["SELECT * FROM fruit"] (count res))))
+      (is (= 565 (sql/with-query-results res ["SELECT * FROM fruit WHERE appearance = ?" "ripe"] (:cost (first res)))))
+      (sql/update-or-insert-values
+        :fruit
+        ["name=?" "Apple"]
+        {:name "Apple" :appearance "green" :cost 74})
+      (is (= 2 (sql/with-query-results res ["SELECT * FROM fruit"] (count res)))))))
 
-(defn db-update
-  "Update two fruits as a transaction"
-  []
-  (sql/with-connection db
-    (sql/transaction
-     (db-update-appearance-cost "Banana" "bruised" 14)
-     (db-update-appearance-cost "Feijoa" "green" 400)))
-  nil)
+(deftest test-partial-exception
+  (doseq [db (test-specs)]
+    (sql/with-connection db
+      (create-test-table :fruit db)
+      (try
+        (sql/transaction
+          (sql/insert-values
+            :fruit
+            [:name :appearance]
+            ["Grape" "yummy"]
+            ["Pear" "bruised"])
+          (is (= 2 (sql/with-query-results res ["SELECT * FROM fruit"] (count res))))
+          (throw (Exception. "deliberate exception")))
+        (catch Exception _
+          (is (= 0 (sql/with-query-results res ["SELECT * FROM fruit"] (count res)))))))))
 
-(defn db-update-or-insert
-  "Updates or inserts a fruit"
-  [record]
-  (sql/with-connection db
-    (sql/update-or-insert-values
-     :fruit
-     ["name=?" (:name record)]
-     record)))
+(deftest test-sql-exception
+  (doseq [db (test-specs)]
+    (sql/with-connection db
+      (create-test-table :fruit db)
+      (try
+        (sql/transaction
+          (sql/insert-values
+            :fruit
+            [:name :appearance]
+            ["Grape" "yummy"]
+            ["Pear" "bruised"]
+            ["Apple" "strange" "whoops"]))
+        (catch java.sql.SQLException _
+          (is (= 0 (sql/with-query-results res ["SELECT * FROM fruit"] (count res))))))
+      (is (= 0 (sql/with-query-results res ["SELECT * FROM fruit"] (count res)))))))
 
-(defn db-read-all
-  "Return all the rows of the fruit table as a vector"
-  []
-  (sql/with-connection db
-    (sql/with-query-results res
-      ["SELECT * FROM fruit"]
-      (into [] res))))
+(deftest test-rollback
+  (doseq [db (test-specs)]
+    (sql/with-connection db
+      (create-test-table :fruit db)
+      (try
+        (sql/transaction
+          (is (not (sql/is-rollback-only)))
+          (sql/set-rollback-only)
+          (is (sql/is-rollback-only))
+          (sql/insert-values
+            :fruit
+            [:name :appearance]
+            ["Grape" "yummy"]
+            ["Pear" "bruised"]
+            ["Apple" "strange" "whoops"])
+          (is (= 3 (sql/with-query-results res ["SELECT * FROM fruit"] (count res)))))
+        (catch java.sql.SQLException _
+          (is (= 0 (sql/with-query-results res ["SELECT * FROM fruit"] (count res))))))
+      (is (= 0 (sql/with-query-results res ["SELECT * FROM fruit"] (count res)))))))
 
-(defn db-grade-range
-  "Print rows describing fruit that are within a grade range"
-  [min max]
-  (sql/with-connection db
-    (sql/with-query-results res
-      [(str "SELECT name, cost, grade "
-            "FROM fruit "
-            "WHERE grade >= ? AND grade <= ?")
-       min max]
-      (doseq [rec res]
-        (println rec)))))
-
-(defn db-grade-a 
-  "Print rows describing all grade a fruit (grade between 90 and 100)"
-  []
-  (db-grade-range 90 100))
-
-(defn db-get-tables
-  "Demonstrate getting table info"
-  []
-  (sql/with-connection db
-    (into []
-          (sql/resultset-seq
-           (-> (sql/connection)
-               (.getMetaData)
-               (.getTables nil nil nil (into-array ["TABLE" "VIEW"])))))))
-
-(defn db-exception
-  "Demonstrate rolling back a partially completed transaction on exception"
-  []
-  (sql/with-connection db
-    (sql/transaction
-     (sql/insert-values
-      :fruit
-      [:name :appearance]
-      ["Grape" "yummy"]
-      ["Pear" "bruised"])
-     ;; at this point the insert-values call is complete, but the transaction
-     ;; is not. the exception will cause it to roll back leaving the database
-     ;; untouched.
-     (throw (Exception. "sql/test exception")))))
-
-(defn db-sql-exception
-  "Demonstrate an sql exception"
-  []
-  (sql/with-connection db
-    (sql/transaction
-     (sql/insert-values
-      :fruit
-      [:name :appearance]
-      ["Grape" "yummy"]
-      ["Pear" "bruised"]
-      ["Apple" "strange" "whoops"]))))
-
-(defn db-batchupdate-exception
-  "Demonstrate a batch update exception"
-  []
-  (sql/with-connection db
-    (sql/transaction
-     (sql/do-commands
-      "DROP TABLE fruit"
-      "DROP TABLE fruit"))))
-
-(defn db-rollback
-  "Demonstrate a rollback-only trasaction"
-  []
-  (sql/with-connection db
-    (sql/transaction
-     (prn "is-rollback-only" (sql/is-rollback-only))
-     (sql/set-rollback-only)
-     (sql/insert-values
-      :fruit
-      [:name :appearance]
-      ["Grape" "yummy"]
-      ["Pear" "bruised"])
-     (prn "is-rollback-only" (sql/is-rollback-only))
-     (sql/with-query-results res
-       ["SELECT * FROM fruit"]
-       (doseq [rec res]
-         (println rec))))
-    (prn)
-    (sql/with-query-results res
-      ["SELECT * FROM fruit"]
-      (doseq [rec res]
-        (println rec)))))
+(deftest test-metadata
+  (doseq [db (test-specs)]
+    (let [metadata (sql/with-connection
+                     db
+                     (into []
+                           (sql/resultset-seq
+                             (-> (sql/connection)
+                               (.getMetaData)
+                               (.getTables nil nil nil (into-array ["TABLE" "VIEW"]))))))]
+      (is (= [] metadata)))))

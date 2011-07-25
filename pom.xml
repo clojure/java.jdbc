@@ -28,5 +28,17 @@
   		<version>5.1.6</version>
   		<scope>test</scope>
   	</dependency>
+  	<dependency>
+  		<groupId>org.apache.derby</groupId>
+  		<artifactId>derby</artifactId>
+  		<version>10.8.1.2</version>
+  		<scope>test</scope>
+  	</dependency>
+  	<dependency>
+  		<groupId>hsqldb</groupId>
+  		<artifactId>hsqldb</artifactId>
+  		<version>1.8.0.10</version>
+  		<scope>test</scope>
+  	</dependency>
   </dependencies>
 </project>
