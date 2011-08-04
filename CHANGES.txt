@@ -1,4 +1,4 @@
-Changes in 0.0.6-SNAPSHOT:
+Changes in 0.0.6:
 
 * Move former tests to test-utilities namespace - these do not touch a database
 * Convert old "test" examples into real tests against real databases
