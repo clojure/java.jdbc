@@ -5,13 +5,13 @@ The first problem that the old approach exposed was when table names or column n
 
 A quote spec is either a single character or a pair of characters in a vector. For the former, the entity name is wrapped in a pair of that character. For the latter, the entity name is wrapped in the specified pair:
 
-```clj
+```
 (as-quoted-identifier \` :name) ;; produces "`name`"
 (as-quoted-identifier [[ ]] :name) ;; produces "[name]"
 ```
 Any code can be wrapped in the *with-quoted-identifiers* macro to influence how keywords are mapped to entity names:
 
-```clj
+```
 (sql/with-quoted-identifiers \`
   (sql/insert-record
     :fruit
@@ -25,7 +25,7 @@ The second problem with the old approach was that in returned results, all entit
 
 A naming strategy may be a single function or a map containing the keys `:entity` and/or `:keyword`, whose values are functions. If a single function `f` is provided, it is treated as `{ :entity f }`, i.e., an entity naming strategy. The `:entity` mapping is used on keywords that need to be converted to entity names. The `:keyword` mapping is used on entity names that need to be converted to keywords.
 
-```clj
+```
 (as-named-identifier clojure.string/upper-case :name) ;; produces "NAME"
 (def quote-dash
   { :entity (partial as-quoted-str \`) :keyword #(.replace % "_" "-") })

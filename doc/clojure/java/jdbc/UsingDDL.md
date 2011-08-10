@@ -3,7 +3,7 @@ Currently you can create and drop tables using clojure.java.jdbc. To see how to 
 ## Creating a table
 To create a table, use *create-table* with the table name and a vector for each column spec. Currently, table-level specifications are not supported.
 
-```clj
+```
 (defn create-fruit
   "Create a table"
   []
@@ -17,7 +17,7 @@ To create a table, use *create-table* with the table name and a vector for each 
 ## Dropping a table
 To drop a table, use *drop-table* with the table name.
 
-```clj
+```
 (defn drop-fruit
   "Drop a table"
   []
@@ -28,7 +28,7 @@ To drop a table, use *drop-table* with the table name.
 ## Accessing table metadata
 To retrieve the metadata for a table, you can operate on the connection itself. In future, functions may be added to make this easier.
 
-```clj
+```
 (defn db-get-tables
   "Demonstrate getting table info"
   []
