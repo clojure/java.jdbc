@@ -51,8 +51,8 @@ Define a function that creates a pooled datasource:
 Now you can create a single connection pool:
 
 ```
-(defn db-connection []
-  (let [pooled-db (delay (pool db-spec))]
-    @pooled-db))
+(def pooled-db (delay (pool db-spec)))
+
+(defn db-connection [] @pooled-db)
 ```
 And then call (db-connection) wherever you need access to it.
