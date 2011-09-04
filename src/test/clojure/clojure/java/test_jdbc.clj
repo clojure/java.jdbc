@@ -79,13 +79,15 @@
   "Create a standard test table. Must be inside with-connection.
    For MySQL, ensure table uses an engine that supports transactions!"
   [table db]
-  (sql/create-table
-    table
-    [:name "VARCHAR(32)" "PRIMARY KEY"]
-    [:appearance "VARCHAR(32)"]
-    [:cost :int]
-    [:grade :real]
-    :table-spec (if (= "mysql" (:subprotocol db)) "ENGINE=InnoDB" "")))
+  (let [p (:subprotocol db)]
+    (sql/create-table
+      table
+      [:id :int (if (= "mysql" p) "PRIMARY KEY AUTO_INCREMENT" "DEFAULT 0")]
+      [:name "VARCHAR(32)" (if (= "mysql" p) "" "PRIMARY KEY")]
+      [:appearance "VARCHAR(32)"]
+      [:cost :int]
+      [:grade :real]
+      :table-spec (if (= "mysql" p) "ENGINE=InnoDB" ""))))
 
 (deftest test-create-table
   (doseq [db (test-specs)]
@@ -104,12 +106,13 @@
   (doseq [db (test-specs)]
     (sql/with-connection db
       (create-test-table :fruit db)
-      (sql/insert-rows
-        :fruit
-        ["Apple" "red" 59 87]
-        ["Banana" "yellow" 29 92.2]
-        ["Peach" "fuzzy" 139 90.0]
-        ["Orange" "juicy" 89 88.6])
+      (let [r (sql/insert-rows
+                :fruit
+                [1 "Apple" "red" 59 87]
+                [2 "Banana" "yellow" 29 92.2]
+                [3 "Peach" "fuzzy" 139 90.0]
+                [4 "Orange" "juicy" 89 88.6])]
+        (is (= '(1 1 1 1) r)))
       (is (= 4 (sql/with-query-results res ["SELECT * FROM fruit"] (count res))))
       (is (= "Apple" (sql/with-query-results res ["SELECT * FROM fruit WHERE appearance = ?" "red"] (:name (first res)))))
       (is (= "juicy" (sql/with-query-results res ["SELECT * FROM fruit WHERE name = ?" "Orange"] (:appearance (first res))))))))
@@ -118,11 +121,12 @@
   (doseq [db (test-specs)]
     (sql/with-connection db
       (create-test-table :fruit db)
-      (sql/insert-values
-        :fruit
-        [:name :cost]
-        ["Mango" 722]
-        ["Feijoa" 441])
+      (let [r (sql/insert-values
+                :fruit
+                [:name :cost]
+                ["Mango" 722]
+                ["Feijoa" 441])]
+        (is (= '(1 1) r)))
       (is (= 2 (sql/with-query-results res ["SELECT * FROM fruit"] (count res))))
       (is (= "Mango" (sql/with-query-results res ["SELECT * FROM fruit WHERE cost = ?" 722] (:name (first res))))))))
 
@@ -130,10 +134,14 @@
   (doseq [db (test-specs)]
     (sql/with-connection db
       (create-test-table :fruit db)
-      (sql/insert-records
-        :fruit
-        {:name "Pomegranate" :appearance "fresh" :cost 585}
-        {:name "Kiwifruit" :grade 93})
+      (let [r (sql/insert-records
+                :fruit
+                {:name "Pomegranate" :appearance "fresh" :cost 585}
+                {:name "Kiwifruit" :grade 93})]
+        (condp = (:subprotocol db)
+          "mysql" (is (= '({:generated_key 1} {:generated_key 2}) r))
+          "hsqldb" (is (= '(1 1) r))
+          "derby" (is (= '({:1 nil} {:1 nil}) r))))
       (is (= 2 (sql/with-query-results res ["SELECT * FROM fruit"] (count res))))
       (is (= "Pomegranate" (sql/with-query-results res ["SELECT * FROM fruit WHERE cost = ?" 585] (:name (first res))))))))
 
@@ -141,12 +149,13 @@
   (doseq [db (test-specs)]
     (sql/with-connection db
       (create-test-table :fruit db)
-      (sql/insert-rows
-        :fruit
-        ["Apple" "red" 59 87]
-        ["Banana" "yellow" 29 92.2]
-        ["Peach" "fuzzy" 139 90.0]
-        ["Orange" "juicy" 89 88.6])
+      (let [r (sql/insert-rows
+                :fruit
+                [1 "Apple" "red" 59 87]
+                [2 "Banana" "yellow" 29 92.2]
+                [3 "Peach" "fuzzy" 139 90.0]
+                [4 "Orange" "juicy" 89 88.6])]
+        (is (= '(1 1 1 1) r)))
       (sql/update-values
         :fruit
         ["name=?" "Banana"]
