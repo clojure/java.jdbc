@@ -53,13 +53,13 @@ namespace.
 
 <p>A quote spec is either a single character or a pair of characters in a vector. For the former, the entity name is wrapped in a pair of that character. For the latter, the entity name is wrapped in the specified pair:</p>
 
-<p><code>clj
+<p><code>
 (as-quoted-identifier \` :name) ;; produces "`name`"
 (as-quoted-identifier [[ ]] :name) ;; produces "[name]"
 </code>
 Any code can be wrapped in the <em>with-quoted-identifiers</em> macro to influence how keywords are mapped to entity names:</p>
 
-<p><code>clj
+<p><code>
 (sql/with-quoted-identifiers \`
   (sql/insert-record
     :fruit
@@ -75,7 +75,7 @@ Note that if a string is used for an entity name, rather than a keyword, it is p
 
 <p>A naming strategy may be a single function or a map containing the keys <code>:entity</code> and/or <code>:keyword</code>, whose values are functions. If a single function <code>f</code> is provided, it is treated as <code>{ :entity f }</code>, i.e., an entity naming strategy. The <code>:entity</code> mapping is used on keywords that need to be converted to entity names. The <code>:keyword</code> mapping is used on entity names that need to be converted to keywords.</p>
 
-<p><code>clj
+<p><code>
 (as-named-identifier clojure.string/upper-case :name) ;; produces "NAME"
 (def quote-dash
   { :entity (partial as-quoted-str \`) :keyword #(.replace % "_" "-") })

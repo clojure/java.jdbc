@@ -52,7 +52,7 @@ These examples assume a simple table called fruit (see <a href="https://github.c
 
 <p>If you want to insert complete rows, you can use <em>insert-rows</em> and provide the values as a simple vector for each row. Every column's value must be present in the same order the columns are declared in the table. This performs a single insert statement. If you attempt to insert a single row, a map of the generated keys will be returned.</p>
 
-<p><code>clj
+<p><code>
 (defn insert-rows-fruit
   "Insert complete rows"
   []
@@ -68,7 +68,7 @@ These examples assume a simple table called fruit (see <a href="https://github.c
 
 <p>If you want to insert rows but only specify some columns' values, you can use <em>insert-values</em> and provide the names of the columns following by vectors containing values for those columns. This performs a single insert statement. If you attempt to insert a single row, a map of the generated keys will be returned.</p>
 
-<p><code>clj
+<p><code>
 (defn insert-values-fruit
   "Insert rows with values for only specific columns"
   []
@@ -83,7 +83,7 @@ These examples assume a simple table called fruit (see <a href="https://github.c
 
 <p>If you want to insert a single record, you can use <em>insert-record</em> and specify the columns and their values as a map. This performs a single insert statement. A map of the generated keys will be returned.</p>
 
-<p><code>clj
+<p><code>
 (defn insert-record-fruit
   "Insert a single record, map from keys specifying columsn to values"
   []
@@ -96,7 +96,7 @@ These examples assume a simple table called fruit (see <a href="https://github.c
 
 <p>If you want to insert multiple records, you can use <em>insert-records</em> and specify each record as a map of columns and their values. This performs a separate insert statement for each record. The generated keys are returned in a sequence of maps.</p>
 
-<p><code>clj
+<p><code>
 (defn insert-records-fruit
   "Insert records, maps from keys specifying columns to values"
   []
@@ -110,7 +110,7 @@ These examples assume a simple table called fruit (see <a href="https://github.c
 
 <p>You can write multiple operations in a transaction to ensure they are either all performed, or all rolled back.</p>
 
-<p><code>clj
+<p><code>
 (defn db-write
   "Write initial values to the database as a transaction"
   []
@@ -128,7 +128,7 @@ These examples assume a simple table called fruit (see <a href="https://github.c
 
 <p>To execute code against each row in a result set, use <em>with-query-results</em> with SQL.</p>
 
-<p>```clj
+<p>```
 (defn db-read
   "Read the entire fruit table"
   []
@@ -168,7 +168,7 @@ These examples assume a simple table called fruit (see <a href="https://github.c
 
 <p>To update column values based on a SQL predicate, use <em>update-values</em> with a SQL where clause and a map of columns to new values. The result is a sequence of update counts, indicating the number of records affected by each update (in this case, a single update and therefore a single count in the sequence).</p>
 
-<p>```clj
+<p>```
 (defn db-update-appearance-cost
   "Update the appearance and cost of the named fruit"
   [name appearance cost]
@@ -191,7 +191,7 @@ These examples assume a simple table called fruit (see <a href="https://github.c
 
 <p>If you want to update existing records that match a SQL predicate or insert a new record if no existing records match, use <em>update-or-insert-values</em> with a SQL where clause and a map of columns to values. This calls <em>update-values</em> first and if no rows were updated, this calls <em>insert-values</em>. The result is either the sequence of update counts from the update or the sequence of generated key maps from the insert.</p>
 
-<p><code>clj
+<p><code>
 (defn db-update-or-insert
   "Updates or inserts a fruit"
   [record]
@@ -206,7 +206,7 @@ These examples assume a simple table called fruit (see <a href="https://github.c
 
 <p>Transactions are rolled back if an exception is thrown, as shown in these examples.</p>
 
-<p>```clj
+<p>```
 (defn db-exception
   "Demonstrate rolling back a partially completed transaction on exception"
   []

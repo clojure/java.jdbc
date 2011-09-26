@@ -1,6 +1,6 @@
 <html>
   <head>
-    <title>Manipulating Tables with DDL</title>
+    <title>Connection Pooling</title>
     <link href="../../../../static/favicon.png" rel="icon" />
     <link href="../../../../static/favicon.png" rel="shortcut icon" />
     <link media="all" type="text/css" href="../../../../static/clojure.css" rel="stylesheet" />
@@ -43,54 +43,69 @@ namespace.
 	  <div class="contentBox"><div class="innerContentBox">
               <div id="content_view" class="wiki wikiPage">
                 <div id="right-sidebar"></div>
-                <div id="content-tag"><html><body><h1>Manipulating Tables with DDL</h1>
+                <div id="content-tag"><html><body><h1>Connection Pooling</h1>
 
-<p>Currently you can create and drop tables using clojure.java.jdbc. To see how to manipulate data with SQL, see <a href="https://github.com/clojure/java.jdbc/blob/master/doc/clojure/java/jdbc/UsingSQL.md">Manipulating Data with SQL</a>.</p>
+<p>clojure.java.jdbc does not provide connection pooling directly but it is relatively easy to add to your project. The following example shows how to configure connection pooling use c3p0.</p>
 
-<h2>Creating a table</h2>
+<h2>Add the c3p0 dependency</h2>
 
-<p>To create a table, use <em>create-table</em> with the table name and a vector for each column spec. Currently, table-level specifications are not supported.</p>
-
-<p><code>
-(defn create-fruit
-  "Create a table"
-  []
-  (sql/create-table
-    :fruit
-    [:name "varchar(32)" "PRIMARY KEY"]
-    [:appearance "varchar(32)"]
-    [:cost :int]
-    [:grade :real]))
-</code></p>
-
-<h2>Dropping a table</h2>
-
-<p>To drop a table, use <em>drop-table</em> with the table name.</p>
+<p>If you're using Leiningen, you can just add the following to your dependencies:</p>
 
 <p><code>
-(defn drop-fruit
-  "Drop a table"
-  []
-  (try
-    (sql/drop-table :fruit)
-    (catch Exception _)))
-</code></p>
-
-<h2>Accessing table metadata</h2>
-
-<p>To retrieve the metadata for a table, you can operate on the connection itself. In future, functions may be added to make this easier.</p>
+[c3p0/c3p0 "0.9.1.2"]
+</code>
+In Maven, it would be:</p>
 
 <p><code>
-(defn db-get-tables
-  "Demonstrate getting table info"
-  []
-  (sql/with-connection db
-    (into []
-          (sql/resultset-seq
-           (-&gt; (sql/connection)
-               (.getMetaData)
-               (.getTables nil nil nil (into-array ["TABLE" "VIEW"])))))))
+&lt;dependency&gt;
+  &lt;groupId&gt;c3p0&lt;/groupId&gt;
+  &lt;artifactId&gt;c3p0&lt;/artifactId&gt;
+  &lt;version&gt;0.9.1.2&lt;/version&gt;
+&lt;/dependency&gt;
 </code></p>
+
+<h2>Create the pooled datasource from your db-spec</h2>
+
+<p>Define your db-spec as usual, for example (for MySQL):</p>
+
+<p><code>
+(def db-spec 
+  {:classname "com.mysql.jdbc.Driver"
+   :subprotocol "mysql"
+   :subname "//127.0.0.1:3306/mydb"
+   :user "myaccount"
+   :password "secret"})
+</code>
+Import the c3p0 class as part of your namespace declaration, for example:</p>
+
+<p><code>
+(ns example.db
+  (:import com.mchange.v2.c3p0.ComboPooledDataSource))
+</code>
+Define a function that creates a pooled datasource:</p>
+
+<p><code>
+(defn pool
+  [spec]
+  (let [cpds (doto (ComboPooledDataSource.)
+               (.setDriverClass (:classname spec)) 
+               (.setJdbcUrl (str "jdbc:" (:subprotocol spec) ":" (:subname spec)))
+               (.setUser (:user spec))
+               (.setPassword (:password spec))
+               ;; expire excess connections after 30 minutes of inactivity:
+               (.setMaxIdleTimeExcessConnections (* 30 60))
+               ;; expire connections after 3 hours of inactivity:
+               (.setMaxIdleTime (* 3 60 60)))] 
+    {:datasource cpds}))
+</code>
+Now you can create a single connection pool:</p>
+
+<p>```
+(def pooled-db (delay (pool db-spec)))</p>
+
+<p>(defn db-connection [] @pooled-db)
+```
+And then call (db-connection) wherever you need access to it.</p>
 </body></html></div>
               </div>
             </div>
