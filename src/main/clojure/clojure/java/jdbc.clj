@@ -52,12 +52,14 @@ generated keys are returned (as a map)." }
   as-keyword*)
 
 (def ^{:doc "Returns the current database connection (or nil if there
-            is none)"}
+            is none)"
+       :tag Connection}
   find-connection
   find-connection*)
 
 (def ^{:doc "Returns the current database connection (or throws if
-            there is none)"}
+            there is none)"
+       :tag Connection}
   connection
   connection*)
 
