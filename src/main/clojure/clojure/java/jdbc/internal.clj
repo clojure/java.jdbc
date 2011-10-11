@@ -272,7 +272,7 @@
   open database connection. The param-group is a seq of values for all of
   the parameters.
   Return the generated keys for the (single) update/insert."
-  [^String sql param-group]
+  [sql param-group]
   (with-open [^PreparedStatement stmt (prepare-statement* (connection*) sql :return-keys true)]
     (set-parameters stmt param-group)
     (transaction* (fn [] (let [counts (.executeUpdate stmt)]
@@ -289,9 +289,11 @@
   Return a seq of update counts (one count for each param-group)."
   [sql & param-groups]
   (with-open [^PreparedStatement stmt (prepare-statement* (connection*) sql)]
-    (doseq [param-group param-groups]
-      (set-parameters stmt param-group)
-      (.addBatch stmt))
+    (if (empty? param-groups)
+      (.addBatch stmt)
+      (doseq [param-group param-groups]
+        (set-parameters stmt param-group)
+        (.addBatch stmt)))
     (transaction* (fn [] (seq (.executeBatch stmt))))))
 
 (defn with-query-results*

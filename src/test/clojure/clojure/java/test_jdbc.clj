@@ -102,6 +102,27 @@
       (sql/drop-table :fruit2)
       (is (thrown? java.sql.SQLException (sql/with-query-results res ["SELECT * FROM fruit2"] (count res)))))))
 
+(deftest test-do-commands
+  (doseq [db (test-specs)]
+    (sql/with-connection db
+      (create-test-table :fruit2 db)
+      (sql/do-commands "DROP TABLE fruit2")
+      (is (thrown? java.sql.SQLException (sql/with-query-results res ["SELECT * FROM fruit2"] (count res)))))))
+
+(deftest test-do-prepared1
+  (doseq [db (test-specs)]
+    (sql/with-connection db
+      (create-test-table :fruit2 db)
+      (sql/do-prepared "INSERT INTO fruit2 ( name, appearance, cost, grade ) VALUES ( 'test', 'test', 1, 1.0 )")
+      (is (= 1 (sql/with-query-results res ["SELECT * FROM fruit2"] (count res)))))))
+
+(deftest test-do-prepared2
+  (doseq [db (test-specs)]
+    (sql/with-connection db
+      (create-test-table :fruit2 db)
+      (sql/do-prepared "DROP TABLE fruit2")
+      (is (thrown? java.sql.SQLException (sql/with-query-results res ["SELECT * FROM fruit2"] (count res)))))))
+
 (deftest test-insert-rows
   (doseq [db (test-specs)]
     (sql/with-connection db
