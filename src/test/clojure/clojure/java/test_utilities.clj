@@ -19,7 +19,8 @@
 
 (ns clojure.java.test-utilities
   (:use clojure.test)
-  (:require [clojure.java.jdbc :as sql]))
+  (:require [clojure.java.jdbc :as sql])
+  (:require [clojure.java.jdbc.internal :as internal]))
 
 ;; basic tests for keyword / entity conversion
 
@@ -81,6 +82,19 @@
       (is (re-find (pattern "^BatchUpdateException:.*SQLException:") except-str))
       (is (re-find (pattern "Message: Test Message.*Message: Base Message") except-str))
       (is (re-find (pattern "SQLState: Test State.*SQLState: Base State") except-str)))))
+
+(deftest test-make-name-unique
+  (let [make-name-unique @#'internal/make-name-unique]
+    (is (= "a" (make-name-unique '() "a" 1)))
+    (is (= "a_2" (make-name-unique '("a") "a" 1)))
+    (is (= "a_3" (make-name-unique '("a" "b" "a_2") "a" 1)))))
+
+(deftest test-make-cols-unique
+  (let [make-cols-unique @#'internal/make-cols-unique]
+    (is (= '("a") (make-cols-unique '("a"))))
+    (is (= '("a" "a_2") (make-cols-unique '("a" "a"))))
+    (is (= '("a" "b" "a_2" "a_3") (make-cols-unique '("a" "b" "a" "a"))))
+    (is (= '("a" "b" "a_2" "b_2" "a_3" "b_3") (make-cols-unique '("a" "b" "a" "b" "a" "b"))))))
 
 ;; DDL tests
 

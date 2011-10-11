@@ -66,7 +66,9 @@ generated keys are returned (as a map)." }
 (def ^{:doc "Creates and returns a lazy sequence of structmaps
             corresponding to the rows in the java.sql.ResultSet
             rs. Based on clojure.core/resultset-seq but it respects
-            the current naming strategy."}
+            the current naming strategy. Duplicate column names are
+            made unique by appending _N before applying the naming
+            strategy (where N is a unique integer)."}
   resultset-seq
   resultset-seq*)
 

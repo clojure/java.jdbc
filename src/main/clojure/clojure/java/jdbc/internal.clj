@@ -192,18 +192,41 @@
               (.setAutoCommit con auto-commit)))))
       (func))))
 
+(defn- make-name-unique
+  "Given a collection of column names and a new column name,
+   return the new column name made unique, if necessary, by
+   appending _N where N is some unique integer suffix."
+  [cols col-name n]
+  (let [suffixed-name (if (= n 1) col-name (str col-name "_" n))]
+    (if (apply distinct? suffixed-name cols)
+      suffixed-name
+      (recur cols col-name (inc n)))))
+
+(defn- make-cols-unique
+  "Given a collection of column names, rename duplicates so
+   that the result is a collection of unique column names."
+  [cols]
+  (if (apply distinct? cols)
+    cols
+    (loop [[col-name :as new-cols] (seq cols)
+           unique-cols []]
+      (if (seq new-cols)
+        (recur (rest new-cols) (conj unique-cols (make-name-unique unique-cols col-name 1)))
+        unique-cols))))
+
 (defn resultset-seq*
   "Creates and returns a lazy sequence of structmaps corresponding to
    the rows in the java.sql.ResultSet rs. Based on clojure.core/resultset-seq
-   but it respects the current naming strategy."
+   but it respects the current naming strategy. Duplicate column names are
+   made unique by appending _N before applying the naming strategy (where
+   N is a unique integer)."
   [^ResultSet rs]
     (let [rsmeta (.getMetaData rs)
           idxs (range 1 (inc (.getColumnCount rsmeta)))
-          keys (map (comp keyword *as-key*)
-                    (map (fn [^Integer i] (.getColumnLabel rsmeta i)) idxs))
-          check-keys
-                (or (apply distinct? keys)
-                    (throw (Exception. "ResultSet must have unique column labels")))
+          keys (->> idxs
+                 (map (fn [^Integer i] (.getColumnLabel rsmeta i)))
+                 make-cols-unique
+                 (map (comp keyword *as-key*)))
           row-struct (apply create-struct keys)
           row-values (fn [] (map (fn [^Integer i] (.getObject rs i)) idxs))
           rows (fn thisfn []
