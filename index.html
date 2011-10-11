@@ -1,6 +1,6 @@
 <html>
   <head>
-    <title>clojure.java.jdbc - JDBC-based SQL Interface 0.0.4 API documentation</title>
+    <title>clojure.java.jdbc - JDBC-based SQL Interface 0.0.7 API documentation</title>
     <link href="static/favicon.png" rel="icon" />
     <link href="static/favicon.png" rel="shortcut icon" />
     <link media="all" type="text/css" href="static/clojure.css" rel="stylesheet" />
@@ -27,7 +27,7 @@ namespace.
       <div id="leftcolumn"><div style="text-align: center;"></div>
 <div class="menu">
   <div class="WikiCustomNav WikiElement wiki">
-    <span class="toc-header"><span id="project-name">JDBC-based SQL Interface</span> <span id="version">0.0.4</span> API</span><br />
+    <span class="toc-header"><span id="project-name">JDBC-based SQL Interface</span> <span id="version">0.0.7</span> API</span><br />
     <ul>
       <li><a class="wiki_link" href="index.html">Overview</a></li>
       <li><a class="wiki_link" href="api-index.html">API Index</a></li>
@@ -154,7 +154,7 @@ namespace.
 </div>
 </div>
                 <div id="content-tag"><h1 id="overview">API for <span id="namespace-name">clojure.java.jdbc</span>
-  - <span id="header-project">JDBC-based SQL Interface</span> <span id="header-version">0.0.4</span> (<span id="header-status">in development</span>)
+  - <span id="header-project">JDBC-based SQL Interface</span> <span id="header-version">0.0.7</span> (<span id="header-status">in development</span>)
   </h1>
 <span id="author-line">by <span id="author-name">Stephen C. Gilardi, Sean Corfield</span><br /></span>
 <br />Full namespace name: <span id="long-name">clojure.java.jdbc</span>
@@ -200,7 +200,7 @@ generated keys are returned (as a map).</pre>
 it as a string using the current naming strategy.</pre>
   
   
-  <a href="https://github.com/clojure/java.jdbc/blob/a313f6d8f36002f40c42677472b97359301fd969/src/main/clojure/clojure/java/jdbc.clj#L44" id="var-source">Source</a>
+  <a href="https://github.com/clojure/java.jdbc/blob/8571448824053953705de598d7690a719f478791/src/main/clojure/clojure/java/jdbc.clj#L44" id="var-source">Source</a>
 </div><div id="var-entry">
   <br />
   <hr />
@@ -211,7 +211,7 @@ it as a string using the current naming strategy.</pre>
 naming strategy.  Given a keyword, return it as-is.</pre>
   
   
-  <a href="https://github.com/clojure/java.jdbc/blob/a313f6d8f36002f40c42677472b97359301fd969/src/main/clojure/clojure/java/jdbc.clj#L49" id="var-source">Source</a>
+  <a href="https://github.com/clojure/java.jdbc/blob/8571448824053953705de598d7690a719f478791/src/main/clojure/clojure/java/jdbc.clj#L49" id="var-source">Source</a>
 </div><div id="var-entry">
   <br />
   <hr />
@@ -227,7 +227,7 @@ a map containing :entity and/or :keyword keys which provide the entity naming
 strategy and/or keyword naming strategy respectively.</pre>
   
   
-  <a href="https://github.com/clojure/java.jdbc/blob/a313f6d8f36002f40c42677472b97359301fd969/src/main/clojure/clojure/java/jdbc.clj#L81" id="var-source">Source</a>
+  <a href="https://github.com/clojure/java.jdbc/blob/8571448824053953705de598d7690a719f478791/src/main/clojure/clojure/java/jdbc.clj#L83" id="var-source">Source</a>
 </div><div id="var-entry">
   <br />
   <hr />
@@ -245,7 +245,7 @@ Note that providing a single function will cause the default keyword naming
 strategy to be used!</pre>
   
   
-  <a href="https://github.com/clojure/java.jdbc/blob/a313f6d8f36002f40c42677472b97359301fd969/src/main/clojure/clojure/java/jdbc.clj#L91" id="var-source">Source</a>
+  <a href="https://github.com/clojure/java.jdbc/blob/8571448824053953705de598d7690a719f478791/src/main/clojure/clojure/java/jdbc.clj#L93" id="var-source">Source</a>
 </div><div id="var-entry">
   <br />
   <hr />
@@ -261,7 +261,7 @@ Given a qote pattern and a string, return the string as-is.
   (as-quoted-identifier [A B] :name) will return AnameB as a string.</pre>
   
   
-  <a href="https://github.com/clojure/java.jdbc/blob/a313f6d8f36002f40c42677472b97359301fd969/src/main/clojure/clojure/java/jdbc.clj#L103" id="var-source">Source</a>
+  <a href="https://github.com/clojure/java.jdbc/blob/8571448824053953705de598d7690a719f478791/src/main/clojure/clojure/java/jdbc.clj#L105" id="var-source">Source</a>
 </div><div id="var-entry">
   <br />
   <hr />
@@ -275,7 +275,7 @@ characters - and a string, return the quoted string:
   (as-quoted-str [A B] foo) will return AfooB</pre>
   
   
-  <a href="https://github.com/clojure/java.jdbc/blob/a313f6d8f36002f40c42677472b97359301fd969/src/main/clojure/clojure/java/jdbc.clj#L71" id="var-source">Source</a>
+  <a href="https://github.com/clojure/java.jdbc/blob/8571448824053953705de598d7690a719f478791/src/main/clojure/clojure/java/jdbc.clj#L73" id="var-source">Source</a>
 </div><div id="var-entry">
   <br />
   <hr />
@@ -286,7 +286,7 @@ characters - and a string, return the quoted string:
 there is none)</pre>
   
   
-  <a href="https://github.com/clojure/java.jdbc/blob/a313f6d8f36002f40c42677472b97359301fd969/src/main/clojure/clojure/java/jdbc.clj#L59" id="var-source">Source</a>
+  <a href="https://github.com/clojure/java.jdbc/blob/8571448824053953705de598d7690a719f478791/src/main/clojure/clojure/java/jdbc.clj#L60" id="var-source">Source</a>
 </div><div id="var-entry">
   <br />
   <hr />
@@ -303,7 +303,7 @@ by provided as :table-spec {table-attributes-string}. All words used to
 describe the table may be supplied as strings or keywords.</pre>
   
   
-  <a href="https://github.com/clojure/java.jdbc/blob/a313f6d8f36002f40c42677472b97359301fd969/src/main/clojure/clojure/java/jdbc.clj#L223" id="var-source">Source</a>
+  <a href="https://github.com/clojure/java.jdbc/blob/8571448824053953705de598d7690a719f478791/src/main/clojure/clojure/java/jdbc.clj#L225" id="var-source">Source</a>
 </div><div id="var-entry">
   <br />
   <hr />
@@ -315,7 +315,7 @@ describe the table may be supplied as strings or keywords.</pre>
 return the DDL string for creating a table based on that.</pre>
   
   
-  <a href="https://github.com/clojure/java.jdbc/blob/a313f6d8f36002f40c42677472b97359301fd969/src/main/clojure/clojure/java/jdbc.clj#L204" id="var-source">Source</a>
+  <a href="https://github.com/clojure/java.jdbc/blob/8571448824053953705de598d7690a719f478791/src/main/clojure/clojure/java/jdbc.clj#L206" id="var-source">Source</a>
 </div><div id="var-entry">
   <br />
   <hr />
@@ -328,7 +328,7 @@ providing the (optionally parameterized) selection criteria followed by
 values for any parameters.</pre>
   
   
-  <a href="https://github.com/clojure/java.jdbc/blob/a313f6d8f36002f40c42677472b97359301fd969/src/main/clojure/clojure/java/jdbc.clj#L285" id="var-source">Source</a>
+  <a href="https://github.com/clojure/java.jdbc/blob/8571448824053953705de598d7690a719f478791/src/main/clojure/clojure/java/jdbc.clj#L287" id="var-source">Source</a>
 </div><div id="var-entry">
   <br />
   <hr />
@@ -339,7 +339,7 @@ values for any parameters.</pre>
   <pre id="var-docstr">Executes SQL commands on the open database connection.</pre>
   
   
-  <a href="https://github.com/clojure/java.jdbc/blob/a313f6d8f36002f40c42677472b97359301fd969/src/main/clojure/clojure/java/jdbc.clj#L177" id="var-source">Source</a>
+  <a href="https://github.com/clojure/java.jdbc/blob/8571448824053953705de598d7690a719f478791/src/main/clojure/clojure/java/jdbc.clj#L179" id="var-source">Source</a>
 </div><div id="var-entry">
   <br />
   <hr />
@@ -352,7 +352,7 @@ open database connection. Each param-group is a seq of values for all of
 the parameters.</pre>
   
   
-  <a href="https://github.com/clojure/java.jdbc/blob/a313f6d8f36002f40c42677472b97359301fd969/src/main/clojure/clojure/java/jdbc.clj#L197" id="var-source">Source</a>
+  <a href="https://github.com/clojure/java.jdbc/blob/8571448824053953705de598d7690a719f478791/src/main/clojure/clojure/java/jdbc.clj#L199" id="var-source">Source</a>
 </div><div id="var-entry">
   <br />
   <hr />
@@ -364,7 +364,7 @@ the parameters.</pre>
 or keyword</pre>
   
   
-  <a href="https://github.com/clojure/java.jdbc/blob/a313f6d8f36002f40c42677472b97359301fd969/src/main/clojure/clojure/java/jdbc.clj#L234" id="var-source">Source</a>
+  <a href="https://github.com/clojure/java.jdbc/blob/8571448824053953705de598d7690a719f478791/src/main/clojure/clojure/java/jdbc.clj#L236" id="var-source">Source</a>
 </div><div id="var-entry">
   <br />
   <hr />
@@ -375,7 +375,7 @@ or keyword</pre>
 is none)</pre>
   
   
-  <a href="https://github.com/clojure/java.jdbc/blob/a313f6d8f36002f40c42677472b97359301fd969/src/main/clojure/clojure/java/jdbc.clj#L54" id="var-source">Source</a>
+  <a href="https://github.com/clojure/java.jdbc/blob/8571448824053953705de598d7690a719f478791/src/main/clojure/clojure/java/jdbc.clj#L54" id="var-source">Source</a>
 </div><div id="var-entry">
   <br />
   <hr />
@@ -388,7 +388,7 @@ keywords (identifying columns) to values.
 Returns a map of the generated keys.</pre>
   
   
-  <a href="https://github.com/clojure/java.jdbc/blob/a313f6d8f36002f40c42677472b97359301fd969/src/main/clojure/clojure/java/jdbc.clj#L277" id="var-source">Source</a>
+  <a href="https://github.com/clojure/java.jdbc/blob/8571448824053953705de598d7690a719f478791/src/main/clojure/clojure/java/jdbc.clj#L279" id="var-source">Source</a>
 </div><div id="var-entry">
   <br />
   <hr />
@@ -401,7 +401,7 @@ Returns a map of the generated keys.</pre>
 Returns a sequence of maps containing the generated keys for each record.</pre>
   
   
-  <a href="https://github.com/clojure/java.jdbc/blob/a313f6d8f36002f40c42677472b97359301fd969/src/main/clojure/clojure/java/jdbc.clj#L269" id="var-source">Source</a>
+  <a href="https://github.com/clojure/java.jdbc/blob/8571448824053953705de598d7690a719f478791/src/main/clojure/clojure/java/jdbc.clj#L271" id="var-source">Source</a>
 </div><div id="var-entry">
   <br />
   <hr />
@@ -414,7 +414,7 @@ each of the table's columns in order.
 If a single row is inserted, returns a map of the generated keys.</pre>
   
   
-  <a href="https://github.com/clojure/java.jdbc/blob/a313f6d8f36002f40c42677472b97359301fd969/src/main/clojure/clojure/java/jdbc.clj#L262" id="var-source">Source</a>
+  <a href="https://github.com/clojure/java.jdbc/blob/8571448824053953705de598d7690a719f478791/src/main/clojure/clojure/java/jdbc.clj#L264" id="var-source">Source</a>
 </div><div id="var-entry">
   <br />
   <hr />
@@ -430,7 +430,7 @@ insert-rows instead.
 If a single set of values is inserted, returns a map of the generated keys.</pre>
   
   
-  <a href="https://github.com/clojure/java.jdbc/blob/a313f6d8f36002f40c42677472b97359301fd969/src/main/clojure/clojure/java/jdbc.clj#L241" id="var-source">Source</a>
+  <a href="https://github.com/clojure/java.jdbc/blob/8571448824053953705de598d7690a719f478791/src/main/clojure/clojure/java/jdbc.clj#L243" id="var-source">Source</a>
 </div><div id="var-entry">
   <br />
   <hr />
@@ -442,7 +442,7 @@ If a single set of values is inserted, returns a map of the generated keys.</pre
 commit when complete</pre>
   
   
-  <a href="https://github.com/clojure/java.jdbc/blob/a313f6d8f36002f40c42677472b97359301fd969/src/main/clojure/clojure/java/jdbc.clj#L171" id="var-source">Source</a>
+  <a href="https://github.com/clojure/java.jdbc/blob/8571448824053953705de598d7690a719f478791/src/main/clojure/clojure/java/jdbc.clj#L173" id="var-source">Source</a>
 </div><div id="var-entry">
   <br />
   <hr />
@@ -459,7 +459,7 @@ optional list of parameters:
   :max-rows n</pre>
   
   
-  <a href="https://github.com/clojure/java.jdbc/blob/a313f6d8f36002f40c42677472b97359301fd969/src/main/clojure/clojure/java/jdbc.clj#L186" id="var-source">Source</a>
+  <a href="https://github.com/clojure/java.jdbc/blob/8571448824053953705de598d7690a719f478791/src/main/clojure/clojure/java/jdbc.clj#L188" id="var-source">Source</a>
 </div><div id="var-entry">
   <br />
   <hr />
@@ -470,7 +470,7 @@ optional list of parameters:
   <pre id="var-docstr">Prints the contents of an SQLException to *out*</pre>
   
   
-  <a href="https://github.com/clojure/java.jdbc/blob/a313f6d8f36002f40c42677472b97359301fd969/src/main/clojure/clojure/java/jdbc.clj#L335" id="var-source">Source</a>
+  <a href="https://github.com/clojure/java.jdbc/blob/8571448824053953705de598d7690a719f478791/src/main/clojure/clojure/java/jdbc.clj#L337" id="var-source">Source</a>
 </div><div id="var-entry">
   <br />
   <hr />
@@ -481,7 +481,7 @@ optional list of parameters:
   <pre id="var-docstr">Prints a chain of SQLExceptions to *out*</pre>
   
   
-  <a href="https://github.com/clojure/java.jdbc/blob/a313f6d8f36002f40c42677472b97359301fd969/src/main/clojure/clojure/java/jdbc.clj#L349" id="var-source">Source</a>
+  <a href="https://github.com/clojure/java.jdbc/blob/8571448824053953705de598d7690a719f478791/src/main/clojure/clojure/java/jdbc.clj#L351" id="var-source">Source</a>
 </div><div id="var-entry">
   <br />
   <hr />
@@ -492,7 +492,7 @@ optional list of parameters:
   <pre id="var-docstr">Prints the update counts from a BatchUpdateException to *out*</pre>
   
   
-  <a href="https://github.com/clojure/java.jdbc/blob/a313f6d8f36002f40c42677472b97359301fd969/src/main/clojure/clojure/java/jdbc.clj#L357" id="var-source">Source</a>
+  <a href="https://github.com/clojure/java.jdbc/blob/8571448824053953705de598d7690a719f478791/src/main/clojure/clojure/java/jdbc.clj#L359" id="var-source">Source</a>
 </div><div id="var-entry">
   <br />
   <hr />
@@ -505,7 +505,7 @@ rs. Based on clojure.core/resultset-seq but it respects
 the current naming strategy.</pre>
   
   
-  <a href="https://github.com/clojure/java.jdbc/blob/a313f6d8f36002f40c42677472b97359301fd969/src/main/clojure/clojure/java/jdbc.clj#L64" id="var-source">Source</a>
+  <a href="https://github.com/clojure/java.jdbc/blob/8571448824053953705de598d7690a719f478791/src/main/clojure/clojure/java/jdbc.clj#L66" id="var-source">Source</a>
 </div><div id="var-entry">
   <br />
   <hr />
@@ -517,7 +517,7 @@ the current naming strategy.</pre>
 commit when complete</pre>
   
   
-  <a href="https://github.com/clojure/java.jdbc/blob/a313f6d8f36002f40c42677472b97359301fd969/src/main/clojure/clojure/java/jdbc.clj#L165" id="var-source">Source</a>
+  <a href="https://github.com/clojure/java.jdbc/blob/8571448824053953705de598d7690a719f478791/src/main/clojure/clojure/java/jdbc.clj#L167" id="var-source">Source</a>
 </div><div id="var-entry">
   <br />
   <hr />
@@ -534,7 +534,7 @@ transaction, the entire transaction will be rolled back rather than
 committed when complete.</pre>
   
   
-  <a href="https://github.com/clojure/java.jdbc/blob/a313f6d8f36002f40c42677472b97359301fd969/src/main/clojure/clojure/java/jdbc.clj#L154" id="var-source">Source</a>
+  <a href="https://github.com/clojure/java.jdbc/blob/8571448824053953705de598d7690a719f478791/src/main/clojure/clojure/java/jdbc.clj#L156" id="var-source">Source</a>
 </div><div id="var-entry">
   <br />
   <hr />
@@ -549,7 +549,7 @@ criteria followed by values for any parameters. record is a map from
 strings or keywords (identifying columns) to updated values.</pre>
   
   
-  <a href="https://github.com/clojure/java.jdbc/blob/a313f6d8f36002f40c42677472b97359301fd969/src/main/clojure/clojure/java/jdbc.clj#L310" id="var-source">Source</a>
+  <a href="https://github.com/clojure/java.jdbc/blob/8571448824053953705de598d7690a719f478791/src/main/clojure/clojure/java/jdbc.clj#L312" id="var-source">Source</a>
 </div><div id="var-entry">
   <br />
   <hr />
@@ -563,7 +563,7 @@ criteria followed by values for any parameters. record is a map from
 strings or keywords (identifying columns) to updated values.</pre>
   
   
-  <a href="https://github.com/clojure/java.jdbc/blob/a313f6d8f36002f40c42677472b97359301fd969/src/main/clojure/clojure/java/jdbc.clj#L296" id="var-source">Source</a>
+  <a href="https://github.com/clojure/java.jdbc/blob/8571448824053953705de598d7690a719f478791/src/main/clojure/clojure/java/jdbc.clj#L298" id="var-source">Source</a>
 </div><div id="var-entry">
   <br />
   <hr />
@@ -595,7 +595,7 @@ JNDI:
   :environment (optional) a java.util.Map</pre>
   
   
-  <a href="https://github.com/clojure/java.jdbc/blob/a313f6d8f36002f40c42677472b97359301fd969/src/main/clojure/clojure/java/jdbc.clj#L128" id="var-source">Source</a>
+  <a href="https://github.com/clojure/java.jdbc/blob/8571448824053953705de598d7690a719f478791/src/main/clojure/clojure/java/jdbc.clj#L130" id="var-source">Source</a>
 </div><div id="var-entry">
   <br />
   <hr />
@@ -610,7 +610,7 @@ strategy and/or the keyword naming strategy respectively. The default entity
 naming strategy is identity; the default keyword naming strategy is lower-case.</pre>
   
   
-  <a href="https://github.com/clojure/java.jdbc/blob/a313f6d8f36002f40c42677472b97359301fd969/src/main/clojure/clojure/java/jdbc.clj#L113" id="var-source">Source</a>
+  <a href="https://github.com/clojure/java.jdbc/blob/8571448824053953705de598d7690a719f478791/src/main/clojure/clojure/java/jdbc.clj#L115" id="var-source">Source</a>
 </div><div id="var-entry">
   <br />
   <hr />
@@ -628,7 +628,7 @@ results. sql-params is a vector containing either:
 See prepare-statement for supported options.</pre>
   
   
-  <a href="https://github.com/clojure/java.jdbc/blob/a313f6d8f36002f40c42677472b97359301fd969/src/main/clojure/clojure/java/jdbc.clj#L323" id="var-source">Source</a>
+  <a href="https://github.com/clojure/java.jdbc/blob/8571448824053953705de598d7690a719f478791/src/main/clojure/clojure/java/jdbc.clj#L325" id="var-source">Source</a>
 </div><div id="var-entry">
   <br />
   <hr />
@@ -639,7 +639,7 @@ See prepare-statement for supported options.</pre>
   <pre id="var-docstr">Evaluates body in the context of a simple quoting naming strategy.</pre>
   
   
-  <a href="https://github.com/clojure/java.jdbc/blob/a313f6d8f36002f40c42677472b97359301fd969/src/main/clojure/clojure/java/jdbc.clj#L123" id="var-source">Source</a>
+  <a href="https://github.com/clojure/java.jdbc/blob/8571448824053953705de598d7690a719f478791/src/main/clojure/clojure/java/jdbc.clj#L125" id="var-source">Source</a>
 </div>
 <h2 id="namespace-name">clojure.java.jdbc.internal</h2>
 <pre id="namespace-docstr"></pre>
