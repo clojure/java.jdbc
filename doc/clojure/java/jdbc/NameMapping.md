@@ -5,33 +5,29 @@ The first problem that the old approach exposed was when table names or column n
 
 A quote spec is either a single character or a pair of characters in a vector. For the former, the entity name is wrapped in a pair of that character. For the latter, the entity name is wrapped in the specified pair:
 
-```
-(as-quoted-identifier \` :name) ;; produces "`name`"
-(as-quoted-identifier [[ ]] :name) ;; produces "[name]"
-```
+    (as-quoted-identifier \` :name) ;; produces "`name`"
+    (as-quoted-identifier [[ ]] :name) ;; produces "[name]"
+
 Any code can be wrapped in the *with-quoted-identifiers* macro to influence how keywords are mapped to entity names:
 
-```
-(sql/with-quoted-identifiers \`
-  (sql/insert-record
-    :fruit
-    { :name "Pear" :appearance "green" :cost 99}))
-;; INSERT INTO `fruit` ( `name`, `appearance`, `cost` )
-;; VALUES ( 'Pear', 'green', 99 )
-```
+    (sql/with-quoted-identifiers \`
+      (sql/insert-record
+        :fruit
+        { :name "Pear" :appearance "green" :cost 99}))
+    ;; INSERT INTO `fruit` ( `name`, `appearance`, `cost` )
+    ;; VALUES ( 'Pear', 'green', 99 )
+
 Note that if a string is used for an entity name, rather than a keyword, it is passed through unchanged, on the assumption that if you're explicitly passing strings, you want to control exactly what goes into the SQL.
 ## Naming Strategies
 The second problem with the old approach was that in returned results, all entity names were mapped to lowercase so any case sensitivity in the original entity names was lost. In addition to the option to determine a quoting strategy, clojure.java.jdbc now has functions *as-named-identifier*, *as-named-keyword* and a macro *with-naming-strategy* to allow you to specify how entity name / keyword mapping should be performed in both directions.
 
 A naming strategy may be a single function or a map containing the keys `:entity` and/or `:keyword`, whose values are functions. If a single function `f` is provided, it is treated as `{ :entity f }`, i.e., an entity naming strategy. The `:entity` mapping is used on keywords that need to be converted to entity names. The `:keyword` mapping is used on entity names that need to be converted to keywords.
 
-```
-(as-named-identifier clojure.string/upper-case :name) ;; produces "NAME"
-(def quote-dash
-  { :entity (partial as-quoted-str \`) :keyword #(.replace % "_" "-") })
-(as-named-identifier quote-dash :name) ;; produces "`name`"
-(as-named-keyword quote-dash "item_id") ;; produces :item-id
-```
+    (as-named-identifier clojure.string/upper-case :name) ;; produces "NAME"
+    (def quote-dash
+      { :entity (partial as-quoted-str \`) :keyword #(.replace % "_" "-") })
+    (as-named-identifier quote-dash :name) ;; produces "`name`"
+    (as-named-keyword quote-dash "item_id") ;; produces :item-id
 
 The default naming strategy is `{ :entity identity :keyword clojure.string/lower-case }`. clojure.java.jdbc provides its own version of *resultset-seq* that respects the current naming strategy (for entity names mapped to keywords). You cannot specify a naming strategy that produces strings instead of keywords (but you could use a keyword naming strategy of *identity* to preserve case and spelling).
 ## Convenience Functions
