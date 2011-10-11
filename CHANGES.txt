@@ -1,3 +1,13 @@
+Changes in 0.0.7:
+
+* Fix JDBC-9 by renaming duplicate columns instead of throwing an exception.
+  - thanx to Peter Siewert!
+* Fix JDBC-16 by ensuring do-prepared works with no param-groups provided.
+* Fix JDBC-17 by adding type hints to remove more reflection warnings.
+  - thanx to Stuart Sierra!
+Documentation:
+* Address JDBC-4 by documenting how to do connection pooling.
+
 Changes in 0.0.6:
 
 * Move former tests to test-utilities namespace - these do not touch a database
@@ -5,8 +15,8 @@ Changes in 0.0.6:
   - tested locally against MySQL, Apache Derby, HSQLDB
   - build system should run against Apache Derby, HSQLSB
   - will add additional databases later
- * Fix JDBC-12 by removing batch when doing a single update
- * Remove wrapping of exceptions in transactions to make it easier to work with SQLExceptions
+* Fix JDBC-12 by removing batch when doing a single update
+* Remove wrapping of exceptions in transactions to make it easier to work with SQLExceptions
 
 Changes in 0.0.5:
 
