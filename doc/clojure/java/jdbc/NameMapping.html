@@ -53,21 +53,21 @@ namespace.
 
 <p>A quote spec is either a single character or a pair of characters in a vector. For the former, the entity name is wrapped in a pair of that character. For the latter, the entity name is wrapped in the specified pair:</p>
 
-<p><code>
-(as-quoted-identifier \` :name) ;; produces "`name`"
+<pre><code>(as-quoted-identifier \` :name) ;; produces "`name`"
 (as-quoted-identifier [[ ]] :name) ;; produces "[name]"
-</code>
-Any code can be wrapped in the <em>with-quoted-identifiers</em> macro to influence how keywords are mapped to entity names:</p>
+</code></pre>
 
-<p><code>
-(sql/with-quoted-identifiers \`
+<p>Any code can be wrapped in the <em>with-quoted-identifiers</em> macro to influence how keywords are mapped to entity names:</p>
+
+<pre><code>(sql/with-quoted-identifiers \`
   (sql/insert-record
     :fruit
     { :name "Pear" :appearance "green" :cost 99}))
 ;; INSERT INTO `fruit` ( `name`, `appearance`, `cost` )
 ;; VALUES ( 'Pear', 'green', 99 )
-</code>
-Note that if a string is used for an entity name, rather than a keyword, it is passed through unchanged, on the assumption that if you're explicitly passing strings, you want to control exactly what goes into the SQL.</p>
+</code></pre>
+
+<p>Note that if a string is used for an entity name, rather than a keyword, it is passed through unchanged, on the assumption that if you're explicitly passing strings, you want to control exactly what goes into the SQL.</p>
 
 <h2>Naming Strategies</h2>
 
@@ -75,13 +75,12 @@ Note that if a string is used for an entity name, rather than a keyword, it is p
 
 <p>A naming strategy may be a single function or a map containing the keys <code>:entity</code> and/or <code>:keyword</code>, whose values are functions. If a single function <code>f</code> is provided, it is treated as <code>{ :entity f }</code>, i.e., an entity naming strategy. The <code>:entity</code> mapping is used on keywords that need to be converted to entity names. The <code>:keyword</code> mapping is used on entity names that need to be converted to keywords.</p>
 
-<p><code>
-(as-named-identifier clojure.string/upper-case :name) ;; produces "NAME"
+<pre><code>(as-named-identifier clojure.string/upper-case :name) ;; produces "NAME"
 (def quote-dash
   { :entity (partial as-quoted-str \`) :keyword #(.replace % "_" "-") })
 (as-named-identifier quote-dash :name) ;; produces "`name`"
 (as-named-keyword quote-dash "item_id") ;; produces :item-id
-</code></p>
+</code></pre>
 
 <p>The default naming strategy is <code>{ :entity identity :keyword clojure.string/lower-case }</code>. clojure.java.jdbc provides its own version of <em>resultset-seq</em> that respects the current naming strategy (for entity names mapped to keywords). You cannot specify a naming strategy that produces strings instead of keywords (but you could use a keyword naming strategy of <em>identity</em> to preserve case and spelling).</p>
 

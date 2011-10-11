@@ -51,8 +51,7 @@ namespace.
 
 <p>To create a table, use <em>create-table</em> with the table name and a vector for each column spec. Currently, table-level specifications are not supported.</p>
 
-<p><code>
-(defn create-fruit
+<pre><code>(defn create-fruit
   "Create a table"
   []
   (sql/create-table
@@ -61,27 +60,25 @@ namespace.
     [:appearance "varchar(32)"]
     [:cost :int]
     [:grade :real]))
-</code></p>
+</code></pre>
 
 <h2>Dropping a table</h2>
 
 <p>To drop a table, use <em>drop-table</em> with the table name.</p>
 
-<p><code>
-(defn drop-fruit
+<pre><code>(defn drop-fruit
   "Drop a table"
   []
   (try
     (sql/drop-table :fruit)
     (catch Exception _)))
-</code></p>
+</code></pre>
 
 <h2>Accessing table metadata</h2>
 
 <p>To retrieve the metadata for a table, you can operate on the connection itself. In future, functions may be added to make this easier.</p>
 
-<p><code>
-(defn db-get-tables
+<pre><code>(defn db-get-tables
   "Demonstrate getting table info"
   []
   (sql/with-connection db
@@ -90,7 +87,7 @@ namespace.
            (-&gt; (sql/connection)
                (.getMetaData)
                (.getTables nil nil nil (into-array ["TABLE" "VIEW"])))))))
-</code></p>
+</code></pre>
 </body></html></div>
               </div>
             </div>

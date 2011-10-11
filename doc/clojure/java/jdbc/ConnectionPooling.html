@@ -51,41 +51,39 @@ namespace.
 
 <p>If you're using Leiningen, you can just add the following to your dependencies:</p>
 
-<p><code>
-[c3p0/c3p0 "0.9.1.2"]
-</code>
-In Maven, it would be:</p>
+<pre><code>[c3p0/c3p0 "0.9.1.2"]
+</code></pre>
 
-<p><code>
-&lt;dependency&gt;
+<p>In Maven, it would be:</p>
+
+<pre><code>&lt;dependency&gt;
   &lt;groupId&gt;c3p0&lt;/groupId&gt;
   &lt;artifactId&gt;c3p0&lt;/artifactId&gt;
   &lt;version&gt;0.9.1.2&lt;/version&gt;
 &lt;/dependency&gt;
-</code></p>
+</code></pre>
 
 <h2>Create the pooled datasource from your db-spec</h2>
 
 <p>Define your db-spec as usual, for example (for MySQL):</p>
 
-<p><code>
-(def db-spec 
+<pre><code>(def db-spec 
   {:classname "com.mysql.jdbc.Driver"
    :subprotocol "mysql"
    :subname "//127.0.0.1:3306/mydb"
    :user "myaccount"
    :password "secret"})
-</code>
-Import the c3p0 class as part of your namespace declaration, for example:</p>
+</code></pre>
 
-<p><code>
-(ns example.db
+<p>Import the c3p0 class as part of your namespace declaration, for example:</p>
+
+<pre><code>(ns example.db
   (:import com.mchange.v2.c3p0.ComboPooledDataSource))
-</code>
-Define a function that creates a pooled datasource:</p>
+</code></pre>
 
-<p><code>
-(defn pool
+<p>Define a function that creates a pooled datasource:</p>
+
+<pre><code>(defn pool
   [spec]
   (let [cpds (doto (ComboPooledDataSource.)
                (.setDriverClass (:classname spec)) 
@@ -97,15 +95,16 @@ Define a function that creates a pooled datasource:</p>
                ;; expire connections after 3 hours of inactivity:
                (.setMaxIdleTime (* 3 60 60)))] 
     {:datasource cpds}))
-</code>
-Now you can create a single connection pool:</p>
+</code></pre>
 
-<p>```
-(def pooled-db (delay (pool db-spec)))</p>
+<p>Now you can create a single connection pool:</p>
 
-<p>(defn db-connection [] @pooled-db)
-```
-And then call (db-connection) wherever you need access to it.</p>
+<pre><code>(def pooled-db (delay (pool db-spec)))
+
+(defn db-connection [] @pooled-db)
+</code></pre>
+
+<p>And then call (db-connection) wherever you need access to it.</p>
 </body></html></div>
               </div>
             </div>
