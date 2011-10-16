@@ -1,3 +1,7 @@
+Changes in 0.1.0:
+
+* Fix JDBC-15 by removing dependence on deprecated structmap.
+
 Changes in 0.0.7:
 
 * Fix JDBC-9 by renaming duplicate columns instead of throwing an exception.
