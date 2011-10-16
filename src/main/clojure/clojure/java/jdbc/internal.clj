@@ -215,7 +215,7 @@
         unique-cols))))
 
 (defn resultset-seq*
-  "Creates and returns a lazy sequence of structmaps corresponding to
+  "Creates and returns a lazy sequence of maps corresponding to
    the rows in the java.sql.ResultSet rs. Based on clojure.core/resultset-seq
    but it respects the current naming strategy. Duplicate column names are
    made unique by appending _N before applying the naming strategy (where
@@ -227,11 +227,17 @@
                  (map (fn [^Integer i] (.getColumnLabel rsmeta i)))
                  make-cols-unique
                  (map (comp keyword *as-key*)))
-          row-struct (apply create-struct keys)
           row-values (fn [] (map (fn [^Integer i] (.getObject rs i)) idxs))
+          ;; This used to use create-struct (on keys) and then struct to populate each row.
+          ;; That had the side effect of preserving the order of columns in each row. As
+          ;; part of JDBC-15, this was changed because structmaps are deprecated. We don't
+          ;; want to switch to records so we're using regular maps instead. We no longer
+          ;; guarantee column order in rows but using into {} should preserve order for up
+          ;; to 16 columns (because it will use a PersistentArrayMap). If someone is relying
+          ;; on the order-preserving behavior of structmaps, we can reconsider...
           rows (fn thisfn []
                  (when (.next rs)
-                   (cons (apply struct row-struct (row-values)) (lazy-seq (thisfn)))))]
+                   (cons (into {} (map vector keys (row-values))) (lazy-seq (thisfn)))))]
       (rows)))
 
 (defn- set-parameters

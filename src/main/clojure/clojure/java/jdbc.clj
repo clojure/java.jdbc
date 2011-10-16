@@ -63,7 +63,7 @@ generated keys are returned (as a map)." }
   connection
   connection*)
 
-(def ^{:doc "Creates and returns a lazy sequence of structmaps
+(def ^{:doc "Creates and returns a lazy sequence of maps
             corresponding to the rows in the java.sql.ResultSet
             rs. Based on clojure.core/resultset-seq but it respects
             the current naming strategy. Duplicate column names are
