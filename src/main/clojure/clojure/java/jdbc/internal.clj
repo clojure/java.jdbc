@@ -33,6 +33,9 @@
    "hsqldb" "org.hsqldb.jdbcDriver"
    "sqlite" "org.sqlite.JDBC"})
 
+(def ^{:private true :doc "Map of schemes to subprotocols"} subprotocols
+  {"postgres" "postgresql"})
+
 (def special-counts
   {Statement/EXECUTE_FAILED "EXECUTE_FAILED"
    Statement/SUCCESS_NO_INFO "SUCCESS_NO_INFO"})
@@ -110,10 +113,11 @@
 (defn- parse-properties-uri [^URI uri]
   (let [host (.getHost uri)
         port (.getPort uri)
-        path (.getPath uri)]
+        path (.getPath uri)
+        scheme (.getScheme uri)]
     (merge
      {:subname (str "//" host ":" port path)
-      :subprotocol (.getScheme uri)}
+      :subprotocol (subprotocols scheme scheme)}
      (if-let [user-info (.getUserInfo uri)]
              {:user (first (str/split user-info #":"))
               :password (second (str/split user-info #":"))}))))
