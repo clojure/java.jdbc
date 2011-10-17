@@ -45,6 +45,8 @@
 (def hsqldb-db {:subprotocol "hsqldb"
                 :subname "clojure_test_hsqldb"})
 
+(def mysql-str "mysql://clojure_test:clojure_test@localhost:3306/clojure_test")
+
 (defn- test-specs
   "Return a sequence of db-spec maps that should be used for tests"
   []
@@ -58,7 +60,7 @@
   (doseq [db (test-specs)]
     (sql/with-connection
       db
-      (doseq [table [:fruit :fruit2]]
+      (doseq [table [:fruit :fruit2 :veggies :veggies2]]
         (try
           (sql/drop-table table)
           (catch Exception _
@@ -85,6 +87,20 @@
       [:cost :int]
       [:grade :real]
       :table-spec (if (= "mysql" p) "ENGINE=InnoDB" ""))))
+
+(deftest test-string-connection
+  (when (:mysql (set test-databases))
+    (sql/with-connection mysql-str
+      (create-test-table :veggies "mysql")
+      (sql/with-query-results res ["SELECT * FROM veggies"]
+        (is (empty? res))))))
+
+(deftest test-uri-connection
+  (when (:mysql (set test-databases))
+    (sql/with-connection (java.net.URI. mysql-str)
+      (create-test-table :veggies2 "mysql")
+      (sql/with-query-results res ["SELECT * FROM veggies2"]
+        (is (empty? res))))))
 
 (deftest test-create-table
   (doseq [db (test-specs)]

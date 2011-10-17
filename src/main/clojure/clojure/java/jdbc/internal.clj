@@ -15,9 +15,10 @@
 ;;  Migrated from clojure.contrib.sql.internal 17 April 2011
 
 (ns clojure.java.jdbc.internal
-  (:require clojure.string)
+  (:require [clojure.string :as str])
   (:import
     (clojure.lang RT)
+    (java.net URI)
     (java.sql BatchUpdateException Connection DriverManager PreparedStatement ResultSet SQLException Statement)
     (java.util Hashtable Map Properties)
     (javax.naming InitialContext Name)
@@ -106,6 +107,17 @@
       (.setProperty p (as-str identity k) (as-str identity v)))
     p))
 
+(defn- parse-properties-uri [^URI uri]
+  (let [host (.getHost uri)
+        port (.getPort uri)
+        path (.getPath uri)]
+    (merge
+     {:subname (str "//" host ":" port path)
+      :subprotocol (.getScheme uri)}
+     (if-let [user-info (.getUserInfo uri)]
+             {:user (first (str/split user-info #":"))
+              :password (second (str/split user-info #":"))}))))
+
 (defn get-connection
   "Creates a connection to a database. db-spec is a map containing values
   for one of the following parameter sets:
@@ -134,6 +146,10 @@
            name environment]
     :as db-spec}]
   (cond
+    (instance? URI db-spec)
+    (get-connection (parse-properties-uri db-spec))
+    (string? db-spec)
+    (get-connection (URI. db-spec))
     factory
     (factory (dissoc db-spec :factory))
     (and subprotocol subname)
