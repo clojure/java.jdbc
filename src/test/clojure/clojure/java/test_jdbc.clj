@@ -25,11 +25,13 @@
   (:require [clojure.java.jdbc :as sql]))
 
 ;; Set test-databases according to whether you have the local database available:
-;; Possible values so far: [:mysql :derby :hsqldb]
+;; Possible values so far: [:mysql :postgres :derby :hsqldb :mysql-str :postgres-str]
 ;; Apache Derby and HSQLDB can run without an external setup.
-
-;; The build system does not yet have MySQL available :(
-(def test-databases [:derby :hsqldb])
+(def test-databases
+  (if-let [dbs (System/getenv "TEST_DBS")]
+    (map keyword (.split dbs ","))
+    ;; enable more by default once the build server is equipped?
+    [:derby :hsqldb]))
 
 ;; database connections used for testing:
 
@@ -45,25 +47,29 @@
 (def hsqldb-db {:subprotocol "hsqldb"
                 :subname "clojure_test_hsqldb"})
 
-(def mysql-str "mysql://clojure_test:clojure_test@localhost:3306/clojure_test")
 (def postgres-db {:subprotocol "postgresql"
                   :subname "clojure_test"
                   :user "clojure_test"
                   :password "clojure_test"})
 
+;; To test against the stringified DB connection settings:
+(def mysql-str-db
+  "mysql://clojure_test:clojure_test@localhost:3306/clojure_test")
+
+(def postgres-str-db
+  "postgres://clojure_test:clojure_test@localhost/clojure_test")
+
 (defn- test-specs
   "Return a sequence of db-spec maps that should be used for tests"
   []
-  (map (fn [db] 
-         (deref (resolve (symbol (str "clojure.java.test-jdbc/" (name db) "-db"))))) 
-       test-databases))
+  (for [db test-databases]
+    @(ns-resolve 'clojure.java.test-jdbc (symbol (str (name db) "-db")))))
 
 (defn- clean-up
   "Attempt to drop any test tables before we start a test."
   [t]
   (doseq [db (test-specs)]
-    (sql/with-connection
-      db
+    (sql/with-connection db
       (doseq [table [:fruit :fruit2 :veggies :veggies2]]
         (try
           (sql/drop-table table)
@@ -90,21 +96,8 @@
       [:appearance "VARCHAR(32)"]
       [:cost :int]
       [:grade :real]
-      :table-spec (if (= "mysql" p) "ENGINE=InnoDB" ""))))
-
-(deftest test-string-connection
-  (when (:mysql (set test-databases))
-    (sql/with-connection mysql-str
-      (create-test-table :veggies "mysql")
-      (sql/with-query-results res ["SELECT * FROM veggies"]
-        (is (empty? res))))))
-
-(deftest test-uri-connection
-  (when (:mysql (set test-databases))
-    (sql/with-connection (java.net.URI. mysql-str)
-      (create-test-table :veggies2 "mysql")
-      (sql/with-query-results res ["SELECT * FROM veggies2"]
-        (is (empty? res))))))
+      :table-spec (if (or (= "mysql" p) (and (string? db) (re-find #"^mysql" db)))
+                    "ENGINE=InnoDB" ""))))
 
 (deftest test-create-table
   (doseq [db (test-specs)]
@@ -177,6 +170,7 @@
                 {:name "Pomegranate" :appearance "fresh" :cost 585}
                 {:name "Kiwifruit" :grade 93})]
         (condp = (:subprotocol db)
+          nil nil ; for the string connection args
           "postgresql" (is (= 2 (count r)))
           "mysql" (is (= '({:generated_key 1} {:generated_key 2}) r))
           "hsqldb" (is (= '(1 1) r))
