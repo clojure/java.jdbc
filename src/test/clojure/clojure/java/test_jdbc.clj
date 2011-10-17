@@ -46,6 +46,10 @@
                 :subname "clojure_test_hsqldb"})
 
 (def mysql-str "mysql://clojure_test:clojure_test@localhost:3306/clojure_test")
+(def postgres-db {:subprotocol "postgresql"
+                  :subname "clojure_test"
+                  :user "clojure_test"
+                  :password "clojure_test"})
 
 (defn- test-specs
   "Return a sequence of db-spec maps that should be used for tests"
@@ -173,6 +177,7 @@
                 {:name "Pomegranate" :appearance "fresh" :cost 585}
                 {:name "Kiwifruit" :grade 93})]
         (condp = (:subprotocol db)
+          "postgresql" (is (= 2 (count r)))
           "mysql" (is (= '({:generated_key 1} {:generated_key 2}) r))
           "hsqldb" (is (= '(1 1) r))
           "derby" (is (= '({:1 nil} {:1 nil}) r))))
