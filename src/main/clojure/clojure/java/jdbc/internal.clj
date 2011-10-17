@@ -25,6 +25,13 @@
 
 (def ^{:dynamic true} *db* {:connection nil :level 0})
 
+(def ^{:private true :doc "Map of classnames to subprotocols"} classnames
+  {"postgresql" "org.postgresql.Driver"
+   "mysql" "com.mysql.jdbc.Driver"
+   "derby" "org.apache.derby.jdbc.EmbeddedDriver"
+   "hsqldb" "org.hsqldb.jdbcDriver"
+   "sqlite" "org.sqlite.JDBC"})
+
 (def special-counts
   {Statement/EXECUTE_FAILED "EXECUTE_FAILED"
    Statement/SUCCESS_NO_INFO "SUCCESS_NO_INFO"})
@@ -108,9 +115,9 @@
     (others)     (optional) passed to the factory function in a map
 
   DriverManager:
-    :classname   (required) a String, the jdbc driver class name
     :subprotocol (required) a String, the jdbc subprotocol
     :subname     (required) a String, the jdbc subname
+    :classname   (optional) a String, the jdbc driver class name
     (others)     (optional) passed to the driver as properties.
 
   DataSource:
@@ -129,9 +136,10 @@
   (cond
     factory
     (factory (dissoc db-spec :factory))
-    (and classname subprotocol subname)
+    (and subprotocol subname)
     (let [url (format "jdbc:%s:%s" subprotocol subname)
-          etc (dissoc db-spec :classname :subprotocol :subname)]
+          etc (dissoc db-spec :classname :subprotocol :subname)
+          classname (or classname (classnames subprotocol))]
       (RT/loadClassForName classname)
       (DriverManager/getConnection url (as-properties etc)))
     (and datasource username password)

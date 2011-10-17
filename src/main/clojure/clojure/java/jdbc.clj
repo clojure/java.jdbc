@@ -139,9 +139,9 @@ generated keys are returned (as a map)." }
     (others)     (optional) passed to the factory function in a map
 
   DriverManager:
-    :classname   (required) a String, the jdbc driver class name
     :subprotocol (required) a String, the jdbc subprotocol
     :subname     (required) a String, the jdbc subname
+    :classname   (optional) a String, the jdbc driver class name
     (others)     (optional) passed to the driver as properties.
 
   DataSource:

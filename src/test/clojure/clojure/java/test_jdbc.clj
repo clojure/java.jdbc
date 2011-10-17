@@ -33,19 +33,16 @@
 
 ;; database connections used for testing:
 
-(def mysql-db {:classname "com.mysql.jdbc.Driver"
-               :subprotocol "mysql"
+(def mysql-db {:subprotocol "mysql"
                :subname "//127.0.0.1:3306/clojure_test"
                :user "clojure_test"
                :password "clojure_test"})
 
-(def derby-db {:classname "org.apache.derby.jdbc.EmbeddedDriver"
-               :subprotocol "derby"
+(def derby-db {:subprotocol "derby"
                :subname "clojure_test_derby"
                :create true})
 
-(def hsqldb-db {:classname "org.hsqldb.jdbcDriver"
-                :subprotocol "hsqldb"
+(def hsqldb-db {:subprotocol "hsqldb"
                 :subname "clojure_test_hsqldb"})
 
 (defn- test-specs
