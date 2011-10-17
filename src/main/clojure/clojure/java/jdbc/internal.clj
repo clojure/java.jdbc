@@ -112,11 +112,13 @@
 
 (defn- parse-properties-uri [^URI uri]
   (let [host (.getHost uri)
-        port (.getPort uri)
+        port (if (pos? (.getPort uri)) (.getPort uri))
         path (.getPath uri)
         scheme (.getScheme uri)]
     (merge
-     {:subname (str "//" host ":" port path)
+     {:subname (if port
+                 (str "//" host ":" port path)
+                 (str "//" host path))
       :subprotocol (subprotocols scheme scheme)}
      (if-let [user-info (.getUserInfo uri)]
              {:user (first (str/split user-info #":"))
