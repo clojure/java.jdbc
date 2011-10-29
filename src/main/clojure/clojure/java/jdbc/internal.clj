@@ -36,11 +36,6 @@
   {Statement/EXECUTE_FAILED "EXECUTE_FAILED"
    Statement/SUCCESS_NO_INFO "SUCCESS_NO_INFO"})
 
-(defn filter-existing [specs existing]
-  "Filters out existing columns for the update-table function"
-  (filter (fn [col] (nil? (some #{(sql/as-identifier (first col))} existing))) specs)
-  )
-
 (defn find-connection*
   "Returns the current database connection (or nil if there is none)"
   []

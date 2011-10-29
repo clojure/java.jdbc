@@ -235,45 +235,6 @@ generated keys are returned (as a map)." }
   [name & specs]
   (do-commands (apply create-table-ddl name specs)))
 
-(defn update-table 
-  "Adds non-existing columns to a table on the open database connection given a table name and
-  specs. This can be used instead of create-table Each spec is either a column spec: a vector containing a column
-  name and optionally a type and other constraints, or a table-level
-  constraint: a vector containing words that express the constraint.  All words used to
-  describe the table may be supplied as strings or keywords."  
-  [table-name & specs]
-  (def exists (table-exists table-name))
-  ; Create the table with placeholder column (to remove after other columns are added.
-  (if (not exists)
-    (do-commands (str "CREATE TABLE " table-name " (__placeholder__ int)")))
-  
-  (with-query-results rs [(str "SHOW COLUMNS FROM " table-name)]
-     (let [existing-columns (map #(:field %) rs)
-           split-specs (partition-by #(= :table-spec %) specs)
-	         col-specs (first split-specs)
-		       table-spec (first (second (rest split-specs)))
-		       table-spec-str (or (and table-spec (str " " table-spec)) "")
-           remaining-cols (filter-existing specs existing-columns)
-		       specs-to-string (fn [specs]
-		                          (apply str
-		                                 (map as-identifier
-		                                      (apply concat
-		                                             (interpose [", ADD COLUMN "]
-		                                                        (map (partial interpose " ") 
-                                                               remaining-cols))))))
-           query (format "ALTER TABLE %s ADD COLUMN %s %s"
-	            (as-identifier table-name)
-	            (specs-to-string col-specs)
-	            table-spec-str)]
-       (if (> (count remaining-cols) 0)
-         (do-commands query)
-         )))
-     
-  ; Remove placeholder column
-  (if (not exists)
-    (do-commands (str "ALTER TABLE " table-name " DROP COLUMN __placeholder__")))
-  )
-
 
 (defn drop-table
   "Drops a table on the open database connection given its name, a string
@@ -409,3 +370,53 @@ generated keys are returned (as a map)." }
                          index
                          (get special-counts count count)))) 
       (.getUpdateCounts exception))))
+
+
+(defn filter-existing [specs existing]
+  "Filters out existing columns for the update-table function"
+  (filter (fn [col] (nil? (some #{(as-identifier (first col))} existing))) specs)
+  )
+
+(defn table-exists [table-name]
+  (not (nil? (with-query-results rs [(str "SHOW TABLES LIKE \"" table-name "\"")] (first rs))))
+  )
+
+(defn update-table 
+  "Adds non-existing columns to a table on the open database connection given a table name and
+  specs. This can be used instead of create-table Each spec is either a column spec: a vector containing a column
+  name and optionally a type and other constraints, or a table-level
+  constraint: a vector containing words that express the constraint.  All words used to
+  describe the table may be supplied as strings or keywords."  
+  [table-name & specs]
+  (def exists (table-exists table-name))
+  ; Create the table with placeholder column (to remove after other columns are added.
+  (if (not exists)
+    (do-commands (str "CREATE TABLE " table-name " (__placeholder__ int)")))
+  
+  (with-query-results rs [(str "SHOW COLUMNS FROM " table-name)]
+     (let [existing-columns (map #(:field %) rs)
+           split-specs (partition-by #(= :table-spec %) specs)
+	         col-specs (first split-specs)
+		       table-spec (first (second (rest split-specs)))
+		       table-spec-str (or (and table-spec (str " " table-spec)) "")
+           remaining-cols (filter-existing specs existing-columns)
+		       specs-to-string (fn [specs]
+		                          (apply str
+		                                 (map as-identifier
+		                                      (apply concat
+		                                             (interpose [", ADD COLUMN "]
+		                                                        (map (partial interpose " ") 
+                                                               remaining-cols))))))
+           query (format "ALTER TABLE %s ADD COLUMN %s %s"
+	            (as-identifier table-name)
+	            (specs-to-string col-specs)
+	            table-spec-str)]
+       (if (> (count remaining-cols) 0)
+         (do-commands query)
+         )))
+     
+  ; Remove placeholder column
+  (if (not exists)
+    (do-commands (str "ALTER TABLE " table-name " DROP COLUMN __placeholder__")))
+  )
+
