@@ -235,7 +235,6 @@ generated keys are returned (as a map)." }
   [name & specs]
   (do-commands (apply create-table-ddl name specs)))
 
-
 (defn drop-table
   "Drops a table on the open database connection given its name, a string
   or keyword"
