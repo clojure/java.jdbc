@@ -1,3 +1,10 @@
+Changes in 0.1.1:
+
+* Fix JDBC-21 by adding support for db-spec as URI (Phil Hagelberg). 
+* Fix JDBC-22 by deducing driver class name from subprotocol (Phil Hagelberg).
+* Add Postgres dependency so tests can be automcated (Phil Hagelberg).
+* Add ability to specify test databases via TEST_DBS environment variable (Phil Hagelberg).
+
 Changes in 0.1.0:
 
 * Fix JDBC-15 by removing dependence on deprecated structmap.

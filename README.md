@@ -10,7 +10,7 @@ In Maven:
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>java.jdbc</artifactId>
-  <version>0.1.0</version>
+  <version>0.1.1</version>
 </dependency>
 ```
 
@@ -18,14 +18,14 @@ In Leiningen:
 
 ```clj
   :dependencies [...
-                 [org.clojure/java.jdbc "0.1.0"]
+                 [org.clojure/java.jdbc "0.1.1"]
                  ...]
 ```
 
 ## Testing
 
 Currently by default tests run only against Derby and HSQLDB, the
-in-process databases. 
+in-process databases.
 
 To test against PostgreSQL, first create the user and database:
 
