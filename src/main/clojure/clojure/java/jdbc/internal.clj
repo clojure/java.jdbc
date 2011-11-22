@@ -382,7 +382,6 @@
         params (vec (cond sql-is-first (rest sql-params)
                           options-are-first (rest (rest sql-params))
                           :else (rest sql-params)))
-        params (vec (if sql-is-first (rest sql-params) (rest (rest sql-params))))
         prepare-args (when (map? special) (flatten (seq special)))]
     (with-open [^PreparedStatement stmt (if (instance? PreparedStatement special) special (apply prepare-statement* (connection*) sql prepare-args))]
       (set-parameters stmt params)
