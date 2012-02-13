@@ -114,13 +114,14 @@ Change Log
   * Clojure 1.2 compatibility [JDBC-7](http://dev.clojure.org/jira/browse/JDBC-7)
 * Release 0.0.1 on 2011-05-07
   * Initial release
-  * Changes from clojure.java.jdbc:
-    * Expose print-... functions; no longer write exceptions to ***out***
-    * Define resultset-seq to replace clojure.core/resultset-seq
-    * Add naming / quoting strategies (see [name mapping documentation](http://clojure.github.com/java.jdbc/doc/clojure/java/jdbc/NameMapping.html)
-    * Return generated keys from insert operations, where possible
-    * Add insert-record function
-    * Clojure 1.3 compatibility
+
+* Changes from clojure.contrib.sql:
+  * Expose print-... functions; no longer write exceptions to **\*out\***
+  * Define resultset-seq to replace clojure.core/resultset-seq
+  * Add naming / quoting strategies (see [name mapping documentation](http://clojure.github.com/java.jdbc/doc/clojure/java/jdbc/NameMapping.html)
+  * Return generated keys from insert operations, where possible
+  * Add insert-record function
+  * Clojure 1.3 compatibility
 
 
 
