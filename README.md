@@ -69,19 +69,19 @@ Developer Information
   * Currently by default tests run only against Derby and HSQLDB, the in-process databases.
 
 * To test against PostgreSQL, first create the user and database:
-  
-      $ sudo -u postgres createuser clojure_test -P # password: clojure_test
-      $ sudo -u postgres createdb clojure_test -O clojure_test
-      
+
+    $ sudo -u postgres createuser clojure_test -P # password: clojure_test
+    $ sudo -u postgres createdb clojure_test -O clojure_test
+
 * Or similarly with MySQL:
-    
-        $ mysql -u root
-        mysql> create database clojure_test;
-        mysql> grant all on clojure_test.* to clojure_test identified by "clojure_test";
-        
+
+    $ mysql -u root
+    mysql> create database clojure_test;
+    mysql> grant all on clojure_test.* to clojure_test identified by "clojure_test";
+
 * Then run the tests with the <tt>TEST_DBS</tt> environment variable:
-    
-        $ TEST_DBS=mysql,postgres mvn test
+
+    $ TEST_DBS=mysql,postgres mvn test
 
 
 
