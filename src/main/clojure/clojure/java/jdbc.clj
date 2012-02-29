@@ -254,7 +254,7 @@ generated keys are returned (as a map)." }
         n (count (first value-groups))
         return-keys (= 1 (count value-groups))
         prepared-statement (if return-keys do-prepared-return-keys* do-prepared*)
-        template (apply str (interpose "," (replicate n "?")))
+        template (apply str (interpose "," (repeat n "?")))
         columns (if (seq column-names)
                   (format "(%s)" (apply str (interpose "," column-strs)))
                   "")]
