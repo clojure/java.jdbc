@@ -351,11 +351,12 @@
   [sql & param-groups]
   (with-open [^PreparedStatement stmt (prepare-statement* (connection*) sql)]
     (if (empty? param-groups)
-      (.addBatch stmt)
-      (doseq [param-group param-groups]
-        (set-parameters stmt param-group)
-        (.addBatch stmt)))
-    (transaction* (fn [] (seq (.executeBatch stmt))))))
+      (transaction* (fn [] (vector (.executeUpdate stmt))))
+      (do
+        (doseq [param-group param-groups]
+          (set-parameters stmt param-group)
+          (.addBatch stmt))
+        (transaction* (fn [] (seq (.executeBatch stmt))))))))
 
 (defn with-query-results*
   "Executes a query, then evaluates func passing in a seq of the results as

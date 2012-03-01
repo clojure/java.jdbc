@@ -69,6 +69,9 @@
 (def hsqldb-db {:subprotocol "hsqldb"
                 :subname "clojure_test_hsqldb"})
 
+(def sqlite-db {:subprotocol "sqlite"
+                :subname "clojure_test_sqlite"})
+
 (def postgres-db {:subprotocol "postgresql"
                   :subname "clojure_test"
                   :user "clojure_test"
@@ -222,6 +225,8 @@
           "sqlserver"      (is (= '({:generated_keys nil} {:generated_keys nil}) r))
           "jtds:sqlserver" (is (= '({:id nil} {:id nil}) r))
           "hsqldb"         (is (= '(1 1) r))
+          "sqlite"         (is (= (list {(keyword "last_insert_rowid()") 1}
+                                        {(keyword "last_insert_rowid()") 2}) r))
           "derby"          (is (= '({:1 nil} {:1 nil}) r))))
       (is (= 2 (sql/with-query-results res ["SELECT * FROM fruit"] (count res))))
       (is (= "Pomegranate" (sql/with-query-results res ["SELECT * FROM fruit WHERE cost = ?" 585] (:name (first res))))))))
@@ -295,7 +300,9 @@
             [:name :appearance]
             ["Grape" "yummy"]
             ["Pear" "bruised"]
-            ["Apple" "strange" "whoops"]))
+            ["Apple" "strange" "whoops"])
+          ;; sqlite does not throw exception for too many items
+          (throw (java.sql.SQLException.)))
         (catch java.sql.SQLException _
           (is (= 0 (sql/with-query-results res ["SELECT * FROM fruit"] (count res))))))
       (is (= 0 (sql/with-query-results res ["SELECT * FROM fruit"] (count res)))))))
