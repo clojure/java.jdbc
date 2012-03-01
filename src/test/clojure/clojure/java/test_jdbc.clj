@@ -31,7 +31,7 @@
   (if-let [dbs (System/getenv "TEST_DBS")]
     (map keyword (.split dbs ","))
     ;; enable more by default once the build server is equipped?
-    [:derby :hsqldb]))
+    [:derby :hsqldb :sqlite]))
 
 ;; MS SQL Server requires more specialized configuration:
 (def mssql-host
