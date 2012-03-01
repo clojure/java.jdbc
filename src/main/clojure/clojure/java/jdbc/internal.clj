@@ -27,11 +27,13 @@
 (def ^{:dynamic true} *db* {:connection nil :level 0})
 
 (def ^{:private true :doc "Map of classnames to subprotocols"} classnames
-  {"postgresql" "org.postgresql.Driver"
-   "mysql" "com.mysql.jdbc.Driver"
-   "derby" "org.apache.derby.jdbc.EmbeddedDriver"
-   "hsqldb" "org.hsqldb.jdbcDriver"
-   "sqlite" "org.sqlite.JDBC"})
+  {"postgresql"     "org.postgresql.Driver"
+   "mysql"          "com.mysql.jdbc.Driver"
+   "sqlserver"      "com.microsoft.sqlserver.jdbc.SQLServerDriver"
+   "jtds:sqlserver" "net.sourceforge.jtds.jdbc.Driver"
+   "derby"          "org.apache.derby.jdbc.EmbeddedDriver"
+   "hsqldb"         "org.hsqldb.jdbcDriver"
+   "sqlite"         "org.sqlite.JDBC"})
 
 (def ^{:private true :doc "Map of schemes to subprotocols"} subprotocols
   {"postgres" "postgresql"})
