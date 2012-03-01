@@ -46,5 +46,20 @@
       <version>8.4-702.jdbc4</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>net.sourceforge.jtds</groupId>
+      <artifactId>jtds</artifactId>
+      <version>1.2.4</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- assumes you have the Microsoft JDBC4 Driver 3.0 installed locally -->
+    <!--
+    <dependency>
+      <groupId>sqljdbc4</groupId>
+      <artifactId>sqljdbc4</artifactId>
+      <version>3.0</version>
+      <scope>test</scope>
+    </dependency>
+    -->
   </dependencies>
 </project>
