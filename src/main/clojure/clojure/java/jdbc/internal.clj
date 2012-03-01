@@ -337,11 +337,16 @@
   (with-open [^PreparedStatement stmt (prepare-statement* (connection*) sql :return-keys true)]
     (set-parameters stmt param-group)
     (transaction* (fn [] (let [counts (.executeUpdate stmt)]
-                           (try
-                             (first (resultset-seq* (.getGeneratedKeys stmt)))
-                             (catch Exception _
-                               ;; assume generated keys is unsupported and return counts instead: 
-                               counts)))))))
+                          (try
+                            (let [rs (.getGeneratedKeys stmt)
+                                  result (first (resultset-seq* rs))]
+                              ;; sqlite (and maybe others?) requires
+                              ;; record set to be closed
+                              (.close rs)
+                              result)
+                            (catch Exception _
+                              ;; assume generated keys is unsupported and return counts instead: 
+                              counts)))))))
 
 (defn do-prepared*
   "Executes an (optionally parameterized) SQL prepared statement on the

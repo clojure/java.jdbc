@@ -327,6 +327,20 @@
           (is (= 0 (sql/with-query-results res ["SELECT * FROM fruit"] (count res))))))
       (is (= 0 (sql/with-query-results res ["SELECT * FROM fruit"] (count res)))))))
 
+(deftest test-transactions-with-possible-generated-keys-result-set
+  (doseq [db (test-specs)]
+    (sql/with-connection db
+      (create-test-table :fruit db)
+      (try
+        (sql/transaction
+         (sql/set-rollback-only)
+         (sql/insert-values
+          :fruit
+          [:name :appearance]
+          ["Grape" "yummy"])
+         (is (= 1 (sql/with-query-results res ["SELECT * FROM fruit"] (count res))))))
+      (is (= 0 (sql/with-query-results res ["SELECT * FROM fruit"] (count res)))))))
+
 (deftest test-metadata
   (doseq [db (test-specs)]
     (when-not (.endsWith ^String (:subprotocol db) "sqlserver")
