@@ -8,4 +8,5 @@ clojure_test_derby
 clojure_test_hsqldb.*
 derby.log
 target
+test-all.sh
 settings.xml
