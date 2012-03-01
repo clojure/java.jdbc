@@ -33,6 +33,28 @@
     ;; enable more by default once the build server is equipped?
     [:derby :hsqldb]))
 
+;; MS SQL Server requires more specialized configuration:
+(def mssql-host
+  (if-let [host (System/getenv "TEST_MSSQL_HOST")] host "127.0.0.1\\SQLEXPRESS"))
+(def mssql-port
+  (if-let [port (System/getenv "TEST_MSSQL_PORT")] port "1433"))
+(def mssql-user
+  (if-let [user (System/getenv "TEST_MSSQL_USER")] user "sa"))
+(def mssql-pass
+  (if-let [pass (System/getenv "TEST_MSSQL_PASS")] pass ""))
+(def mssql-dbname
+  (if-let [name (System/getenv "TEST_MSSQL_NAME")] name "clojure_test"))
+(def jtds-host
+  (if-let [host (System/getenv "TEST_JTDS_HOST")] host mssql-host))
+(def jtds-port
+  (if-let [port (System/getenv "TEST_JTDS_PORT")] port mssql-port))
+(def jtds-user
+  (if-let [user (System/getenv "TEST_JTDS_USER")] user mssql-user))
+(def jtds-pass
+  (if-let [pass (System/getenv "TEST_JTDS_PASS")] pass mssql-pass))
+(def jtds-dbname
+  (if-let [name (System/getenv "TEST_JTDS_NAME")] name mssql-dbname))
+
 ;; database connections used for testing:
 
 (def mysql-db {:subprotocol "mysql"
@@ -51,6 +73,16 @@
                   :subname "clojure_test"
                   :user "clojure_test"
                   :password "clojure_test"})
+
+(def mssql-db {:subprotocol "sqlserver"
+               :subname (str "//" mssql-host ":" mssql-port ";DATABASENAME=" mssql-dbname)
+               :user mssql-user
+               :password mssql-pass})
+
+(def jtds-db {:subprotocol "jtds:sqlserver"
+              :subname (str "//" jtds-host ":" jtds-port "/" jtds-dbname)
+              :user jtds-user
+              :password jtds-pass})
 
 ;; To test against the stringified DB connection settings:
 (def mysql-str-db
@@ -171,10 +203,12 @@
                 {:name "Kiwifruit" :grade 93})]
         (condp = (:subprotocol db)
           nil nil ; for the string connection args
-          "postgresql" (is (= 2 (count r)))
-          "mysql" (is (= '({:generated_key 1} {:generated_key 2}) r))
-          "hsqldb" (is (= '(1 1) r))
-          "derby" (is (= '({:1 nil} {:1 nil}) r))))
+          "postgresql"     (is (= 2 (count r)))
+          "mysql"          (is (= '({:generated_key 1} {:generated_key 2}) r))
+          "sqlserver"      (is (= '({:generated_keys nil} {:generated_keys nil}) r))
+          "jtds:sqlserver" (is (= '({:id nil} {:id nil}) r))
+          "hsqldb"         (is (= '(1 1) r))
+          "derby"          (is (= '({:1 nil} {:1 nil}) r))))
       (is (= 2 (sql/with-query-results res ["SELECT * FROM fruit"] (count res))))
       (is (= "Pomegranate" (sql/with-query-results res ["SELECT * FROM fruit WHERE cost = ?" 585] (:name (first res))))))))
 
@@ -274,11 +308,12 @@
 
 (deftest test-metadata
   (doseq [db (test-specs)]
-    (let [metadata (sql/with-connection
-                     db
-                     (into []
-                           (sql/resultset-seq
-                             (-> (sql/connection)
-                               (.getMetaData)
-                               (.getTables nil nil nil (into-array ["TABLE" "VIEW"]))))))]
-      (is (= [] metadata)))))
+    (when-not (.endsWith ^String (:subprotocol db) "sqlserver")
+      (let [metadata (sql/with-connection
+                       db
+                       (into []
+                             (sql/resultset-seq
+                              (-> (sql/connection)
+                                  (.getMetaData)
+                                  (.getTables nil nil nil (into-array ["TABLE" "VIEW"]))))))]
+        (is (= [] metadata))))))
