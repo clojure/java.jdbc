@@ -10,7 +10,7 @@ Formerly known as clojure.contrib.sql.
 Releases and Dependency Information
 ========================================
 
-Latest stable release: 0.1.1
+Latest stable release: 0.1.2
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22java.jdbc%22)
 
@@ -18,14 +18,14 @@ Latest stable release: 0.1.1
 
 [Leiningen](https://github.com/technomancy/leiningen) dependency information:
 
-    [org.clojure/java.jdbc "0.1.1"]
+    [org.clojure/java.jdbc "0.1.2"]
 
 [Maven](http://maven.apache.org/) dependency information:
 
     <dependency>
       <groupId>org.clojure</groupId>
       <artifactId>java.jdbc</artifactId>
-      <version>0.1.1</version>
+      <version>0.1.2</version>
     </dependency>
 
 
@@ -88,6 +88,13 @@ Developer Information
 Change Log
 ====================
 
+* Release 0.1.2 on 2012-02-29
+  * Handle prepared statement params correctly [JDBC-23](http://dev.clojure.org/jira/browse/JDBC-23)
+  * Add support for SQLite3 [JDBC-26](http://dev.clojure.org/jira/browse/JDBC-26)
+  * Replace replicate (deprecated) with repeat [JDBC-27](http://dev.clojure.org/jira/browse/JDBC-27)
+  * Ensure MS SQL Server passes tests with both Microsoft and jTDS drivers
+  * Build server now tests derby, hsqldb and sqlite by default
+  * Update README per Stuart Sierra's outline for contrib projects
 * Release 0.1.1 on 2011-11-02
   * Accept string or URI in connection definition [JDBC-21](http://dev.clojure.org/jira/browse/JDBC-21)
   * Allow driver, port and subprotocol to be deduced [JDBC-22](http://dev.clojure.org/jira/browse/JDBC-22)

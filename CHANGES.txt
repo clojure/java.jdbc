@@ -1,3 +1,12 @@
+Changes in 0.1.2:
+
+* Fix JDBC-23 by handling prepared statement params correctly (Ghadi Shayban)
+* Fix JDBC-26 by adding support for SQLite3 (based on patch from Nelson Morris)
+* Fix JDBC-27 by replacing replicate with repeat (Jonas Enlund)
+* Ensure MS SQL Server passes tests with both Microsoft and jTDS drivers
+* Build server now tests derby, hsqldb and sqlite by default
+* Update README per Stuart Sierra's outline for contrib projects
+
 Changes in 0.1.1:
 
 * Fix JDBC-21 by adding support for db-spec as URI (Phil Hagelberg). 
