@@ -214,7 +214,7 @@
               ;; rather than something wrapped in a RuntimeException which
               ;; can really obscure your code when working with JDBC from
               ;; Clojure... :(
-              (letfn [(throw-non-rte [ex]
+              (letfn [(throw-non-rte [^Throwable ex]
                         (cond (instance? java.sql.SQLException ex) (throw ex)
                               (and (instance? RuntimeException ex) (.getCause ex)) (throw-non-rte (.getCause ex))
                               :else (throw ex)))]
