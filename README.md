@@ -10,7 +10,7 @@ Formerly known as clojure.contrib.sql.
 Releases and Dependency Information
 ========================================
 
-Latest stable release: 0.1.3
+Latest stable release: 0.1.4
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22java.jdbc%22)
 
@@ -18,14 +18,14 @@ Latest stable release: 0.1.3
 
 [Leiningen](https://github.com/technomancy/leiningen) dependency information:
 
-    [org.clojure/java.jdbc "0.1.3"]
+    [org.clojure/java.jdbc "0.1.4"]
 
 [Maven](http://maven.apache.org/) dependency information:
 
     <dependency>
       <groupId>org.clojure</groupId>
       <artifactId>java.jdbc</artifactId>
-      <version>0.1.3</version>
+      <version>0.1.4</version>
     </dependency>
 
 
@@ -88,7 +88,7 @@ Developer Information
 Change Log
 ====================
 
-* Release 0.1.4 on ????
+* Release 0.1.4 on 2012-04-15
   * Unwrap RTE for nested transaction exceptions (we already
     unwrapped top-level transaction RTEs).
   * Remove reflection warning unwrapping RunTimeException (Alan Malloy)
