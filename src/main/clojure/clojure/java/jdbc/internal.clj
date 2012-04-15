@@ -14,7 +14,8 @@
 ;;  seancorfield (gmail)
 ;;  Migrated from clojure.contrib.sql.internal 17 April 2011
 
-(ns clojure.java.jdbc.internal
+(ns ^{:skip-wiki true}
+  clojure.java.jdbc.internal
   (:require [clojure.string :as str])
   (:import
     (clojure.lang RT)
