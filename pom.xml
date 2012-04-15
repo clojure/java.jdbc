@@ -14,6 +14,9 @@
     <developer>
       <name>Stephen C. Gilardi</name>
     </developer>
+    <developer>
+      <name>Sean Corfield</name>
+    </developer>
   </developers>
 
   <scm>
