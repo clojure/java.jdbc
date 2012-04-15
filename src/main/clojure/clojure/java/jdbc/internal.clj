@@ -197,32 +197,35 @@
   complete."
   [func]
   (binding [*db* (update-in *db* [:level] inc)]
-    (if (= (:level *db*) 1)
-      (let [^Connection con (connection*)
-            auto-commit (.getAutoCommit con)]
-        (io!
-          (.setAutoCommit con false)
-          (try
-            (let [result (func)]
-              (if (rollback)
-                (.rollback con)
-                (.commit con))
-              result)
-            (catch Exception e
-              (.rollback con)
-              ;; This ugliness makes it easier to catch SQLException objects
-              ;; rather than something wrapped in a RuntimeException which
-              ;; can really obscure your code when working with JDBC from
-              ;; Clojure... :(
-              (letfn [(throw-non-rte [^Throwable ex]
-                        (cond (instance? java.sql.SQLException ex) (throw ex)
-                              (and (instance? RuntimeException ex) (.getCause ex)) (throw-non-rte (.getCause ex))
-                              :else (throw ex)))]
-                     (throw-non-rte e)))
-            (finally
+    ;; This ugliness makes it easier to catch SQLException objects
+    ;; rather than something wrapped in a RuntimeException which
+    ;; can really obscure your code when working with JDBC from
+    ;; Clojure... :(
+    (letfn [(throw-non-rte [^Throwable ex]
+              (cond (instance? java.sql.SQLException ex) (throw ex)
+                    (and (instance? RuntimeException ex) (.getCause ex)) (throw-non-rte (.getCause ex))
+                    :else (throw ex)))]
+      (if (= (:level *db*) 1)
+        (let [^Connection con (connection*)
+              auto-commit (.getAutoCommit con)]
+          (io!
+           (.setAutoCommit con false)
+           (try
+             (let [result (func)]
+               (if (rollback)
+                 (.rollback con)
+                 (.commit con))
+               result)
+             (catch Exception e
+               (.rollback con)
+               (throw-non-rte e))
+             (finally
               (rollback false)
               (.setAutoCommit con auto-commit)))))
-      (func))))
+        (try
+          (func)
+          (catch Exception e
+            (throw-non-rte e)))))))
 
 (defn- make-name-unique
   "Given a collection of column names and a new column name,

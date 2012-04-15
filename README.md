@@ -88,6 +88,10 @@ Developer Information
 Change Log
 ====================
 
+* Release 0.1.4 on ????
+  * Unwrap RTE for nested transaction exceptions (we already
+    unwrapped top-level transaction RTEs).
+  * Remove reflection warning unwrapping RunTimeException (Alan Malloy)
 * Release 0.1.3 on 2012-02-29
   * Fix generated keys inside transactions for SQLite3 [JDBC-26](http://dev.clojure.org/jira/browse/JDBC-26)
 * Release 0.1.2 on 2012-02-29
