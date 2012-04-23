@@ -19,8 +19,7 @@
 
 (ns clojure.java.test-utilities
   (:use clojure.test)
-  (:require [clojure.java.jdbc :as sql])
-  (:require [clojure.java.jdbc.internal :as internal]))
+  (:require [clojure.java.jdbc :as sql]))
 
 ;; basic tests for keyword / entity conversion
 
@@ -84,13 +83,13 @@
       (is (re-find (pattern "SQLState: Test State.*SQLState: Base State") except-str)))))
 
 (deftest test-make-name-unique
-  (let [make-name-unique @#'internal/make-name-unique]
+  (let [make-name-unique @#'sql/make-name-unique]
     (is (= "a" (make-name-unique '() "a" 1)))
     (is (= "a_2" (make-name-unique '("a") "a" 1)))
     (is (= "a_3" (make-name-unique '("a" "b" "a_2") "a" 1)))))
 
 (deftest test-make-cols-unique
-  (let [make-cols-unique @#'internal/make-cols-unique]
+  (let [make-cols-unique @#'sql/make-cols-unique]
     (is (= '("a") (make-cols-unique '("a"))))
     (is (= '("a" "a_2") (make-cols-unique '("a" "a"))))
     (is (= '("a" "b" "a_2" "a_3") (make-cols-unique '("a" "b" "a" "a"))))
