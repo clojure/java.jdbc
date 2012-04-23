@@ -1,3 +1,7 @@
+Changes in 0.2.0:
+
+* Merge internal namespace into main jdbc namespace and update symbol visibility / naming.
+
 Changes in 0.1.4:
 
 * Unwrap RTE for nested transaction exception (we already unwrapped top-level transaction RTEs).

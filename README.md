@@ -10,7 +10,7 @@ Formerly known as clojure.contrib.sql.
 Releases and Dependency Information
 ========================================
 
-Latest stable release: 0.1.4
+Latest stable release: 0.2.0
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22java.jdbc%22)
 
@@ -18,14 +18,14 @@ Latest stable release: 0.1.4
 
 [Leiningen](https://github.com/technomancy/leiningen) dependency information:
 
-    [org.clojure/java.jdbc "0.1.4"]
+    [org.clojure/java.jdbc "0.2.0"]
 
 [Maven](http://maven.apache.org/) dependency information:
 
     <dependency>
       <groupId>org.clojure</groupId>
       <artifactId>java.jdbc</artifactId>
-      <version>0.1.4</version>
+      <version>0.2.0</version>
     </dependency>
 
 
@@ -88,6 +88,8 @@ Developer Information
 Change Log
 ====================
 
+* Release 0.2.0 on 2012-04-23
+  * Merge internal namespace into main jdbc namespace [JDBC-19](http://dev.clojure.org/jira/browse/JDBC-19)
 * Release 0.1.4 on 2012-04-15
   * Unwrap RTE for nested transaction exceptions (we already
     unwrapped top-level transaction RTEs).
