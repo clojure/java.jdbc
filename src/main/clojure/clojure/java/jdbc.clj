@@ -89,7 +89,6 @@ generated keys are returned (as a map)." }
 (defn- ^Properties as-properties
   "Convert any seq of pairs to a java.utils.Properties instance.
    Uses as-str to convert both keys and values into strings."
-  { :tag Properties }
   [m]
   (let [p (Properties.)]
     (doseq [[k v] m]
