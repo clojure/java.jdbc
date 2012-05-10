@@ -513,7 +513,7 @@ generated keys are returned (as a map)." }
   (do-commands
     (format "DROP TABLE %s" (as-identifier name))))
 
-(defn- do-prepared-return-keys
+(defn do-prepared-return-keys
   "Executes an (optionally parameterized) SQL prepared statement on the
   open database connection. The param-group is a seq of values for all of
   the parameters.
