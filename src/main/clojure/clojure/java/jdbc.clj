@@ -232,7 +232,7 @@ generated keys are returned (as a map)." }
           ;; on the order-preserving behavior of structmaps, we can reconsider...
           rows (fn thisfn []
                  (when (.next rs)
-                   (cons (into {} (map vector keys (row-values))) (lazy-seq (thisfn)))))]
+                   (cons (zipmap keys (row-values)) (lazy-seq (thisfn)))))]
       (rows)))
 
 (defn as-quoted-str
