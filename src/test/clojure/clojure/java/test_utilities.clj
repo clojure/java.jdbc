@@ -90,6 +90,7 @@
 
 (deftest test-make-cols-unique
   (let [make-cols-unique @#'sql/make-cols-unique]
+    (is (= '() (make-cols-unique '())))
     (is (= '("a") (make-cols-unique '("a"))))
     (is (= '("a" "a_2") (make-cols-unique '("a" "a"))))
     (is (= '("a" "b" "a_2" "a_3") (make-cols-unique '("a" "b" "a" "a"))))
