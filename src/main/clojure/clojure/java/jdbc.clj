@@ -201,13 +201,9 @@ generated keys are returned (as a map)." }
   "Given a collection of column names, rename duplicates so
    that the result is a collection of unique column names."
   [cols]
-  (if (apply distinct? cols)
+  (if (or (not (seq cols)) (apply distinct? cols))
     cols
-    (loop [[col-name :as new-cols] (seq cols)
-           unique-cols []]
-      (if (seq new-cols)
-        (recur (rest new-cols) (conj unique-cols (make-name-unique unique-cols col-name 1)))
-        unique-cols))))
+    (reduce (fn [unique-cols col-name] (conj unique-cols (make-name-unique unique-cols col-name 1))) []  cols)))
 
 (defn resultset-seq
   "Creates and returns a lazy sequence of maps corresponding to
