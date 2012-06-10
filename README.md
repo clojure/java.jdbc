@@ -10,7 +10,7 @@ Formerly known as clojure.contrib.sql.
 Releases and Dependency Information
 ========================================
 
-Latest stable release: 0.2.1
+Latest stable release: 0.2.2
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22java.jdbc%22)
 
@@ -18,14 +18,14 @@ Latest stable release: 0.2.1
 
 [Leiningen](https://github.com/technomancy/leiningen) dependency information:
 
-    [org.clojure/java.jdbc "0.2.1"]
+    [org.clojure/java.jdbc "0.2.2"]
 
 [Maven](http://maven.apache.org/) dependency information:
 
     <dependency>
       <groupId>org.clojure</groupId>
       <artifactId>java.jdbc</artifactId>
-      <version>0.2.1</version>
+      <version>0.2.2</version>
     </dependency>
 
 
@@ -88,6 +88,9 @@ Developer Information
 Change Log
 ====================
 
+* Release 0.2.2 on 2012-06-10
+  * Handle jdbc: prefix in string db-specs [JDBC-32](http://dev.clojure.org/jira/browse/JDBC-32)
+  * Handle empty columns in make column unique (Juergen Hoetzel) [JDBC-31](http://dev.clojure.org/jira/browse/JDBC-31)
 * Release 0.2.1 on 2012-05-10
   * Result set performance enhancement (Juergen Hoetzel) [JDBC-29](http://dev.clojure.org/jira/browse/JDBC-29)
   * Make do-prepared-return-keys (for Korma team) [JDBC-30](http://dev.clojure.org/jira/browse/JDBC-30)

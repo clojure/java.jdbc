@@ -160,7 +160,14 @@ generated keys are returned (as a map)." }
 
   JNDI:
     :name        (required) a String or javax.naming.Name
-    :environment (optional) a java.util.Map"
+    :environment (optional) a java.util.Map
+
+  URI:
+    Parsed JDBC connection string - see below
+  
+  String:
+    subprotocol://user:password@host:post/subname
+                 An optional prefix of jdbc: is allowed."
   [{:keys [factory
            classname subprotocol subname
            datasource username password
