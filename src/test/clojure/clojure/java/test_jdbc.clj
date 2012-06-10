@@ -343,7 +343,7 @@
 
 (deftest test-metadata
   (doseq [db (test-specs)]
-    (when-not (.endsWith ^String (:subprotocol db) "sqlserver")
+    (when-not (and (map? db) (.endsWith ^String (:subprotocol db) "sqlserver"))
       (let [metadata (sql/with-connection
                        db
                        (into []
