@@ -89,6 +89,7 @@ Change Log
 ====================
 
 * Release 0.2.2 on 2012-06-10
+  * Handle Oracle unknown row count affected [JDBC-33](http://dev.clojure.org/jira/browse/JDBC-33)
   * Handle jdbc: prefix in string db-specs [JDBC-32](http://dev.clojure.org/jira/browse/JDBC-32)
   * Handle empty columns in make column unique (Juergen Hoetzel) [JDBC-31](http://dev.clojure.org/jira/browse/JDBC-31)
 * Release 0.2.1 on 2012-05-10

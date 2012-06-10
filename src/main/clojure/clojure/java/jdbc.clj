@@ -404,6 +404,18 @@ generated keys are returned (as a map)." }
   []
   (rollback))
 
+(defn- execute-batch
+  "Executes a batch of SQL commands and returns a sequence of update counts.
+   (-2) indicates a single operation operating on an unknown number of rows.
+   Specifically, Oracle returns that and we must call getUpdateCount() to get
+   the actual number of rows affected. In general, operations return an array
+   of update counts, so this may not be a general solution for Oracle..."
+  [stmt]
+  (let [result (.executeBatch stmt)]
+    (if (and (= 1 (count result)) (= -2 (first result)))
+      (list (.getUpdateCount stmt))
+      (seq result))))
+
 (defn do-commands
   "Executes SQL commands on the open database connection."
   [& commands]
@@ -411,7 +423,7 @@ generated keys are returned (as a map)." }
     (doseq [^String cmd commands]
       (.addBatch stmt cmd))
     (transaction
-      (seq (.executeBatch stmt)))))
+     (execute-batch stmt))))
 
 (def ^{:private true
        :doc "Map friendly :concurrency values to ResultSet constants."} 
@@ -482,7 +494,7 @@ generated keys are returned (as a map)." }
         (doseq [param-group param-groups]
           (set-parameters stmt param-group)
           (.addBatch stmt))
-        (transaction* (fn [] (seq (.executeBatch stmt))))))))
+        (transaction* (fn [] (execute-batch stmt)))))))
 
 (defn create-table-ddl
   "Given a table name and column specs with an optional table-spec
