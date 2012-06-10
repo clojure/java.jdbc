@@ -134,6 +134,11 @@ generated keys are returned (as a map)." }
              {:user (first (str/split user-info #":"))
               :password (second (str/split user-info #":"))}))))
 
+(defn- strip-jdbc [^String spec]
+  (if (.startsWith spec "jdbc:")
+    (.substring spec 5)
+    spec))
+
 (defn- get-connection
   "Creates a connection to a database. db-spec is a map containing values
   for one of the following parameter sets:
@@ -165,7 +170,7 @@ generated keys are returned (as a map)." }
     (instance? URI db-spec)
     (get-connection (parse-properties-uri db-spec))
     (string? db-spec)
-    (get-connection (URI. db-spec))
+    (get-connection (URI. (strip-jdbc db-spec)))
     factory
     (factory (dissoc db-spec :factory))
     (and subprotocol subname)
