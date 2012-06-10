@@ -91,6 +91,9 @@
 (def mysql-str-db
   "mysql://clojure_test:clojure_test@localhost:3306/clojure_test")
 
+(def mysql-jdbc-str-db
+  "jdbc:mysql://clojure_test:clojure_test@localhost:3306/clojure_test")
+
 (def postgres-str-db
   "postgres://clojure_test:clojure_test@localhost/clojure_test")
 
@@ -131,7 +134,7 @@
       [:appearance "VARCHAR(32)"]
       [:cost :int]
       [:grade :real]
-      :table-spec (if (or (= "mysql" p) (and (string? db) (re-find #"^mysql" db)))
+      :table-spec (if (or (= "mysql" p) (and (string? db) (re-find #"mysql:" db)))
                     "ENGINE=InnoDB" ""))))
 
 (deftest test-create-table
