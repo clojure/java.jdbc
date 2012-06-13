@@ -18,37 +18,42 @@ Latest stable release: 0.2.2
 
 [Leiningen](https://github.com/technomancy/leiningen) dependency information:
 
-    [org.clojure/java.jdbc "0.2.2"]
+```clojure
+[org.clojure/java.jdbc "0.2.2"]
+```
 
 [Maven](http://maven.apache.org/) dependency information:
 
-    <dependency>
-      <groupId>org.clojure</groupId>
-      <artifactId>java.jdbc</artifactId>
-      <version>0.2.2</version>
-    </dependency>
-
+```xml
+<dependency>
+  <groupId>org.clojure</groupId>
+  <artifactId>java.jdbc</artifactId>
+  <version>0.2.2</version>
+</dependency>
+```
 
 
 Example Usage
 ========================================
 
-    (require '[clojure.java.jdbc :as sql])
+```clojure
+(require '[clojure.java.jdbc :as sql])
     
-    (def mysql-db {:subprotocol "mysql"
-        :subname "//127.0.0.1:3306/clojure_test"
-        :user "clojure_test"
-        :password "clojure_test"})
+(def mysql-db {:subprotocol "mysql"
+  :subname "//127.0.0.1:3306/clojure_test"
+  :user "clojure_test"
+  :password "clojure_test"})
     
-    (sql/with-connection mysql-db
-        (sql/insert-records :fruit
-            {:name "Apple" :appearance "rosy" :cost 24}
-            {:name "Orange" :appearance "round" :cost 49}))
+(sql/with-connection mysql-db
+  (sql/insert-records :fruit
+    {:name "Apple" :appearance "rosy" :cost 24}
+    {:name "Orange" :appearance "round" :cost 49}))
             
-    (sql/with-connection mysql-db
-        (sql/with-query-results rows
-            ["SELECT * FROM fruit WHERE appearance = ?" "rosy"]
-            (:cost (first rows))))
+(sql/with-connection mysql-db
+  (sql/with-query-results rows
+    ["SELECT * FROM fruit WHERE appearance = ?" "rosy"]
+    (:cost (first rows))))
+```
 
 For more detail see the [generated documentation on github](http://clojure.github.com/java.jdbc/).
 
@@ -82,7 +87,6 @@ Developer Information
 * Then run the tests with the <tt>TEST_DBS</tt> environment variable:
 
         $ TEST_DBS=mysql,postgres mvn test
-
 
 
 Change Log
