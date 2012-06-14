@@ -169,6 +169,7 @@ generated keys are returned (as a map)." }
     subprotocol://user:password@host:post/subname
                  An optional prefix of jdbc: is allowed."
   [{:keys [factory
+           connection-uri
            classname subprotocol subname
            datasource username password
            name environment]
@@ -176,25 +177,35 @@ generated keys are returned (as a map)." }
   (cond
     (instance? URI db-spec)
     (get-connection (parse-properties-uri db-spec))
+    
     (string? db-spec)
     (get-connection (URI. (strip-jdbc db-spec)))
+    
     factory
     (factory (dissoc db-spec :factory))
+    
+    connection-uri
+    (DriverManager/getConnection connection-uri)
+    
     (and subprotocol subname)
     (let [url (format "jdbc:%s:%s" subprotocol subname)
           etc (dissoc db-spec :classname :subprotocol :subname)
           classname (or classname (classnames subprotocol))]
       (clojure.lang.RT/loadClassForName classname)
       (DriverManager/getConnection url (as-properties etc)))
+    
     (and datasource username password)
     (.getConnection ^DataSource datasource ^String username ^String password)
+    
     datasource
     (.getConnection ^DataSource datasource)
+    
     name
     (let [env (and environment (Hashtable. ^Map environment))
           context (InitialContext. env)
           ^DataSource datasource (.lookup context ^String name)]
       (.getConnection datasource))
+    
     :else
     (let [^String msg (format "db-spec %s is missing a required parameter" db-spec)]
       (throw (IllegalArgumentException. msg)))))

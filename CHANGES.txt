@@ -1,3 +1,6 @@
+Changes in 0.2.3-SNAPSHOT:
+* Add :connection-uri option [JDBC-34](http://dev.clojure.org/jira/browse/JDBC-34)
+
 Changes in 0.2.2:
 * Handle Oracle unknown row count affected [JDBC-33](http://dev.clojure.org/jira/browse/JDBC-33)
 * Handle jdbc: prefix in string db-specs [JDBC-32](http://dev.clojure.org/jira/browse/JDBC-32)
