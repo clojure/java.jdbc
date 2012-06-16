@@ -162,6 +162,10 @@ generated keys are returned (as a map)." }
     :name        (required) a String or javax.naming.Name
     :environment (optional) a java.util.Map
 
+  Raw:
+    :connection-uri (required) a String
+                 Passed directly to DriverManager/getConnection
+
   URI:
     Parsed JDBC connection string - see below
   
