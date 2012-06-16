@@ -57,10 +57,18 @@ generated keys are returned (as a map)." }
 (defn as-str
   "Given a naming strategy and a keyword, return the keyword as a
    string per that naming strategy. Given (a naming strategy and)
-   a string, return it as-is."
+   a string, return it as-is.
+   A keyword of the form :x.y is treated as keywords :x and :y,
+   both are turned into strings via the naming strategy and then
+   joined back together so :x.y might become `x`.`y` if the naming
+   strategy quotes identifiers with `."
   [f x]
   (if (instance? clojure.lang.Named x)
-    (f (name x))
+    (let [n (name x)
+          i (.indexOf n (int \.))]
+      (if (= -1 i)
+        (f n)
+        (str/join "." (map f (.split n "\\.")))))
     (str x)))
 
 (defn as-key
