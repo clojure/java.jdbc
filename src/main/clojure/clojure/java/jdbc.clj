@@ -140,38 +140,8 @@ generated keys are returned (as a map)." }
     spec))
 
 (defn- get-connection
-  "Creates a connection to a database. db-spec is a map containing values
-  for one of the following parameter sets:
-
-  Factory:
-    :factory     (required) a function of one argument, a map of params
-    (others)     (optional) passed to the factory function in a map
-
-  DriverManager:
-    :subprotocol (required) a String, the jdbc subprotocol
-    :subname     (required) a String, the jdbc subname
-    :classname   (optional) a String, the jdbc driver class name
-    (others)     (optional) passed to the driver as properties.
-
-  DataSource:
-    :datasource  (required) a javax.sql.DataSource
-    :username    (optional) a String
-    :password    (optional) a String, required if :username is supplied
-
-  JNDI:
-    :name        (required) a String or javax.naming.Name
-    :environment (optional) a java.util.Map
-
-  Raw:
-    :connection-uri (required) a String
-                 Passed directly to DriverManager/getConnection
-
-  URI:
-    Parsed JDBC connection string - see below
-  
-  String:
-    subprotocol://user:password@host:post/subname
-                 An optional prefix of jdbc: is allowed."
+  "Creates a connection to a database. db-spec is a map containing connection
+   parameters - see with-connection for full details."
   [{:keys [factory
            connection-uri
            classname subprotocol subname
@@ -345,7 +315,18 @@ generated keys are returned (as a map)." }
 
   JNDI:
     :name        (required) a String or javax.naming.Name
-    :environment (optional) a java.util.Map"
+    :environment (optional) a java.util.Map
+
+  Raw:
+    :connection-uri (required) a String
+                 Passed directly to DriverManager/getConnection
+
+  URI:
+    Parsed JDBC connection string - see below
+  
+  String:
+    subprotocol://user:password@host:post/subname
+                 An optional prefix of jdbc: is allowed."
   [db-spec & body]
   `(with-connection* ~db-spec (fn [] ~@body)))
 
