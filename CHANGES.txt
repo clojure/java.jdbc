@@ -1,4 +1,5 @@
-Changes in 0.2.3-SNAPSHOT:
+Changes in 0.2.3:
+* as-str now treats a.b as two identifiers separated by . so quoting produces [a].[b] instead of [a.b]
 * Add :connection-uri option [JDBC-34](http://dev.clojure.org/jira/browse/JDBC-34)
 
 Changes in 0.2.2:

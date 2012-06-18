@@ -8,7 +8,7 @@ Formerly known as clojure.contrib.sql.
 Releases and Dependency Information
 ========================================
 
-Latest stable release: 0.2.2
+Latest stable release: 0.2.3
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22java.jdbc%22)
 
@@ -16,14 +16,14 @@ Latest stable release: 0.2.2
 
 [Leiningen](https://github.com/technomancy/leiningen) dependency information:
 ```clojure
-[org.clojure/java.jdbc "0.2.2"]
+[org.clojure/java.jdbc "0.2.3"]
 ```
 [Maven](http://maven.apache.org/) dependency information:
 ```xml
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>java.jdbc</artifactId>
-  <version>0.2.2</version>
+  <version>0.2.3</version>
 </dependency>
 ```
 
@@ -81,6 +81,9 @@ Developer Information
 Change Log
 ====================
 
+* Release 0.2.3 on 2012-06-18
+  * as-str now treats a.b as two identifiers separated by . so quoting produces [a].[b] instead of [a.b]
+  * Add :connection-uri option [JDBC-34](http://dev.clojure.org/jira/browse/JDBC-34)
 * Release 0.2.2 on 2012-06-10
   * Handle Oracle unknown row count affected [JDBC-33](http://dev.clojure.org/jira/browse/JDBC-33)
   * Handle jdbc: prefix in string db-specs [JDBC-32](http://dev.clojure.org/jira/browse/JDBC-32)
