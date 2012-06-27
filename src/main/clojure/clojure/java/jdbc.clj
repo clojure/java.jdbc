@@ -367,7 +367,7 @@ generated keys are returned (as a map)." }
         (let [^java.sql.Connection con (connection)
               auto-commit (.getAutoCommit con)]
           (io!
-           (.setAutoCommit con false)
+           (when auto-commit (.setAutoCommit con false))
            (try
              (let [result (func)]
                (if (rollback)
@@ -379,7 +379,7 @@ generated keys are returned (as a map)." }
                (throw-non-rte e))
              (finally
               (rollback false)
-              (.setAutoCommit con auto-commit)))))
+              (when auto-commit (.setAutoCommit con auto-commit))))))
         (try
           (func)
           (catch Exception e
