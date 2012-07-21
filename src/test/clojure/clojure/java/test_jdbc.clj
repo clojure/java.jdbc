@@ -134,6 +134,8 @@
       [:appearance "VARCHAR(32)"]
       [:cost :int]
       [:grade :real]
+      (if (= "postgresql" p)
+        [:expiry "TIMESTAMP WITHOUT TIME ZONE"])    
       :table-spec (if (or (= "mysql" p) (and (string? db) (re-find #"mysql:" db)))
                     "ENGINE=InnoDB" ""))))
 
@@ -184,6 +186,16 @@
       (create-test-table :fruit2 db)
       (sql/do-prepared "INSERT INTO fruit2 ( name, appearance, cost, grade ) VALUES ( ?, ?, ?, ? )" ["test" "test" 1 1.0] ["two" "two" 2 2.0])
       (is (= 2 (sql/with-query-results res ["SELECT * FROM fruit2"] (count res)))))))
+
+(deftest test-timestamp
+  (doseq [db (test-specs)]
+    (if (= "postgresql" (:subprotocol db))
+      (sql/with-connection db
+        (create-test-table :fruit2 db)
+        (sql/do-prepared "INSERT INTO fruit2 ( name, appearance, cost, grade, expiry ) VALUES ( 'test', 'test', 1, 1.0, '2012/07/23')")
+        (is (= (.getTime (.getTime (doto (java.util.GregorianCalendar. (java.util.TimeZone/getTimeZone "UTC")) 
+                                     (.set 2012 6 23 0 0 0)))) ; Month value is 0-based. e.g., 0 for January.
+               (sql/with-query-results res ["SELECT * FROM fruit2"] (.getTime (:expiry (first res))))))))))
 
 (deftest test-insert-rows
   (doseq [db (test-specs)]
