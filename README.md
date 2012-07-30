@@ -26,6 +26,28 @@ Latest stable release: 0.2.3
   <version>0.2.3</version>
 </dependency>
 ```
+You will also need to add dependencies for the JDBC driver you intend to use. Here are examples of the drivers currently used for testing,
+shown as Leiningen dependencies:
+```clojure
+;; Apache Derby
+[org.apache.derby/derby "10.8.1.2"]
+;; HSQLDB
+[hsqldb/hsqldb "1.8.0.10"]
+;; Microsoft SQL Server using the jTDS driver
+[net.sourceforge.jtds/jtds "1.2.4"]
+;; MySQL
+[mysql/mysql-connector-java "5.1.6"]
+;; PostgreSQL
+[postgresql/postgresql "8.4-702.jdbc4"]
+;; SQLite
+[org.xerial/sqlite-jdbc "3.7.2"]
+```
+For the latest versions, consult the vendor or project websites. clojure.java.jdbc is also tested against Microsoft's own JDBC4 Driver 3.0 but that
+has to be downloaded manually and placed in a Maven repository accessible to your system. For testing, it was installed locally as:
+```clojure
+;; Microsoft SQL Server JDBC4 Driver 3.0
+[sqljdbc4/sqljdbc4 "3.0"]
+```
 
 Example Usage
 ========================================
