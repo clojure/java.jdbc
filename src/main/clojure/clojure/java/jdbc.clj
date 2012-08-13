@@ -216,13 +216,14 @@ generated keys are returned (as a map)." }
    but it respects the current naming strategy. Duplicate column names are
    made unique by appending _N before applying the naming strategy (where
    N is a unique integer)."
-  [^ResultSet rs]
+  [^ResultSet rs & {:keys [identifiers]
+                    :or {identifiers *as-key*}}]
     (let [rsmeta (.getMetaData rs)
           idxs (range 1 (inc (.getColumnCount rsmeta)))
           keys (->> idxs
                  (map (fn [^Integer i] (.getColumnLabel rsmeta i)))
                  make-cols-unique
-                 (map (comp keyword *as-key*)))
+                 (map (comp keyword identifiers)))
           row-values (fn [] (map (fn [^Integer i] (.getObject rs i)) idxs))
           ;; This used to use create-struct (on keys) and then struct to populate each row.
           ;; That had the side effect of preserving the order of columns in each row. As
