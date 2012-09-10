@@ -103,21 +103,31 @@
   (for [db test-databases]
     @(ns-resolve 'clojure.java.test-jdbc (symbol (str (name db) "-db")))))
 
+;; Utility to detect MySQL database since we do some
+;; MySQL-specific tests...
+
+(defn- mysql? [db]
+  (let [p (:subprotocol db)]
+    (or (= "mysql" p) (and (string? db) (re-find #"mysql:" db)))))
+
+;; Fixture to drop known tables before each test
+
 (defn- clean-up
   "Attempt to drop any test tables before we start a test."
   [t]
   (doseq [db (test-specs)]
-    (sql/with-connection db
-      (doseq [table [:fruit :fruit2 :veggies :veggies2]]
-        (try
-          (sql/drop-table table)
-          (catch Exception _
-            ;; ignore
-            )))))
+    (let [tables [:fruit :fruit2 :veggies :veggies2]]
+      (sql/with-connection db
+        (doseq [table (if (mysql? db) (conj tables :booleantest) tables)]
+          (try
+            (sql/drop-table table)
+            (catch Exception _
+              ;; ignore
+              ))))))
   (t))
 
 (use-fixtures
-  :each clean-up)
+ :each clean-up)
 
 ;; We start with all tables dropped and each test has to create the tables
 ;; necessary for it to do its job, and populate it as needed...
@@ -126,16 +136,14 @@
   "Create a standard test table. Must be inside with-connection.
    For MySQL, ensure table uses an engine that supports transactions!"
   [table db]
-  (let [p (:subprotocol db)]
-    (sql/create-table
-      table
-      [:id :int (if (= "mysql" p) "PRIMARY KEY AUTO_INCREMENT" "DEFAULT 0")]
-      [:name "VARCHAR(32)" (if (= "mysql" p) "" "PRIMARY KEY")]
-      [:appearance "VARCHAR(32)"]
-      [:cost :int]
-      [:grade :real]
-      :table-spec (if (or (= "mysql" p) (and (string? db) (re-find #"mysql:" db)))
-                    "ENGINE=InnoDB" ""))))
+  (sql/create-table
+   table
+   [:id :int (if (mysql? db) "PRIMARY KEY AUTO_INCREMENT" "DEFAULT 0")]
+   [:name "VARCHAR(32)" (if (mysql? db) "" "PRIMARY KEY")]
+   [:appearance "VARCHAR(32)"]
+   [:cost :int]
+   [:grade :real]
+   :table-spec (if (mysql? db) "ENGINE=InnoDB" "")))
 
 (deftest test-create-table
   (doseq [db (test-specs)]
@@ -343,6 +351,34 @@
           ["Grape" "yummy"])
          (is (= 1 (sql/with-query-results res ["SELECT * FROM fruit"] (count res))))))
       (is (= 0 (sql/with-query-results res ["SELECT * FROM fruit"] (count res)))))))
+
+(deftest mysql-boolean-processing
+  (doseq [db (test-specs)]
+    (when (mysql? db)
+      (sql/with-connection db
+        (sql/create-table
+         :booleantest
+         [:id :int "PRIMARY KEY AUTO_INCREMENT"]
+         [:t "BIT(1) DEFAULT b'1'"]
+         [:f "BIT(1) DEFAULT b'0'"]
+         :table-spec "ENGINE=InnoDB")
+        (let [r (sql/insert-records
+                 :booleantest
+                 {:t 1}
+                 {:f 0})]
+          (is (= '({:generated_key 1} {:generated_key 2}) r))
+          (let [rs (sql/with-query-results res
+                     ["SELECT * FROM booleantest WHERE id = 1"]
+                     (doall res))]
+            (is (= '({:id 1 :t true :f false}) rs))
+            (is (= :valid (if (:t (first rs)) :valid :invalid)))
+            (is (= :valid (if (:f (first rs)) :invalid :valid))))
+          (let [rs (sql/with-query-results res
+                     ["SELECT * FROM booleantest WHERE id = 2"]
+                     (doall res))]
+            (is (= '({:id 2 :t true :f false}) rs))
+            (is (= :valid (if (:t (first rs)) :valid :invalid)))
+            (is (= :valid (if (:f (first rs)) :invalid :valid)))))))))
 
 (deftest test-metadata
   (doseq [db (test-specs)]
