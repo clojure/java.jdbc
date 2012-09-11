@@ -1,3 +1,9 @@
+Changes in 0.2.4-SNAPSHOT
+* Remove reflection warning from execute-batch
+* Add notes to README about 3rd party database driver dependencies
+* Add optional :identifiers argument to resultset-seq so you can explicitly pass in the naming strategy
+* Extract Boolean columns explicitly to avoid byte[] issues in certain situations [JDBC-39](http://dev.clojure.org/jira/browse/JDBC-39)
+
 Changes in 0.2.3:
 * as-str now treats a.b as two identifiers separated by . so quoting produces [a].[b] instead of [a.b]
 * Add :connection-uri option [JDBC-34](http://dev.clojure.org/jira/browse/JDBC-34)
