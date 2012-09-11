@@ -37,7 +37,7 @@ the number of rows affected, except for a single record insert where any
 generated keys are returned (as a map)." }
   clojure.java.jdbc
   (:import [java.net URI]
-           [java.sql BatchUpdateException DriverManager PreparedStatement ResultSet ResultSetMetaData SQLException Statement]
+           [java.sql BatchUpdateException DriverManager PreparedStatement ResultSet SQLException Statement]
            [java.util Hashtable Map Properties]
            [javax.naming InitialContext Name]
            [javax.sql DataSource])
@@ -210,22 +210,6 @@ generated keys are returned (as a map)." }
     cols
     (reduce (fn [unique-cols col-name] (conj unique-cols (make-name-unique unique-cols col-name 1))) []  cols)))
 
-(defn- pure-boolean
-  "Given a Boolean from the database, map it correctly to Clojure's boolean (or nil)."
-  [b]
-  (cond (nil? b)   nil
-        (= b true) true
-        :else      false))
-
-(defn- column-extractor
-  "Given a ResultSet and its metadata, return a function that takes a column index and returns the column value.
-   Currently we only special case BOOLEAN but we may special case others over time."
-  [^ResultSet rs ^ResultSetMetaData rsmd]
-  (fn [^Integer i]
-    (condp = (.getColumnType rsmd i)
-          java.sql.Types/BOOLEAN (pure-boolean (.getBoolean rs i))
-          (.getObject  rs i))))
-
 (defn resultset-seq
   "Creates and returns a lazy sequence of maps corresponding to
    the rows in the java.sql.ResultSet rs. Based on clojure.core/resultset-seq
@@ -234,13 +218,13 @@ generated keys are returned (as a map)." }
    N is a unique integer)."
   [^ResultSet rs & {:keys [identifiers]
                     :or {identifiers *as-key*}}]
-    (let [^ResultSetMetaData rsmeta (.getMetaData rs)
+    (let [rsmeta (.getMetaData rs)
           idxs (range 1 (inc (.getColumnCount rsmeta)))
           keys (->> idxs
                  (map (fn [^Integer i] (.getColumnLabel rsmeta i)))
                  make-cols-unique
                  (map (comp keyword identifiers)))
-          row-values (fn [] (map (column-extractor rs rsmeta) idxs))
+          row-values (fn [] (map (fn [^Integer i] (.getObject rs i)) idxs))
           ;; This used to use create-struct (on keys) and then struct to populate each row.
           ;; That had the side effect of preserving the order of columns in each row. As
           ;; part of JDBC-15, this was changed because structmaps are deprecated. We don't
