@@ -75,13 +75,13 @@ and update! high-level operations within clojure.java.jdbc directly." }
       (str (as-identifier k entities) " " (as-identifier v entities)))
     (as-identifier table entities)))
 
-(def ^:private entity-symbols
+(def ^{:private true} entity-symbols
   #{"delete" "delete!"
     "insert" "insert!"
     "select" "join" "where" "order-by"
     "update" "update!"})
 
-(def ^:private identifier-symbols
+(def ^{:private true} identifier-symbols
   #{"query"})
 
 (defn- order-direction [col entities]
