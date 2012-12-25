@@ -51,9 +51,11 @@
   (is (= ["id IS NULL"] (where {:id nil}))))
 
 (deftest select-where-dsl
-  (is (= ["SELECT * FROM a WHERE c = ? AND b = ?" 3 2]
+  (is (#{["SELECT * FROM a WHERE c = ? AND b = ?" 3 2]
+         ["SELECT * FROM a WHERE b = ? AND c = ?" 2 3]}
          (select * :a (where {:b 2 :c 3}))))
-  (is (= ["SELECT * FROM a WHERE c IS NULL AND b = ?" 2]
+  (is (#{["SELECT * FROM a WHERE c IS NULL AND b = ?" 2]
+         ["SELECT * FROM a WHERE b = ? AND c IS NULL" 2]}
          (select * :a (where {:b 2 :c nil})))))
 
 (deftest order-by-dsl
@@ -94,7 +96,9 @@
 
 (deftest delete-dsl
   (is (= ["DELETE FROM a WHERE b = ?" 2] (delete :a (where {:b 2}))))
-  (is (= ["DELETE FROM a WHERE c IS NULL AND b = ?" 2] (delete :a (where {:b 2 :c nil}))))
+  (is (#{["DELETE FROM a WHERE c IS NULL AND b = ?" 2]
+         ["DELETE FROM a WHERE b = ? AND c IS NULL" 2]}
+         (delete :a (where {:b 2 :c nil}))))
   (is (= ["DELETE FROM `a` WHERE `b` = ?" 2]
          (entities (quoted \`) (delete :a (where {:b 2}))))))
 
