@@ -905,7 +905,7 @@ generated keys are returned (as a map)." }
                     (rest sql-params))))
 
 (defn delete!
-  "Given a database connection, a table name and a map of columns to match,
+  "Given a database connection, a table name and a where clause of columns to match,
   perform a delete. The optional keyword arguments specify how to transform
   column names in the map (default 'as-is') and whether to run the delete in
   a transaction (default true).
@@ -913,10 +913,10 @@ generated keys are returned (as a map)." }
     (delete! db :person {:zip 94546})
   is equivalent to:
     (execute! db [\"DELETE FROM person WHERE zip = ?\" 94546])"
-  [db table where-map & {:keys [entities transaction?]
-                         :or {entities sql/as-is transaction? true}}]
+  [db table where-clause & {:keys [entities transaction?]
+                            :or {entities sql/as-is transaction? true}}]
   (execute! db
-            (sql/delete table where-map :entities entities)
+            (sql/delete table where-clause :entities entities)
             :transaction? transaction?))
 
 (defn insert!
@@ -944,15 +944,15 @@ generated keys are returned (as a map)." }
 
 (defn update!
   "Given a database connection, a table name, a map of column values to set and a
-  map of column values to match, perform an update. The optional keyword arguments
+  where clause of columns to match, perform an update. The optional keyword arguments
   specify how column names (in the set / match maps) should be transformed (default
   'as-is') and whether to run the update in a transaction (default true).
   Example:
-    (delete! db :person {:zip 94540} {:zip 94546})
+    (delete! db :person {:zip 94540} (where {:zip 94546}))
   is equivalent to:
     (execute! db [\"UPDATE person SET zip = ? WHERE zip = ?\" 94540 94546])"
-  [db table set-map where-map & {:keys [entities transaction?]
-                                 :or {entities sql/as-is transaction? true}}]
+  [db table set-map where-clause & {:keys [entities transaction?]
+                                    :or {entities sql/as-is transaction? true}}]
   (execute! db
-            (sql/update table set-map where-map :entities entities)
+            (sql/update table set-map where-clause :entities entities)
             :transaction? transaction?))
