@@ -42,7 +42,8 @@ generated keys are returned (as a map)." }
            [javax.naming InitialContext Name]
            [javax.sql DataSource])
   (:refer-clojure :exclude [resultset-seq])
-  (:require [clojure.string :as str]))
+  (:require [clojure.string :as str]
+            [clojure.java.jdbc.sql :as sql]))
 
 (def ^{:private true :dynamic true
        :doc "The default entity naming strategy is to do nothing."}
@@ -722,3 +723,202 @@ generated keys are returned (as a map)." }
                          index
                          (get special-counts count count)))) 
       (.getUpdateCounts exception))))
+
+;; java.jdbc pieces rewritten to not use dynamic bindings
+
+(defn db-find-connection
+  "Returns the current database connection (or nil if there is none)"
+  ^java.sql.Connection [db]
+  (:connection db))
+
+(defn db-connection
+  "Returns the current database connection (or throws if there is none)"
+  ^java.sql.Connection [db]
+  (or (db-find-connection db)
+      (throw (Exception. "no current database connection"))))
+
+(defn- db-rollback
+  "Accessor for the rollback flag on the current connection"
+  ([db]
+     (deref (:rollback db)))
+  ([db val]
+     (swap! (:rollback db) (fn [_] val))))
+
+(defn- throw-non-rte
+  [^Throwable ex]
+  (cond (instance? java.sql.SQLException ex) (throw ex)
+        (and (instance? RuntimeException ex) (.getCause ex)) (throw-non-rte (.getCause ex))
+        :else (throw ex)))
+
+(defn db-transaction*
+  "Evaluates func as a transaction on the open database connection. Any
+  nested transactions are absorbed into the outermost transaction. By
+  default, all database updates are committed together as a group after
+  evaluating the outermost body, or rolled back on any uncaught
+  exception. If rollback is set within scope of the outermost transaction,
+  the entire transaction will be rolled back rather than committed when
+  complete."
+  [db func]
+  (let [nested-db (update-in db [:level] inc)]
+    ;; This ugliness makes it easier to catch SQLException objects
+    ;; rather than something wrapped in a RuntimeException which
+    ;; can really obscure your code when working with JDBC from
+    ;; Clojure... :(
+    (if (= (:level nested-db) 1)
+      (let [^java.sql.Connection con (db-connection nested-db)
+            auto-commit (.getAutoCommit con)]
+        (io!
+         (.setAutoCommit con false)
+         (try
+           (let [result (func nested-db)]
+             (if (db-rollback nested-db)
+               (.rollback con)
+               (.commit con))
+             result)
+           (catch Exception e
+             (.rollback con)
+             (throw-non-rte e))
+           (finally
+            (db-rollback nested-db false)
+            (.setAutoCommit con auto-commit)))))
+      (try
+        (func nested-db)
+        (catch Exception e
+          (throw-non-rte e))))))
+
+(defn db-do-prepared-return-keys
+  "Executes an (optionally parameterized) SQL prepared statement on the
+  open database connection. The param-group is a seq of values for all of
+  the parameters.
+  Return the generated keys for the (single) update/insert."
+  [db transaction? sql param-group]
+  (with-open [^PreparedStatement stmt (prepare-statement (db-connection db) sql :return-keys true)]
+    (set-parameters stmt param-group)
+    (letfn [(exec-and-return-keys [_]
+              (let [counts (.executeUpdate stmt)]
+                (try
+                  (let [rs (.getGeneratedKeys stmt)
+                        result (first (resultset-seq rs))]
+                    ;; sqlite (and maybe others?) requires
+                    ;; record set to be closed
+                    (.close rs)
+                    result)
+                  (catch Exception _
+                    ;; assume generated keys is unsupported and return counts instead: 
+                    counts))))]
+      (if transaction?
+        (db-transaction* db exec-and-return-keys)
+        (try
+          (exec-and-return-keys db)
+          (catch Exception e
+            (throw-non-rte e)))))))
+
+(defn db-do-prepared
+  "Executes an (optionally parameterized) SQL prepared statement on the
+  open database connection. Each param-group is a seq of values for all of
+  the parameters.
+  Return a seq of update counts (one count for each param-group)."
+  [db transaction? sql & param-groups]
+  (with-open [^PreparedStatement stmt (prepare-statement (db-connection db) sql)]
+    (if (empty? param-groups)
+      (if transaction?
+        (db-transaction* db (fn [_] (vector (.executeUpdate stmt))))
+        (try
+          (vector (.executeUpdate stmt))
+          (catch Exception e
+            (throw-non-rte e))))
+      (do
+        (doseq [param-group param-groups]
+          (set-parameters stmt param-group)
+          (.addBatch stmt))
+        (if transaction?
+          (db-transaction* db (fn [_] (execute-batch stmt)))
+          (try
+            (execute-batch stmt)
+            (catch Exception e
+              (throw-non-rte e))))))))
+
+(defn db-with-query-results*
+  "Executes a query, then evaluates func passing in a seq of the results as
+  an argument. The first argument is a vector containing either:
+    [sql & params] - a SQL query, followed by any parameters it needs
+    [stmt & params] - a PreparedStatement, followed by any parameters it needs
+                      (the PreparedStatement already contains the SQL query)
+    [options sql & params] - options and a SQL query for creating a
+                      PreparedStatement, follwed by any parameters it needs
+  See prepare-statement for supported options."
+  [db sql-params func identifiers]
+  (when-not (vector? sql-params)
+    (let [^Class sql-params-class (class sql-params)
+          ^String msg (format "\"%s\" expected %s %s, found %s %s"
+                              "sql-params"
+                              "vector"
+                              "[sql param*]"
+                              (.getName sql-params-class)
+                              (pr-str sql-params))] 
+      (throw (IllegalArgumentException. msg))))
+  (let [special (first sql-params)
+        sql-is-first (string? special)
+        options-are-first (map? special)
+        sql (cond sql-is-first special 
+                  options-are-first (second sql-params))
+        params (vec (cond sql-is-first (rest sql-params)
+                          options-are-first (rest (rest sql-params))
+                          :else (rest sql-params)))
+        prepare-args (when (map? special) (flatten (seq special)))]
+    (with-open [^PreparedStatement stmt (if (instance? PreparedStatement special)
+                                          special
+                                          (apply prepare-statement (db-connection db) sql prepare-args))]
+      (set-parameters stmt params)
+      (with-open [rset (.executeQuery stmt)]
+        (func (resultset-seq rset :identifiers identifiers))))))
+
+;; top-level API for actual SQL operations
+
+(defn query [db sql-params & {:keys [result-set-fn row-fn identifiers]
+                              :or {result-set-fn doall row-fn identity identifiers sql/lower-case}}]
+  (with-open [^java.sql.Connection con (get-connection db)]
+    (db-with-query-results*
+      (assoc db :connection con :level 0 :rollback (atom false))
+      (vec sql-params)
+      (fn [rs]
+        (result-set-fn (map row-fn rs)))
+      identifiers)))
+
+(defn execute! [db sql-params & {:keys [transaction?]
+                                 :or {transaction? true}}]
+  (with-open [^java.sql.Connection con (get-connection db)]
+    (db-do-prepared (assoc db :connection con :level 0 :rollback (atom false))
+                    transaction?
+                    (first sql-params)
+                    (rest sql-params))))
+
+(defn delete! [db table where-map & {:keys [entities transaction?]
+                                     :or {entities sql/as-is transaction? true}}]
+  (execute! db
+            (sql/delete table where-map :entities entities)
+            :transaction? transaction?))
+
+(defn insert! [db table & maps-or-cols-and-values-etc]
+  (let [stmts (apply sql/insert table maps-or-cols-and-values-etc)
+        transaction? true]
+    (with-open [^java.sql.Connection con (get-connection db)]
+      (if (string? (first stmts))
+        (db-do-prepared (assoc db :connection con :level 0 :rollback (atom false))
+                        transaction?
+                        (first stmts)
+                        (rest stmts))
+        (doall (map (fn [row]
+                      (let [result (db-do-prepared-return-keys
+                                    (assoc db :connection con :level 0 :rollback (atom false))
+                                    transaction?
+                                    (first row)
+                                    (rest row))]
+                        (if (map? result) (first (vals result)) result)))
+                    stmts))))))
+
+(defn update! [db table set-map where-map & {:keys [entities transaction?]
+                                             :or {entities sql/as-is transaction? true}}]
+  (execute! db
+            (sql/update table set-map where-map :entities entities)
+            :transaction? transaction?))
