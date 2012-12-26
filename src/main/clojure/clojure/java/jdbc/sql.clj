@@ -99,13 +99,10 @@ and update! high-level operations within clojure.java.jdbc directly." }
       (throw (IllegalArgumentException. "insert called with inconsistent number of columns / values"))
       (into [(str "INSERT INTO " (table-str table entities) " ( "
                   (str/join ", " (map (fn [col] (col-str col entities)) columns))
-                  " ) VALUES "
-                  (str/join ", "
-                            (repeat (count values)
-                                    (str "( "
-                                         (str/join ", " (repeat nc "?"))
-                                         " )"))))]
-            (apply concat values)))))
+                  " ) VALUES ( "
+                  (str/join ", " (repeat nc "?"))
+                  " )")]
+            values))))
 
 (defn- insert-single-row [table row entities]
   (let [ks (keys row)]

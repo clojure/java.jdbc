@@ -377,7 +377,11 @@
   (doseq [db (test-specs)]
     (sql/with-connection db
       (create-test-table :fruit db))
-    (is (sql/insert! db :fruit {:name "Apple"}))
+    (is (= (condp = (:subprotocol db)
+             "derby" [nil]
+             "jtds:sqlserver" [nil]
+             "sqlserver" [nil]
+             [1]) (sql/insert! db :fruit {:name "Apple"})))
     (is (= [{:id (condp = (:subprotocol db)
                    "derby" 0
                    "hsqldb" 0
@@ -415,19 +419,25 @@
 
 (deftest insert-two-by-cols-and-query
   (doseq [db (test-specs)]
-    ;; hsqldb, sqlite and sqlserver drivers do not support multi-row inserts in a single statement
-    (when (not (#{"hsqldb" "sqlite" "sqlserver" "jtds:sqlserver"} (:subprotocol db)))
-      (sql/with-connection db
-        (create-test-table :fruit db))
-      (let [update-counts (sql/insert! db :fruit [:name] ["Apple"] ["Pear"])
-            rows (sql/query db (dsl/select * :fruit (dsl/order-by :name)))]
-        (is (= [2] update-counts))
-        (is (= [{:id (condp = (:subprotocol db)
-                       "derby" 0
-                       1) :name "Apple" :appearance nil :grade nil :cost nil}
-                {:id (condp = (:subprotocol db)
-                       "derby" 0
-                       2) :name "Pear" :appearance nil :grade nil :cost nil}] rows))))))
+    (sql/with-connection db
+      (create-test-table :fruit db))
+    (let [update-counts (sql/insert! db :fruit [:name] ["Apple"] ["Pear"])
+          rows (sql/query db (dsl/select * :fruit (dsl/order-by :name)))]
+      (is (= [1 1] update-counts))
+      (is (= [{:id (condp = (:subprotocol db)
+                     "derby" 0
+                     "hsqldb" 0
+                     "jtds:sqlserver" 0
+                     "sqlserver" 0
+                     "sqlite" 0
+                     1) :name "Apple" :appearance nil :grade nil :cost nil}
+              {:id (condp = (:subprotocol db)
+                     "derby" 0
+                     "hsqldb" 0
+                     "jtds:sqlserver" 0
+                     "sqlserver" 0
+                     "sqlite" 0
+                     2) :name "Pear" :appearance nil :grade nil :cost nil}] rows)))))
 
 (deftest insert-update-and-query
   (doseq [db (test-specs)]

@@ -904,10 +904,11 @@ generated keys are returned (as a map)." }
         transaction? true]
     (with-open [^java.sql.Connection con (get-connection db)]
       (if (string? (first stmts))
-        (db-do-prepared (assoc db :connection con :level 0 :rollback (atom false))
-                        transaction?
-                        (first stmts)
-                        (rest stmts))
+        (apply db-do-prepared
+               (assoc db :connection con :level 0 :rollback (atom false))
+               transaction?
+               (first stmts)
+               (rest stmts))
         (doall (map (fn [row]
                       (let [result (db-do-prepared-return-keys
                                     (assoc db :connection con :level 0 :rollback (atom false))
