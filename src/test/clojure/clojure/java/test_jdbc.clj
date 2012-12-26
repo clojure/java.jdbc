@@ -357,6 +357,30 @@
                                   (.getTables nil nil nil (into-array ["TABLE" "VIEW"]))))))]
         (is (= [] metadata))))))
 
+(defn- returned-key [db k]
+  (condp = (:subprotocol db)
+    "derby" nil
+    "hsqldb" 1
+    "jtds:sqlserver" nil
+    "sqlserver" nil
+    k))
+
+(defn- generated-key [db k]
+  (condp = (:subprotocol db)
+    "derby" 0
+    "hsqldb" 0
+    "jtds:sqlserver" 0
+    "sqlserver" 0
+    "sqlite" 0
+    k))
+
+(defn- float-or-double [db v]
+  (condp = (:subprotocol db)
+    "derby" (Float. v)
+    "jtds:sqlserver" (Float. v)
+    "sqlserver" (Float. v)
+    v))
+
 (deftest empty-query
   (doseq [db (test-specs)]
     (sql/with-connection db
@@ -367,28 +391,14 @@
   (doseq [db (test-specs)]
     (sql/with-connection db
       (create-test-table :fruit db))
-    (is (= (condp = (:subprotocol db)
-             "derby" [nil]
-             "jtds:sqlserver" [nil]
-             "sqlserver" [nil]
-             [1]) (sql/insert! db :fruit {:name "Apple"})))))
+    (is (= [(returned-key db 1)] (sql/insert! db :fruit {:name "Apple"})))))
 
 (deftest insert-query
   (doseq [db (test-specs)]
     (sql/with-connection db
       (create-test-table :fruit db))
-    (is (= (condp = (:subprotocol db)
-             "derby" [nil]
-             "jtds:sqlserver" [nil]
-             "sqlserver" [nil]
-             [1]) (sql/insert! db :fruit {:name "Apple"})))
-    (is (= [{:id (condp = (:subprotocol db)
-                   "derby" 0
-                   "hsqldb" 0
-                   "jtds:sqlserver" 0
-                   "sqlserver" 0
-                   "sqlite" 0
-                   1) :name "Apple" :appearance nil :grade nil :cost nil}] (sql/query db (dsl/select * :fruit))))))
+    (is (= [(returned-key db 1)] (sql/insert! db :fruit {:name "Apple"})))
+    (is (= [{:id (generated-key db 1) :name "Apple" :appearance nil :grade nil :cost nil}] (sql/query db (dsl/select * :fruit))))))
 
 (deftest insert-two-by-map-and-query
   (doseq [db (test-specs)]
@@ -396,26 +406,9 @@
       (create-test-table :fruit db))
     (let [new-keys (sql/insert! db :fruit {:name "Apple"} {:name "Pear"})
           rows (sql/query db (dsl/select * :fruit (dsl/order-by :name)))]
-      (is (= (condp = (:subprotocol db)
-               "derby" [nil nil]
-               "hsqldb" [1 1]
-               "jtds:sqlserver" [nil nil]
-               "sqlserver" [nil nil]
-               [1 2]) new-keys))
-      (is (= [{:id (condp = (:subprotocol db)
-                     "derby" 0
-                     "hsqldb" 0
-                     "jtds:sqlserver" 0
-                     "sqlserver" 0
-                     "sqlite" 0
-                     1) :name "Apple" :appearance nil :grade nil :cost nil}
-              {:id (condp = (:subprotocol db)
-                     "derby" 0
-                     "hsqldb" 0
-                     "jtds:sqlserver" 0
-                     "sqlserver" 0
-                     "sqlite" 0
-                     2) :name "Pear" :appearance nil :grade nil :cost nil}] rows)))))
+      (is (= [(returned-key db 1) (returned-key db 2)] new-keys))
+      (is (= [{:id (generated-key db 1) :name "Apple" :appearance nil :grade nil :cost nil}
+              {:id (generated-key db 2) :name "Pear" :appearance nil :grade nil :cost nil}] rows)))))
 
 (deftest insert-two-by-cols-and-query
   (doseq [db (test-specs)]
@@ -424,20 +417,8 @@
     (let [update-counts (sql/insert! db :fruit [:name] ["Apple"] ["Pear"])
           rows (sql/query db (dsl/select * :fruit (dsl/order-by :name)))]
       (is (= [1 1] update-counts))
-      (is (= [{:id (condp = (:subprotocol db)
-                     "derby" 0
-                     "hsqldb" 0
-                     "jtds:sqlserver" 0
-                     "sqlserver" 0
-                     "sqlite" 0
-                     1) :name "Apple" :appearance nil :grade nil :cost nil}
-              {:id (condp = (:subprotocol db)
-                     "derby" 0
-                     "hsqldb" 0
-                     "jtds:sqlserver" 0
-                     "sqlserver" 0
-                     "sqlite" 0
-                     2) :name "Pear" :appearance nil :grade nil :cost nil}] rows)))))
+      (is (= [{:id (generated-key db 1) :name "Apple" :appearance nil :grade nil :cost nil}
+              {:id (generated-key db 2) :name "Pear" :appearance nil :grade nil :cost nil}] rows)))))
 
 (deftest insert-update-and-query
   (doseq [db (test-specs)]
@@ -445,33 +426,13 @@
       (create-test-table :fruit db))
     (let [new-key (sql/insert! db :fruit {:name "Apple"})
           update-result (sql/update! db :fruit {:cost 12 :grade 1.2 :appearance "Green"}
-                                     (dsl/where {:id (condp = (:subprotocol db)
-                                                       "derby" 0
-                                                       "hsqldb" 0
-                                                       "jtds:sqlserver" 0
-                                                       "sqlserver" 0
-                                                       "sqlite" 0
-                                                       1)}))
+                                     (dsl/where {:id (generated-key db 1)}))
           rows (sql/query db (dsl/select * :fruit))]
-      (is (= (condp = (:subprotocol db)
-               "derby" [nil]
-               "jtds:sqlserver" [nil]
-               "sqlserver" [nil]
-               [1]) new-key))
+      (is (= [(returned-key db 1)] new-key))
       (is (= [1] update-result))
-      (is (= [{:id (condp = (:subprotocol db)
-                     "derby" 0
-                     "hsqldb" 0
-                     "jtds:sqlserver" 0
-                     "sqlserver" 0
-                     "sqlite" 0
-                     1)
+      (is (= [{:id (generated-key db 1)
                :name "Apple" :appearance "Green"
-               :grade (condp = (:subprotocol db)
-                        "derby" (Float. 1.2)
-                        "jtds:sqlserver" (Float. 1.2)
-                        "sqlserver" (Float. 1.2)
-                        1.2)
+               :grade (float-or-double db 1.2)
                :cost 12}] rows)))))
 
 (deftest insert-delete-and-query
@@ -480,19 +441,9 @@
       (create-test-table :fruit db))
     (let [new-key (sql/insert! db :fruit {:name "Apple"})
           delete-result (sql/delete! db :fruit
-                                     (dsl/where {:id (condp = (:subprotocol db)
-                                                       "derby" 0
-                                                       "hsqldb" 0
-                                                       "jtds:sqlserver" 0
-                                                       "sqlserver" 0
-                                                       "sqlite" 0
-                                                       1)}))
+                                     (dsl/where {:id (generated-key db 1)}))
           rows (sql/query db (dsl/select * :fruit))]
-      (is (= (condp = (:subprotocol db)
-               "derby" [nil]
-               "jtds:sqlserver" [nil]
-               "sqlserver" [nil]
-               [1]) new-key))
+      (is (= [(returned-key db 1)] new-key))
       (is (= [1] delete-result))
       (is (= [] rows)))))
 
