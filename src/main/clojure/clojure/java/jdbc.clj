@@ -786,6 +786,22 @@ generated keys are returned (as a map)." }
         (catch Exception e
           (throw-non-rte e))))))
 
+(defn db-do-commands
+  "Executes SQL commands on the specified database connection. Wraps the commands
+  in a transaction if transaction? is true."
+  [db transaction? & commands]
+  (with-open [^Statement stmt (let [^java.sql.Connection con (db-connection db)] (.createStatement con))]
+    (doseq [^String cmd commands]
+      (.addBatch stmt cmd))
+    (letfn [(execute-batch* [_]
+              (execute-batch stmt))]
+      (if transaction?
+        (db-transaction* db execute-batch*)
+        (try
+          (execute-batch*)
+          (catch Exception e
+            (throw-non-rte e)))))))
+
 (defn db-do-prepared-return-keys
   "Executes an (optionally parameterized) SQL prepared statement on the
   open database connection. The param-group is a seq of values for all of
