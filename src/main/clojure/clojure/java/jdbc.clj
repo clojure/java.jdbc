@@ -875,8 +875,15 @@ generated keys are returned (as a map)." }
 
 ;; top-level API for actual SQL operations
 
-(defn query [db sql-params & {:keys [result-set-fn row-fn identifiers]
-                              :or {result-set-fn doall row-fn identity identifiers sql/lower-case}}]
+(defn query
+  "Given a database connection and a vector containing SQL and optional parameters,
+  perform a simple database query. The optional keyword arguments specify how to
+  construct the result set:
+    :result-set-fn - applied to the entire result set, default doall
+    :row-fn - applied to each row as the result set is constructed, default identity
+    :identifiers - applied to each column name in the result set, default lower-case"
+  [db sql-params & {:keys [result-set-fn row-fn identifiers]
+                    :or {result-set-fn doall row-fn identity identifiers sql/lower-case}}]
   (with-open [^java.sql.Connection con (get-connection db)]
     (db-with-query-results*
       (assoc db :connection con :level 0 :rollback (atom false))
@@ -885,21 +892,38 @@ generated keys are returned (as a map)." }
         (result-set-fn (map row-fn rs)))
       identifiers)))
 
-(defn execute! [db sql-params & {:keys [transaction?]
-                                 :or {transaction? true}}]
+(defn execute!
+  "Given a database connection and a vector containing SQL and optional parameters,
+  perform a general (non-select) SQL operation. The optional keyword argument specifies
+  whether to run the operation in a transaction or not (default true)."
+  [db sql-params & {:keys [transaction?]
+                    :or {transaction? true}}]
   (with-open [^java.sql.Connection con (get-connection db)]
     (db-do-prepared (assoc db :connection con :level 0 :rollback (atom false))
                     transaction?
                     (first sql-params)
                     (rest sql-params))))
 
-(defn delete! [db table where-map & {:keys [entities transaction?]
-                                     :or {entities sql/as-is transaction? true}}]
+(defn delete!
+  "Given a database connection, a table name and a map of columns to match,
+  perform a delete. The optional keyword arguments specify how to transform
+  column names in the map (default 'as-is') and whether to run the delete in
+  a transaction (default true).
+  Example:
+    (delete! db :person {:zip 94546})
+  is equivalent to:
+    (execute! db [\"DELETE FROM person WHERE zip = ?\" 94546])"
+  [db table where-map & {:keys [entities transaction?]
+                         :or {entities sql/as-is transaction? true}}]
   (execute! db
             (sql/delete table where-map :entities entities)
             :transaction? transaction?))
 
-(defn insert! [db table & maps-or-cols-and-values-etc]
+(defn insert!
+  "Given a database connection, a table name and either maps representing rows or
+  a list of column names followed by lists of column values, perform an insert.
+  Currently the insert is always run in a transaction."
+  [db table & maps-or-cols-and-values-etc]
   (let [stmts (apply sql/insert table maps-or-cols-and-values-etc)
         transaction? true]
     (with-open [^java.sql.Connection con (get-connection db)]
@@ -918,8 +942,17 @@ generated keys are returned (as a map)." }
                         (if (map? result) (first (vals result)) result)))
                     stmts))))))
 
-(defn update! [db table set-map where-map & {:keys [entities transaction?]
-                                             :or {entities sql/as-is transaction? true}}]
+(defn update!
+  "Given a database connection, a table name, a map of column values to set and a
+  map of column values to match, perform an update. The optional keyword arguments
+  specify how column names (in the set / match maps) should be transformed (default
+  'as-is') and whether to run the update in a transaction (default true).
+  Example:
+    (delete! db :person {:zip 94540} {:zip 94546})
+  is equivalent to:
+    (execute! db [\"UPDATE person SET zip = ? WHERE zip = ?\" 94540 94546])"
+  [db table set-map where-map & {:keys [entities transaction?]
+                                 :or {entities sql/as-is transaction? true}}]
   (execute! db
             (sql/update table set-map where-map :entities entities)
             :transaction? transaction?))
