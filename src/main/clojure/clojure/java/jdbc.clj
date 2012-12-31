@@ -523,6 +523,14 @@ generated keys are returned (as a map)." }
         (catch Exception e
           (throw-non-rte e))))))
 
+(defmacro db-transaction
+  "Evaluates body in the context of a transaction on the specified database connection.
+  The binding provides the dataabase connection for the transaction and the name to which
+  that is bound for evaluation of the body.
+  See db-transaction* for more details."
+  [binding & body]
+  `(db-transaction* ~(second binding) (fn [~(first binding)] ~@body)))
+
 (defn db-do-commands
   "Executes SQL commands on the specified database connection. Wraps the commands
   in a transaction if transaction? is true."
