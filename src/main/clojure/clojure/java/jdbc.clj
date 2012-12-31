@@ -739,158 +739,114 @@ generated keys are returned (as a map)." }
             (sql/update table set-map where-clause :entities entities)
             :transaction? transaction?))
 
-;; original API being relocated in preparation for rewriting it in
-;; terms of new API primarily without dynamic binding
+;; original API mostly rewritten in terms of new API primarily without dynamic binding
 
-(defn find-connection
-  "Returns the current database connection (or nil if there is none)"
+(defn ^{:doc "Returns the current database connection (or nil if there is none)"
+        :deprecated "0.3.0"}
+  find-connection
   ^java.sql.Connection []
-  (:connection *db*))
+  (db-find-connection *db*))
 
-(defn connection
-  "Returns the current database connection (or throws if there is none)"
+(defn ^{:doc "Returns the current database connection (or throws if there is none)"
+        :deprecated "0.3.0"}
+  connection
   ^java.sql.Connection []
-  (or (find-connection)
-      (throw (Exception. "no current database connection"))))
+  (db-connection *db*))
 
-(defn with-connection*
-  "Evaluates func in the context of a new connection to a database then
-  closes the connection."
+(defn ^{:doc "Evaluates func in the context of a new connection to a database then
+              closes the connection."
+        :deprecated "0.3.0"}
+  with-connection*
   [db-spec func]
   (with-open [^java.sql.Connection con (get-connection db-spec)]
     (binding [*db* (assoc *db* :connection con :level 0 :rollback (atom false))]
       (func))))
 
-(defmacro with-connection
-  "Evaluates body in the context of a new connection to a database then
-  closes the connection. db-spec is a map containing values for one of the
-  following parameter sets:
-
-  Factory:
-    :factory     (required) a function of one argument, a map of params
-    (others)     (optional) passed to the factory function in a map
-
-  DriverManager:
-    :subprotocol (required) a String, the jdbc subprotocol
-    :subname     (required) a String, the jdbc subname
-    :classname   (optional) a String, the jdbc driver class name
-    (others)     (optional) passed to the driver as properties.
-
-  DataSource:
-    :datasource  (required) a javax.sql.DataSource
-    :username    (optional) a String
-    :password    (optional) a String, required if :username is supplied
-
-  JNDI:
-    :name        (required) a String or javax.naming.Name
-    :environment (optional) a java.util.Map
-
-  Raw:
-    :connection-uri (required) a String
-                 Passed directly to DriverManager/getConnection
-
-  URI:
-    Parsed JDBC connection string - see below
-  
-  String:
-    subprotocol://user:password@host:post/subname
-                 An optional prefix of jdbc: is allowed."
+(defmacro ^{:doc "Evaluates body in the context of a new connection to a database then
+                  closes the connection."
+            :deprecated "0.3.0"}
+  with-connection
   [db-spec & body]
   `(with-connection* ~db-spec (fn [] ~@body)))
 
-(defn- rollback
-  "Accessor for the rollback flag on the current connection"
-  ([]
-    (deref (:rollback *db*)))
-  ([val]
-    (swap! (:rollback *db*) (fn [_] val))))
-
 (defn transaction*
-  "Evaluates func as a transaction on the open database connection. Any
-  nested transactions are absorbed into the outermost transaction. By
-  default, all database updates are committed together as a group after
-  evaluating the outermost body, or rolled back on any uncaught
-  exception. If rollback is set within scope of the outermost transaction,
-  the entire transaction will be rolled back rather than committed when
-  complete."
+  ^{:doc "Evaluates func as a transaction on the open database connection. Any
+          nested transactions are absorbed into the outermost transaction. By
+          default, all database updates are committed together as a group after
+          evaluating the outermost body, or rolled back on any uncaught
+          exception. If rollback is set within scope of the outermost transaction,
+          the entire transaction will be rolled back rather than committed when
+          complete."
+    :deprecated "0.3.0"}
   [func]
   (binding [*db* (update-in *db* [:level] inc)]
-    ;; This ugliness makes it easier to catch SQLException objects
-    ;; rather than something wrapped in a RuntimeException which
-    ;; can really obscure your code when working with JDBC from
-    ;; Clojure... :(
-    (letfn [(throw-non-rte [^Throwable ex]
-              (cond (instance? java.sql.SQLException ex) (throw ex)
-                    (and (instance? RuntimeException ex) (.getCause ex)) (throw-non-rte (.getCause ex))
-                    :else (throw ex)))]
-      (if (= (:level *db*) 1)
-        (let [^java.sql.Connection con (connection)
-              auto-commit (.getAutoCommit con)]
-          (io!
-           (.setAutoCommit con false)
-           (try
-             (let [result (func)]
-               (if (rollback)
-                 (.rollback con)
-                 (.commit con))
-               result)
-             (catch Exception e
+    (if (= (:level *db*) 1)
+      (let [^java.sql.Connection con (get-connection *db*)
+            auto-commit (.getAutoCommit con)]
+        (io!
+         (.setAutoCommit con false)
+         (try
+           (let [result (func)]
+             (if (db-rollback *db*)
                (.rollback con)
-               (throw-non-rte e))
-             (finally
-              (rollback false)
-              (.setAutoCommit con auto-commit)))))
-        (try
-          (func)
-          (catch Exception e
-            (throw-non-rte e)))))))
+               (.commit con))
+             result)
+           (catch Exception e
+             (.rollback con)
+             (throw-non-rte e))
+           (finally
+            (db-rollback *db* false)
+            (.setAutoCommit con auto-commit)))))
+      (try
+        (func)
+        (catch Exception e
+          (throw-non-rte e))))))
 
-(defmacro transaction
-  "Evaluates body as a transaction on the open database connection. Any
-  nested transactions are absorbed into the outermost transaction. By
-  default, all database updates are committed together as a group after
-  evaluating the outermost body, or rolled back on any uncaught
-  exception. If set-rollback-only is called within scope of the outermost
-  transaction, the entire transaction will be rolled back rather than
-  committed when complete."
+(defmacro
+  ^{:doc "Evaluates body as a transaction on the open database connection. Any
+          nested transactions are absorbed into the outermost transaction. By
+          default, all database updates are committed together as a group after
+          evaluating the outermost body, or rolled back on any uncaught
+          exception. If set-rollback-only is called within scope of the outermost
+          transaction, the entire transaction will be rolled back rather than
+          committed when complete."
+    :deprecated "0.3.0"}
+  transaction
   [& body]
   `(transaction* (fn [] ~@body)))
 
-(defn set-rollback-only
-  "Marks the outermost transaction such that it will rollback rather than
-  commit when complete"
+(defn
+  ^{:doc "Marks the outermost transaction such that it will rollback rather than
+          commit when complete"
+    :deprecated "0.3.0"}
+  set-rollback-only
   []
-  (rollback true))
+  (db-set-rollback-only *db*))
 
-(defn is-rollback-only
-  "Returns true if the outermost transaction will rollback rather than
-  commit when complete"
+(defn
+  ^{:doc "Returns true if the outermost transaction will rollback rather than
+          commit when complete"
+    :deprecated "0.3.0"}
+  is-rollback-only
   []
-  (rollback))
+  (db-is-rollback-only *db*))
 
-(defn do-commands
-  "Executes SQL commands on the open database connection."
+(defn
+  ^{:doc "Executes SQL commands on the open database connection."
+    :deprecated "0.3.0"}
+  do-commands
   [& commands]
-  (with-open [^Statement stmt (let [^java.sql.Connection con (connection)] (.createStatement con))]
-    (doseq [^String cmd commands]
-      (.addBatch stmt cmd))
-    (transaction
-     (execute-batch stmt))))
+  (apply db-do-commands *db* true commands))
 
-(defn do-prepared
-  "Executes an (optionally parameterized) SQL prepared statement on the
-  open database connection. Each param-group is a seq of values for all of
-  the parameters.
-  Return a seq of update counts (one count for each param-group)."
+(defn
+  ^{:doc "Executes an (optionally parameterized) SQL prepared statement on the
+          open database connection. Each param-group is a seq of values for all of
+          the parameters.
+          Return a seq of update counts (one count for each param-group)."
+    :deprecated "0.3.0"}
+  do-prepared
   [sql & param-groups]
-  (with-open [^PreparedStatement stmt (prepare-statement (connection) sql)]
-    (if (empty? param-groups)
-      (transaction* (fn [] (vector (.executeUpdate stmt))))
-      (do
-        (doseq [param-group param-groups]
-          (set-parameters stmt param-group)
-          (.addBatch stmt))
-        (transaction* (fn [] (execute-batch stmt)))))))
+  (apply db-do-prepared *db* true sql param-groups))
 
 (defn create-table
   "Creates a table on the open database connection given a table name and
@@ -900,43 +856,39 @@ generated keys are returned (as a map)." }
   optional suffix to the CREATE TABLE DDL describing table attributes may
   by provided as :table-spec {table-attributes-string}. All words used to
   describe the table may be supplied as strings or keywords."
+  ;; technically deprecated but we don't yet have a replacement
   [name & specs]
   (do-commands (apply create-table-ddl name specs)))
 
 (defn drop-table
   "Drops a table on the open database connection given its name, a string
   or keyword"
+  ;; technically deprecated but we don't yet have a replacement
   [name]
   (do-commands
     (format "DROP TABLE %s" (as-identifier name))))
 
-(defn do-prepared-return-keys
-  "Executes an (optionally parameterized) SQL prepared statement on the
-  open database connection. The param-group is a seq of values for all of
-  the parameters.
-  Return the generated keys for the (single) update/insert."
+(defn
+  ^{:doc "Executes an (optionally parameterized) SQL prepared statement on the
+          open database connection. The param-group is a seq of values for all of
+          the parameters.
+          Return the generated keys for the (single) update/insert."
+    :deprecated "0.3.0"}
+  do-prepared-return-keys
   [sql param-group]
-  (with-open [^PreparedStatement stmt (prepare-statement (connection) sql :return-keys true)]
-    (set-parameters stmt param-group)
-    (transaction* (fn [] (let [counts (.executeUpdate stmt)]
-                          (try
-                            (let [rs (.getGeneratedKeys stmt)
-                                  result (first (resultset-seq rs))]
-                              ;; sqlite (and maybe others?) requires
-                              ;; record set to be closed
-                              (.close rs)
-                              result)
-                            (catch Exception _
-                              ;; assume generated keys is unsupported and return counts instead: 
-                              counts)))))))
+  (db-do-prepared-return-keys *db* true sql param-group))
 
-(defn insert-values
-  "Inserts rows into a table with values for specified columns only.
-  column-names is a vector of strings or keywords identifying columns. Each
-  value-group is a vector containing a values for each column in
-  order. When inserting complete rows (all columns), consider using
-  insert-rows instead.
-  If a single set of values is inserted, returns a map of the generated keys."
+(defn
+  ^{:doc "Inserts rows into a table with values for specified columns only.
+          column-names is a vector of strings or keywords identifying columns. Each
+          value-group is a vector containing a values for each column in
+          order. When inserting complete rows (all columns), consider using
+          insert-rows instead.
+          If a single set of values is inserted, returns a map of the generated keys."
+    :deprecated "0.3.0"}
+  ;; technically not fully deprecated since the nil column-names case
+  ;; is not (yet) supported in the new API... JDBC-45
+  insert-values
   [table column-names & value-groups]
   (let [column-strs (map as-identifier column-names)
         n (count (first value-groups))
@@ -956,48 +908,45 @@ generated keys are returned (as a map)." }
   each of the table's columns in order.
   If a single row is inserted, returns a map of the generated keys."
   [table & rows]
+  ;; will be deprecated after JDBC-45 is implemented
   (apply insert-values table nil rows))
 
-(defn insert-records
-  "Inserts records into a table. records are maps from strings or keywords
-  (identifying columns) to values. Inserts the records one at a time.
-  Returns a sequence of maps containing the generated keys for each record."
+(defn
+  ^{:doc "Inserts records into a table. records are maps from strings or keywords
+          (identifying columns) to values. Inserts the records one at a time.
+          Returns a sequence of maps containing the generated keys for each record."
+    :deprecated "0.3.0"}
+  insert-records
   [table & records]
-  (let [ins-v (fn [record] (insert-values table (keys record) (vals record)))]
-    (doall (map ins-v records))))
+  (apply insert! *db* table records))
 
-(defn insert-record
-  "Inserts a single record into a table. A record is a map from strings or
-  keywords (identifying columns) to values.
-  Returns a map of the generated keys."
+(defn
+  ^{:doc "Inserts a single record into a table. A record is a map from strings or
+          keywords (identifying columns) to values.
+          Returns a map of the generated keys."
+    :deprecated "0.3.0"}
+  insert-record
   [table record]
-  (let [keys (insert-records table record)]
-    (first keys)))
+  (first (insert! *db* table record)))
 
-(defn delete-rows
-  "Deletes rows from a table. where-params is a vector containing a string
-  providing the (optionally parameterized) selection criteria followed by
-  values for any parameters."
+(defn
+  ^{:doc "Deletes rows from a table. where-params is a vector containing a string
+          providing the (optionally parameterized) selection criteria followed by
+          values for any parameters."
+    :deprecated "0.3.0"}
+  delete-rows
   [table where-params]
-  (let [[where & params] where-params]
-    (do-prepared
-      (format "DELETE FROM %s WHERE %s"
-              (as-identifier table) where)
-      params)))
+  (delete! *db* table where-params))
 
-(defn update-values
-  "Updates values on selected rows in a table. where-params is a vector
-  containing a string providing the (optionally parameterized) selection
-  criteria followed by values for any parameters. record is a map from
-  strings or keywords (identifying columns) to updated values."
+(defn
+  ^{:doc "Updates values on selected rows in a table. where-params is a vector
+          containing a string providing the (optionally parameterized) selection
+          criteria followed by values for any parameters. record is a map from
+          strings or keywords (identifying columns) to updated values."
+    :deprecated "0.3.0"}
+  update-values
   [table where-params record]
-  (let [[where & params] where-params
-        column-strs (map as-identifier (keys record))
-        columns (apply str (concat (interpose "=?, " column-strs) "=?"))]
-    (do-prepared
-      (format "UPDATE %s SET %s WHERE %s"
-              (as-identifier table) columns where)
-      (concat (vals record) params))))
+  (update! *db* table record where-params))
 
 (defn update-or-insert-values
   "Updates values on selected rows in a table, or inserts a new row when no
@@ -1012,15 +961,17 @@ generated keys are returned (as a map)." }
        (insert-values table (keys record) (vals record))
        result))))
 
-(defn with-query-results*
-  "Executes a query, then evaluates func passing in a seq of the results as
-  an argument. The first argument is a vector containing either:
-    [sql & params] - a SQL query, followed by any parameters it needs
-    [stmt & params] - a PreparedStatement, followed by any parameters it needs
-                      (the PreparedStatement already contains the SQL query)
-    [options sql & params] - options and a SQL query for creating a
-                      PreparedStatement, follwed by any parameters it needs
-  See prepare-statement for supported options."
+(defn
+  ^{:doc "Executes a query, then evaluates func passing in a seq of the results as
+          an argument. The first argument is a vector containing either:
+            [sql & params] - a SQL query, followed by any parameters it needs
+            [stmt & params] - a PreparedStatement, followed by any parameters it needs
+                             (the PreparedStatement already contains the SQL query)
+            [options sql & params] - options and a SQL query for creating a
+                             PreparedStatement, follwed by any parameters it needs
+          See prepare-statement for supported options."
+    :deprecated "0.3.0"}
+  with-query-results*
   [sql-params func]
   (when-not (vector? sql-params)
     (let [^Class sql-params-class (class sql-params)
@@ -1040,19 +991,22 @@ generated keys are returned (as a map)." }
                           options-are-first (rest (rest sql-params))
                           :else (rest sql-params)))
         prepare-args (when (map? special) (flatten (seq special)))]
-    (with-open [^PreparedStatement stmt (if (instance? PreparedStatement special) special (apply prepare-statement (connection) sql prepare-args))]
+    (with-open [^PreparedStatement stmt (if (instance? PreparedStatement special) special (apply prepare-statement (get-connection *db*) sql prepare-args))]
       (set-parameters stmt params)
       (with-open [rset (.executeQuery stmt)]
-        (func (resultset-seq rset))))))
+        (binding [*db* (assoc *db* :connection (.getConnection stmt))]
+          (func (resultset-seq rset)))))))
 
-(defmacro with-query-results
-  "Executes a query, then evaluates body with results bound to a seq of the
-  results. sql-params is a vector containing either:
-    [sql & params] - a SQL query, followed by any parameters it needs
-    [stmt & params] - a PreparedStatement, followed by any parameters it needs
-                      (the PreparedStatement already contains the SQL query)
-    [options sql & params] - options and a SQL query for creating a
-                      PreparedStatement, follwed by any parameters it needs
-  See prepare-statement for supported options."
+(defmacro
+  ^{:doc "Executes a query, then evaluates body with results bound to a seq of the
+          results. sql-params is a vector containing either:
+            [sql & params] - a SQL query, followed by any parameters it needs
+            [stmt & params] - a PreparedStatement, followed by any parameters it needs
+                              (the PreparedStatement already contains the SQL query)
+            [options sql & params] - options and a SQL query for creating a
+                              PreparedStatement, follwed by any parameters it needs
+          See prepare-statement for supported options."
+    :deprecated "0.3.0"}
+  with-query-results
   [results sql-params & body]
   `(with-query-results* ~sql-params (fn [~results] ~@body)))
