@@ -658,11 +658,16 @@ generated keys are returned (as a map)." }
   whether to run the operation in a transaction or not (default true)."
   [db sql-params & {:keys [transaction?]
                     :or {transaction? true}}]
-  (with-open [^java.sql.Connection con (get-connection db)]
-    (db-do-prepared (assoc db :connection con :level 0 :rollback (atom false))
+  (if-let [con (:connection db)]
+    (db-do-prepared db
                     transaction?
                     (first sql-params)
-                    (rest sql-params))))
+                    (rest sql-params))
+    (with-open [con (get-connection db)]
+      (db-do-prepared (assoc db :connection con :level 0 :rollback (atom false))
+                      transaction?
+                      (first sql-params)
+                      (rest sql-params)))))
 
 (defn delete!
   "Given a database connection, a table name and a where clause of columns to match,
@@ -686,21 +691,38 @@ generated keys are returned (as a map)." }
   [db table & maps-or-cols-and-values-etc]
   (let [stmts (apply sql/insert table maps-or-cols-and-values-etc)
         transaction? true]
-    (with-open [^java.sql.Connection con (get-connection db)]
+    (if-let [con (:connection db)]
       (if (string? (first stmts))
-        (apply db-do-prepared
-               (assoc db :connection con :level 0 :rollback (atom false))
-               transaction?
-               (first stmts)
-               (rest stmts))
-        (doall (map (fn [row]
-                      (let [result (db-do-prepared-return-keys
-                                    (assoc db :connection con :level 0 :rollback (atom false))
-                                    transaction?
-                                    (first row)
-                                    (rest row))]
-                        (if (map? result) (first (vals result)) result)))
-                    stmts))))))
+          (apply db-do-prepared
+                 db
+                 transaction?
+                 (first stmts)
+                 (rest stmts))
+          (doall (map (fn [row]
+                        (let [result (db-do-prepared-return-keys
+                                      db
+                                      ;; bad idea - this is nested 
+                                      transaction?
+                                      (first row)
+                                      (rest row))]
+                          result))
+                      stmts)))
+      (with-open [con (get-connection db)]
+        (if (string? (first stmts))
+          (apply db-do-prepared
+                 (assoc db :connection con :level 0 :rollback (atom false))
+                 transaction?
+                 (first stmts)
+                 (rest stmts))
+          (doall (map (fn [row]
+                        (let [result (db-do-prepared-return-keys
+                                      (assoc db :connection con :level 0 :rollback (atom false))
+                                      ;; bad idea - this is nested
+                                      transaction?
+                                      (first row)
+                                      (rest row))]
+                          result))
+                      stmts)))))))
 
 (defn update!
   "Given a database connection, a table name, a map of column values to set and a
