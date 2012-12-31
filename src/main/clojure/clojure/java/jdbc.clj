@@ -469,10 +469,26 @@ generated keys are returned (as a map)." }
      (swap! (:rollback db) (fn [_] val))))
 
 (defn- throw-non-rte
+  "This ugliness makes it easier to catch SQLException objects
+  rather than something wrapped in a RuntimeException which
+  can really obscure your code when working with JDBC from
+  Clojure... :("
   [^Throwable ex]
   (cond (instance? java.sql.SQLException ex) (throw ex)
         (and (instance? RuntimeException ex) (.getCause ex)) (throw-non-rte (.getCause ex))
         :else (throw ex)))
+
+(defn db-set-rollback-only
+  "Marks the outermost transaction such that it will rollback rather than
+  commit when complete"
+  [db]
+  (db-rollback db true))
+
+(defn db-is-rollback-only
+  "Returns true if the outermost transaction will rollback rather than
+  commit when complete"
+  [db]
+  (db-rollback db))
 
 (defn db-transaction*
   "Evaluates func as a transaction on the open database connection. Any
@@ -484,12 +500,9 @@ generated keys are returned (as a map)." }
   complete."
   [db func]
   (let [nested-db (update-in db [:level] inc)]
-    ;; This ugliness makes it easier to catch SQLException objects
-    ;; rather than something wrapped in a RuntimeException which
-    ;; can really obscure your code when working with JDBC from
-    ;; Clojure... :(
     (if (= (:level nested-db) 1)
-      (let [^java.sql.Connection con (db-connection nested-db)
+      (let [^java.sql.Connection con (get-connection nested-db)
+            nested-db (assoc nested-db :connection con)
             auto-commit (.getAutoCommit con)]
         (io!
          (.setAutoCommit con false)
@@ -514,15 +527,15 @@ generated keys are returned (as a map)." }
   "Executes SQL commands on the specified database connection. Wraps the commands
   in a transaction if transaction? is true."
   [db transaction? & commands]
-  (with-open [^Statement stmt (let [^java.sql.Connection con (db-connection db)] (.createStatement con))]
+  (with-open [^Statement stmt (let [^java.sql.Connection con (get-connection db)] (.createStatement con))]
     (doseq [^String cmd commands]
       (.addBatch stmt cmd))
     (letfn [(execute-batch* [_]
               (execute-batch stmt))]
       (if transaction?
-        (db-transaction* db execute-batch*)
+        (db-transaction* (assoc db :connection (.getConnection stmt)) execute-batch*)
         (try
-          (execute-batch*)
+          (execute-batch* nil)
           (catch Exception e
             (throw-non-rte e)))))))
 
@@ -532,7 +545,7 @@ generated keys are returned (as a map)." }
   the parameters.
   Return the generated keys for the (single) update/insert."
   [db transaction? sql param-group]
-  (with-open [^PreparedStatement stmt (prepare-statement (db-connection db) sql :return-keys true)]
+  (with-open [^PreparedStatement stmt (prepare-statement (get-connection db) sql :return-keys true)]
     (set-parameters stmt param-group)
     (letfn [(exec-and-return-keys [_]
               (let [counts (.executeUpdate stmt)]
@@ -547,9 +560,9 @@ generated keys are returned (as a map)." }
                     ;; assume generated keys is unsupported and return counts instead: 
                     counts))))]
       (if transaction?
-        (db-transaction* db exec-and-return-keys)
+        (db-transaction* (assoc db :connection (.getConnection stmt)) exec-and-return-keys)
         (try
-          (exec-and-return-keys db)
+          (exec-and-return-keys nil)
           (catch Exception e
             (throw-non-rte e)))))))
 
@@ -559,10 +572,10 @@ generated keys are returned (as a map)." }
   the parameters.
   Return a seq of update counts (one count for each param-group)."
   [db transaction? sql & param-groups]
-  (with-open [^PreparedStatement stmt (prepare-statement (db-connection db) sql)]
+  (with-open [^PreparedStatement stmt (prepare-statement (get-connection db) sql)]
     (if (empty? param-groups)
       (if transaction?
-        (db-transaction* db (fn [_] (vector (.executeUpdate stmt))))
+        (db-transaction* (assoc db :connection (.getConnection stmt)) (fn [_] (vector (.executeUpdate stmt))))
         (try
           (vector (.executeUpdate stmt))
           (catch Exception e
@@ -572,7 +585,7 @@ generated keys are returned (as a map)." }
           (set-parameters stmt param-group)
           (.addBatch stmt))
         (if transaction?
-          (db-transaction* db (fn [_] (execute-batch stmt)))
+          (db-transaction* (assoc db :connection (.getConnection stmt)) (fn [_] (execute-batch stmt)))
           (try
             (execute-batch stmt)
             (catch Exception e
@@ -608,7 +621,7 @@ generated keys are returned (as a map)." }
         prepare-args (when (map? special) (flatten (seq special)))]
     (with-open [^PreparedStatement stmt (if (instance? PreparedStatement special)
                                           special
-                                          (apply prepare-statement (db-connection db) sql prepare-args))]
+                                          (apply prepare-statement (get-connection db) sql prepare-args))]
       (set-parameters stmt params)
       (with-open [rset (.executeQuery stmt)]
         (func (resultset-seq rset :identifiers identifiers))))))
@@ -624,13 +637,20 @@ generated keys are returned (as a map)." }
     :identifiers - applied to each column name in the result set, default lower-case"
   [db sql-params & {:keys [result-set-fn row-fn identifiers]
                     :or {result-set-fn doall row-fn identity identifiers sql/lower-case}}]
-  (with-open [^java.sql.Connection con (get-connection db)]
+  (if-let [con (:connection db)]
     (db-with-query-results*
-      (assoc db :connection con :level 0 :rollback (atom false))
+      db
       (vec sql-params)
       (fn [rs]
         (result-set-fn (map row-fn rs)))
-      identifiers)))
+      identifiers)
+    (with-open [con (get-connection db)]
+      (db-with-query-results*
+        (assoc db :connection con :level 0 :rollback (atom false))
+        (vec sql-params)
+        (fn [rs]
+          (result-set-fn (map row-fn rs)))
+        identifiers))))
 
 (defn execute!
   "Given a database connection and a vector containing SQL and optional parameters,
