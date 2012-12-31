@@ -137,50 +137,89 @@ generated keys are returned (as a map)." }
     (.substring spec 5)
     spec))
 
-(defn- get-connection
+(defn get-connection
   "Creates a connection to a database. db-spec is a map containing connection
-   parameters - see with-connection for full details."
-  [{:keys [factory
+  parameters. db-spec is a map containing values for one of the following
+  parameter sets:
+
+  Existing Connection:
+    :connection  (required) an existing open connection that can be used
+                 but cannot be closed (only the parent connection can be closed)
+
+  Factory:
+    :factory     (required) a function of one argument, a map of params
+    (others)     (optional) passed to the factory function in a map
+
+  DriverManager:
+    :subprotocol (required) a String, the jdbc subprotocol
+    :subname     (required) a String, the jdbc subname
+    :classname   (optional) a String, the jdbc driver class name
+    (others)     (optional) passed to the driver as properties.
+
+  DataSource:
+    :datasource  (required) a javax.sql.DataSource
+    :username    (optional) a String
+    :password    (optional) a String, required if :username is supplied
+
+  JNDI:
+    :name        (required) a String or javax.naming.Name
+    :environment (optional) a java.util.Map
+
+  Raw:
+    :connection-uri (required) a String
+                 Passed directly to DriverManager/getConnection
+
+  URI:
+    Parsed JDBC connection string - see below
+  
+  String:
+    subprotocol://user:password@host:post/subname
+                 An optional prefix of jdbc: is allowed."
+  [{:keys [connection
+           factory
            connection-uri
            classname subprotocol subname
            datasource username password
            name environment]
     :as db-spec}]
   (cond
-    (instance? URI db-spec)
-    (get-connection (parse-properties-uri db-spec))
-    
-    (string? db-spec)
-    (get-connection (URI. (strip-jdbc db-spec)))
-    
-    factory
-    (factory (dissoc db-spec :factory))
-    
-    connection-uri
-    (DriverManager/getConnection connection-uri)
-    
-    (and subprotocol subname)
-    (let [url (format "jdbc:%s:%s" subprotocol subname)
-          etc (dissoc db-spec :classname :subprotocol :subname)
-          classname (or classname (classnames subprotocol))]
-      (clojure.lang.RT/loadClassForName classname)
-      (DriverManager/getConnection url (as-properties etc)))
-    
-    (and datasource username password)
-    (.getConnection ^DataSource datasource ^String username ^String password)
-    
-    datasource
-    (.getConnection ^DataSource datasource)
-    
-    name
-    (let [env (and environment (Hashtable. ^Map environment))
-          context (InitialContext. env)
-          ^DataSource datasource (.lookup context ^String name)]
-      (.getConnection datasource))
-    
-    :else
-    (let [^String msg (format "db-spec %s is missing a required parameter" db-spec)]
-      (throw (IllegalArgumentException. msg)))))
+   connection
+   connection
+   
+   (instance? URI db-spec)
+   (get-connection (parse-properties-uri db-spec))
+   
+   (string? db-spec)
+   (get-connection (URI. (strip-jdbc db-spec)))
+   
+   factory
+   (factory (dissoc db-spec :factory))
+   
+   connection-uri
+   (DriverManager/getConnection connection-uri)
+   
+   (and subprotocol subname)
+   (let [url (format "jdbc:%s:%s" subprotocol subname)
+         etc (dissoc db-spec :classname :subprotocol :subname)
+         classname (or classname (classnames subprotocol))]
+     (clojure.lang.RT/loadClassForName classname)
+     (DriverManager/getConnection url (as-properties etc)))
+   
+   (and datasource username password)
+   (.getConnection ^DataSource datasource ^String username ^String password)
+   
+   datasource
+   (.getConnection ^DataSource datasource)
+   
+   name
+   (let [env (and environment (Hashtable. ^Map environment))
+         context (InitialContext. env)
+         ^DataSource datasource (.lookup context ^String name)]
+     (.getConnection datasource))
+   
+   :else
+   (let [^String msg (format "db-spec %s is missing a required parameter" db-spec)]
+     (throw (IllegalArgumentException. msg)))))
 
 (defn- make-name-unique
   "Given a collection of column names and a new column name,
