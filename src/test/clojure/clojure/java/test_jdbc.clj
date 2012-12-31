@@ -359,10 +359,12 @@
 
 (defn- returned-key [db k]
   (condp = (:subprotocol db)
-    "derby" nil
+    "derby" {:1 nil}
     "hsqldb" 1
-    "jtds:sqlserver" nil
-    "sqlserver" nil
+    "mysql" {:generated_key k}
+    "jtds:sqlserver" {:id nil}
+    "sqlserver" {:generated_keys nil}
+    "sqlite" {(keyword "last_insert_rowid()") k}
     k))
 
 (defn- generated-key [db k]
