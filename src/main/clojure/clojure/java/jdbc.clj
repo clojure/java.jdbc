@@ -730,7 +730,7 @@ generated keys are returned (as a map)." }
   specify how column names (in the set / match maps) should be transformed (default
   'as-is') and whether to run the update in a transaction (default true).
   Example:
-    (delete! db :person {:zip 94540} (where {:zip 94546}))
+    (update! db :person {:zip 94540} (where {:zip 94546}))
   is equivalent to:
     (execute! db [\"UPDATE person SET zip = ? WHERE zip = ?\" 94540 94546])"
   [db table set-map where-clause & {:keys [entities transaction?]
