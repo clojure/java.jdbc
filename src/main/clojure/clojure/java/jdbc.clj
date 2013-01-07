@@ -529,7 +529,7 @@ generated keys are returned (as a map)." }
   that is bound for evaluation of the body.
   See db-transaction* for more details."
   [binding & body]
-  `(db-transaction* ~(second binding) (fn [~(first binding)] ~@body)))
+  `(db-transaction* (assoc ~(second binding) :level 0 :rollback (atom false)) (fn [~(first binding)] ~@body)))
 
 (defn db-do-commands
   "Executes SQL commands on the specified database connection. Wraps the commands
