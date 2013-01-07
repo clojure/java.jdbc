@@ -529,7 +529,10 @@ generated keys are returned (as a map)." }
   that is bound for evaluation of the body.
   See db-transaction* for more details."
   [binding & body]
-  `(db-transaction* (assoc ~(second binding) :level 0 :rollback (atom false)) (fn [~(first binding)] ~@body)))
+  `(db-transaction* (let [db# ~(second binding)]
+                      (assoc db# :level (or (:level db#) 0) :rollback (or (:rollback db#) (atom false))))
+                    (fn [~(first binding)]
+                      ~@body)))
 
 (defn db-do-commands
   "Executes SQL commands on the specified database connection. Wraps the commands
@@ -538,14 +541,12 @@ generated keys are returned (as a map)." }
   (with-open [^Statement stmt (let [^java.sql.Connection con (get-connection db)] (.createStatement con))]
     (doseq [^String cmd commands]
       (.addBatch stmt cmd))
-    (letfn [(execute-batch* [_]
-              (execute-batch stmt))]
-      (if transaction?
-        (db-transaction* (assoc db :connection (.getConnection stmt)) execute-batch*)
-        (try
-          (execute-batch* nil)
-          (catch Exception e
-            (throw-non-rte e)))))))
+    (if transaction?
+      (db-transaction [db (assoc db :connection (.getConnection stmt))] (execute-batch stmt))
+      (try
+        (execute-batch stmt)
+        (catch Exception e
+          (throw-non-rte e))))))
 
 (defn db-do-prepared-return-keys
   "Executes an (optionally parameterized) SQL prepared statement on the
@@ -555,7 +556,7 @@ generated keys are returned (as a map)." }
   [db transaction? sql param-group]
   (with-open [^PreparedStatement stmt (prepare-statement (get-connection db) sql :return-keys true)]
     (set-parameters stmt param-group)
-    (letfn [(exec-and-return-keys [_]
+    (letfn [(exec-and-return-keys []
               (let [counts (.executeUpdate stmt)]
                 (try
                   (let [rs (.getGeneratedKeys stmt)
@@ -568,9 +569,9 @@ generated keys are returned (as a map)." }
                     ;; assume generated keys is unsupported and return counts instead: 
                     counts))))]
       (if transaction?
-        (db-transaction* (assoc db :connection (.getConnection stmt)) exec-and-return-keys)
+        (db-transaction [db (assoc db :connection (.getConnection stmt))] (exec-and-return-keys))
         (try
-          (exec-and-return-keys nil)
+          (exec-and-return-keys)
           (catch Exception e
             (throw-non-rte e)))))))
 
@@ -583,7 +584,7 @@ generated keys are returned (as a map)." }
   (with-open [^PreparedStatement stmt (prepare-statement (get-connection db) sql)]
     (if (empty? param-groups)
       (if transaction?
-        (db-transaction* (assoc db :connection (.getConnection stmt)) (fn [_] (vector (.executeUpdate stmt))))
+        (db-transaction [db (assoc db :connection (.getConnection stmt))] (vector (.executeUpdate stmt)))
         (try
           (vector (.executeUpdate stmt))
           (catch Exception e
@@ -593,7 +594,7 @@ generated keys are returned (as a map)." }
           (set-parameters stmt param-group)
           (.addBatch stmt))
         (if transaction?
-          (db-transaction* (assoc db :connection (.getConnection stmt)) (fn [_] (execute-batch stmt)))
+          (db-transaction [db (assoc db :connection (.getConnection stmt))] (execute-batch stmt))
           (try
             (execute-batch stmt)
             (catch Exception e
@@ -654,7 +655,7 @@ generated keys are returned (as a map)." }
       identifiers)
     (with-open [con (get-connection db)]
       (db-with-query-results*
-        (assoc db :connection con :level 0 :rollback (atom false))
+        (assoc db :connection con)
         (vec sql-params)
         (fn [rs]
           (result-set-fn (map row-fn rs)))
@@ -672,7 +673,7 @@ generated keys are returned (as a map)." }
                     (first sql-params)
                     (rest sql-params))
     (with-open [con (get-connection db)]
-      (db-do-prepared (assoc db :connection con :level 0 :rollback (atom false))
+      (db-do-prepared (assoc db :connection con)
                       transaction?
                       (first sql-params)
                       (rest sql-params)))))
@@ -718,13 +719,13 @@ generated keys are returned (as a map)." }
       (with-open [con (get-connection db)]
         (if (string? (first stmts))
           (apply db-do-prepared
-                 (assoc db :connection con :level 0 :rollback (atom false))
+                 (assoc db :connection con)
                  transaction?
                  (first stmts)
                  (rest stmts))
           (doall (map (fn [row]
                         (let [result (db-do-prepared-return-keys
-                                      (assoc db :connection con :level 0 :rollback (atom false))
+                                      (assoc db :connection con)
                                       ;; bad idea - this is nested
                                       transaction?
                                       (first row)
