@@ -512,9 +512,9 @@ generated keys are returned (as a map)." }
                (.rollback con)
                (.commit con))
              result)
-           (catch Exception e
+           (catch Throwable t
              (.rollback con)
-             (throw-non-rte e))
+             (throw-non-rte t))
            (finally
             (db-rollback nested-db false)
             (.setAutoCommit con auto-commit)))))
@@ -800,9 +800,9 @@ generated keys are returned (as a map)." }
                (.rollback con)
                (.commit con))
              result)
-           (catch Exception e
+           (catch Throwable t
              (.rollback con)
-             (throw-non-rte e))
+             (throw-non-rte t))
            (finally
             (db-rollback *db* false)
             (.setAutoCommit con auto-commit)))))
