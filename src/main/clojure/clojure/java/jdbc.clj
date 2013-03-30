@@ -302,7 +302,7 @@ generated keys are returned (as a map)." }
   "Given a quote pattern - either a single character or a pair of characters in
    a vector - and a keyword, return the keyword as a string using a simple
    quoting naming strategy.
-   Given a qote pattern and a string, return the string as-is.
+   Given a quote pattern and a string, return the string as-is.
      (as-quoted-identifier X :name) will return XnameX as a string.
      (as-quoted-identifier [A B] :name) will return AnameB as a string."
   [q x]
@@ -525,7 +525,7 @@ generated keys are returned (as a map)." }
 
 (defmacro db-transaction
   "Evaluates body in the context of a transaction on the specified database connection.
-  The binding provides the dataabase connection for the transaction and the name to which
+  The binding provides the database connection for the transaction and the name to which
   that is bound for evaluation of the body.
   See db-transaction* for more details."
   [binding & body]
@@ -607,7 +607,7 @@ generated keys are returned (as a map)." }
     [stmt & params] - a PreparedStatement, followed by any parameters it needs
                       (the PreparedStatement already contains the SQL query)
     [options sql & params] - options and a SQL query for creating a
-                      PreparedStatement, follwed by any parameters it needs
+                      PreparedStatement, followed by any parameters it needs
   See prepare-statement for supported options."
   [db sql-params func identifiers]
   (when-not (vector? sql-params)
@@ -977,7 +977,7 @@ generated keys are returned (as a map)." }
             [stmt & params] - a PreparedStatement, followed by any parameters it needs
                              (the PreparedStatement already contains the SQL query)
             [options sql & params] - options and a SQL query for creating a
-                             PreparedStatement, follwed by any parameters it needs
+                             PreparedStatement, followed by any parameters it needs
           See prepare-statement for supported options."
     :deprecated "0.3.0"}
   with-query-results*
@@ -1013,7 +1013,7 @@ generated keys are returned (as a map)." }
             [stmt & params] - a PreparedStatement, followed by any parameters it needs
                               (the PreparedStatement already contains the SQL query)
             [options sql & params] - options and a SQL query for creating a
-                              PreparedStatement, follwed by any parameters it needs
+                              PreparedStatement, followed by any parameters it needs
           See prepare-statement for supported options."
     :deprecated "0.3.0"}
   with-query-results
