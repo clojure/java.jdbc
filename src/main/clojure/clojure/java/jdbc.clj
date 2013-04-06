@@ -531,9 +531,10 @@ generated keys are returned (as a map)." }
   See db-transaction* for more details."
   [binding & body]
   `(db-transaction* (let [db# ~(second binding)]
-                      (assoc db# :level (or (:level db#) 0) :rollback (or (:rollback db#) (atom false))))
-                    (fn [~(first binding)]
-                      ~@body)))
+                      (assoc db#
+                        :level (or (:level db#) 0)
+                        :rollback (or (:rollback db#) (atom false))))
+                    (fn [~(first binding)] ~@body)))
 
 (defn db-do-commands
   "Executes SQL commands on the specified database connection. Wraps the commands
