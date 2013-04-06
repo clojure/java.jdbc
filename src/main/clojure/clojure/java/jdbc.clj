@@ -930,7 +930,7 @@ generated keys are returned (as a map)." }
     :deprecated "0.3.0"}
   insert-records
   [table & records]
-  (apply insert! *db* table records))
+  (apply insert! *db* table (concat records [:entities *as-str*])))
 
 (defn
   ^{:doc "Inserts a single record into a table. A record is a map from strings or
@@ -939,7 +939,7 @@ generated keys are returned (as a map)." }
     :deprecated "0.3.0"}
   insert-record
   [table record]
-  (first (insert! *db* table record)))
+  (first (insert-records table record)))
 
 (defn
   ^{:doc "Deletes rows from a table. where-params is a vector containing a string
@@ -948,7 +948,7 @@ generated keys are returned (as a map)." }
     :deprecated "0.3.0"}
   delete-rows
   [table where-params]
-  (delete! *db* table where-params))
+  (apply delete! *db* table where-params [:entities *as-str*]))
 
 (defn
   ^{:doc "Updates values on selected rows in a table. where-params is a vector
@@ -958,7 +958,7 @@ generated keys are returned (as a map)." }
     :deprecated "0.3.0"}
   update-values
   [table where-params record]
-  (update! *db* table record where-params))
+  (apply update! *db* table record where-params [:entities *as-str*]))
 
 (defn update-or-insert-values
   "Updates values on selected rows in a table, or inserts a new row when no
