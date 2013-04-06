@@ -901,16 +901,19 @@ generated keys are returned (as a map)." }
   [table column-names & value-groups]
   (let [column-strs (map as-identifier column-names)
         n (count (first value-groups))
+        ns (map count value-groups)
         return-keys (= 1 (count value-groups))
         prepared-statement (if return-keys do-prepared-return-keys do-prepared)
         template (apply str (interpose "," (repeat n "?")))
         columns (if (seq column-names)
                   (format "(%s)" (apply str (interpose "," column-strs)))
                   "")]
-    (apply prepared-statement
-           (format "INSERT INTO %s %s VALUES (%s)"
-                   (as-identifier table) columns template)
-           value-groups)))
+    (if (apply = ns)
+      (apply prepared-statement
+             (format "INSERT INTO %s %s VALUES (%s)"
+                     (as-identifier table) columns template)
+             value-groups)
+      (throw (IllegalArgumentException. "insert-values called with inconsistent number of columns / values")))))
 
 (defn insert-rows
   "Inserts complete rows into a table. Each row is a vector of values for

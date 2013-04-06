@@ -302,12 +302,28 @@
           (sql/insert-values
             :fruit
             [:name :appearance]
-            ["Grape" "yummy"]
-            ["Pear" "bruised"]
             ["Apple" "strange" "whoops"])
           ;; sqlite does not throw exception for too many items
           (throw (java.sql.SQLException.)))
         (catch java.sql.SQLException _
+          (is (= 0 (sql/with-query-results res ["SELECT * FROM fruit"] (count res))))))
+      (is (= 0 (sql/with-query-results res ["SELECT * FROM fruit"] (count res)))))))
+
+(deftest test-insert-values-exception
+  (doseq [db (test-specs)]
+    (sql/with-connection db
+      (create-test-table :fruit db)
+      (try
+        (sql/transaction
+          (sql/insert-values
+            :fruit
+            [:name :appearance]
+            ["Grape" "yummy"]
+            ["Pear" "bruised"]
+            ["Apple" "strange" "whoops"])
+          ;; insert-values should complain about the mismatch
+          (is nil "insert-values did not throw an exception!"))
+        (catch IllegalArgumentException _
           (is (= 0 (sql/with-query-results res ["SELECT * FROM fruit"] (count res))))))
       (is (= 0 (sql/with-query-results res ["SELECT * FROM fruit"] (count res)))))))
 
@@ -325,7 +341,7 @@
             [:name :appearance]
             ["Grape" "yummy"]
             ["Pear" "bruised"]
-            ["Apple" "strange" "whoops"])
+            ["Apple" "strange"])
           (is (= 3 (sql/with-query-results res ["SELECT * FROM fruit"] (count res)))))
         (catch java.sql.SQLException _
           (is (= 0 (sql/with-query-results res ["SELECT * FROM fruit"] (count res))))))
