@@ -1,4 +1,4 @@
-Changes in 0.2.4-SNAPSHOT
+Changes in 0.3.0-SNAPSHOT
 * Remove reflection warning from execute-batch
 * Add notes to README about 3rd party database driver dependencies
 * Add optional :identifiers argument to resultset-seq so you can explicitly pass in the naming strategy
