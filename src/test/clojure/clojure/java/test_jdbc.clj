@@ -302,10 +302,8 @@
           (sql/insert-values
             :fruit
             [:name :appearance]
-            ["Apple" "strange" "whoops"])
-          ;; sqlite does not throw exception for too many items
-          (throw (java.sql.SQLException.)))
-        (catch java.sql.SQLException _
+            ["Apple" "strange" "whoops"]))
+        (catch IllegalArgumentException _
           (is (= 0 (sql/with-query-results res ["SELECT * FROM fruit"] (count res))))))
       (is (= 0 (sql/with-query-results res ["SELECT * FROM fruit"] (count res)))))))
 
