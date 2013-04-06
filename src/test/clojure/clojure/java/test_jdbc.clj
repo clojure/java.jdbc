@@ -311,18 +311,14 @@
   (doseq [db (test-specs)]
     (sql/with-connection db
       (create-test-table :fruit db)
-      (try
-        (sql/transaction
-          (sql/insert-values
-            :fruit
-            [:name :appearance]
-            ["Grape" "yummy"]
-            ["Pear" "bruised"]
-            ["Apple" "strange" "whoops"])
-          ;; insert-values should complain about the mismatch
-          (is nil "insert-values did not throw an exception!"))
-        (catch IllegalArgumentException _
-          (is (= 0 (sql/with-query-results res ["SELECT * FROM fruit"] (count res))))))
+      (is (thrown? IllegalArgumentException
+                   (sql/transaction
+                    (sql/insert-values
+                     :fruit
+                     [:name :appearance]
+                     ["Grape" "yummy"]
+                     ["Pear" "bruised"]
+                     ["Apple" "strange" "whoops"]))))
       (is (= 0 (sql/with-query-results res ["SELECT * FROM fruit"] (count res)))))))
 
 (deftest test-rollback
