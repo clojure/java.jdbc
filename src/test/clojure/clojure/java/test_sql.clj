@@ -104,15 +104,27 @@
 
 (deftest insert-dsl
   (is (= ["INSERT INTO a ( b ) VALUES ( ? )" [2]] (insert :a [:b] [2])))
+  (is (= ["INSERT INTO a VALUES ( ? )" [2]] (insert :a nil [2])))
+  (is (= ["INSERT INTO a VALUES ( ? )" [2]] (insert :a [] [2])))
   (is (= [["INSERT INTO a ( b ) VALUES ( ? )" 2]] (insert :a {:b 2})))
   (is (= ["INSERT INTO a ( b ) VALUES ( ? )" [2] [3]] (insert :a [:b] [2] [3])))
+  (is (= ["INSERT INTO a VALUES ( ? )" [2] [3]] (insert :a nil [2] [3])))
+  (is (= ["INSERT INTO a VALUES ( ? )" [2] [3]] (insert :a [] [2] [3])))
   (is (= ["INSERT INTO a ( b, c, d ) VALUES ( ?, ?, ? )" [2 3 4] [3 4 5]]
          (insert :a [:b :c :d] [2 3 4] [3 4 5])))
+  (is (= ["INSERT INTO a VALUES ( ?, ?, ? )" [2 3 4] [3 4 5]]
+         (insert :a nil [2 3 4] [3 4 5])))
+  (is (= ["INSERT INTO a VALUES ( ?, ?, ? )" [2 3 4] [3 4 5]]
+         (insert :a [] [2 3 4] [3 4 5])))
   (is (= [["INSERT INTO a ( b ) VALUES ( ? )" 2]
           ["INSERT INTO a ( b ) VALUES ( ? )" 3]]
          (insert :a {:b 2} {:b 3})))
   (is (= ["INSERT INTO `a` ( `b` ) VALUES ( ? )" [2]]
-         (entities (quoted \`) (insert :a [:b] [2])))))
+         (entities (quoted \`) (insert :a [:b] [2]))))
+  (is (= ["INSERT INTO `a` VALUES ( ? )" [2]]
+         (entities (quoted \`) (insert :a nil [2]))))
+  (is (= ["INSERT INTO `a` VALUES ( ? )" [2]]
+         (entities (quoted \`) (insert :a [] [2])))))
 
 (deftest bad-insert-args
   (is (thrown? IllegalArgumentException (insert)))

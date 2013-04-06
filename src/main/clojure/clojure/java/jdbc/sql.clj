@@ -113,12 +113,15 @@ and update! high-level operations within clojure.java.jdbc directly." }
   [table columns values entities]
   (let [nc (count columns)
         vcs (map count values)]
-    (if (not (apply = nc vcs))
+    (if (not (and (or (zero? nc) (= nc (first vcs))) (apply = vcs)))
       (throw (IllegalArgumentException. "insert called with inconsistent number of columns / values"))
-      (into [(str "INSERT INTO " (table-str table entities) " ( "
-                  (str/join ", " (map (fn [col] (col-str col entities)) columns))
-                  " ) VALUES ( "
-                  (str/join ", " (repeat nc "?"))
+      (into [(str "INSERT INTO " (table-str table entities)
+                  (when (seq columns)
+                    (str " ( "
+                         (str/join ", " (map (fn [col] (col-str col entities)) columns))
+                         " )"))
+                  " VALUES ( "
+                  (str/join ", " (repeat (first vcs) "?"))
                   " )")]
             values))))
 
