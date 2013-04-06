@@ -695,45 +695,47 @@ generated keys are returned (as a map)." }
             (sql/delete table where-clause :entities entities)
             :transaction? transaction?))
 
+(defn- multi-insert-helper
+  "Given a (connected) database connection and some SQL statements (for multiple
+   inserts), run a prepared statement on each and return any generated keys.
+   Note: we are eager so an unrealized lazy-seq cannot escape from the connection."
+  [db stmts]
+  (doall (map (fn [row]
+                (db-do-prepared-return-keys db false (first row) (rest row)))
+              stmts)))
+
+(defn- insert-helper
+  "Given a (connected) database connection, a transaction flag and some SQL statements
+   (for one or more inserts), run a prepared statement or a sequence of them."
+  [db transaction? stmts]
+  (if (string? (first stmts))
+    (apply db-do-prepared db transaction? (first stmts) (rest stmts))
+    (if transaction?
+      (db-transaction [t-db db] (multi-insert-helper t-db stmts))
+      (multi-insert-helper db stmts))))
+
+(defn- extract-transaction?
+  "Given a sequence of data, look for :transaction? arg in it and return a pair of
+   the transaction? value (defaulting to true) and the data without the option."
+  [data]
+  (let [before (take-while (partial not= :transaction?) data)
+        after  (drop-while (partial not= :transaction?) data)]
+    (if (seq after)
+      [(second after) (concat before (nnext after))]
+      [true data])))
+
 (defn insert!
   "Given a database connection, a table name and either maps representing rows or
-  a list of column names followed by lists of column values, perform an insert.
-  Currently the insert is always run in a transaction."
-  [db table & maps-or-cols-and-values-etc]
-  (let [stmts (apply sql/insert table maps-or-cols-and-values-etc)
-        transaction? true]
+   a list of column names followed by lists of column values, perform an insert.
+   Use :transaction? argument to specify whether to run in a transaction or not.
+   The default is true (use a transaction)."
+  [db table & options]
+  (let [[transaction? maps-or-cols-and-values-etc] (extract-transaction? options)
+        stmts (apply sql/insert table maps-or-cols-and-values-etc)]
     (if-let [con (:connection db)]
-      (if (string? (first stmts))
-          (apply db-do-prepared
-                 db
-                 transaction?
-                 (first stmts)
-                 (rest stmts))
-          (doall (map (fn [row]
-                        (let [result (db-do-prepared-return-keys
-                                      db
-                                      ;; bad idea - this is nested 
-                                      transaction?
-                                      (first row)
-                                      (rest row))]
-                          result))
-                      stmts)))
+      (insert-helper db transaction? stmts)
       (with-open [con (get-connection db)]
-        (if (string? (first stmts))
-          (apply db-do-prepared
-                 (assoc db :connection con)
-                 transaction?
-                 (first stmts)
-                 (rest stmts))
-          (doall (map (fn [row]
-                        (let [result (db-do-prepared-return-keys
-                                      (assoc db :connection con)
-                                      ;; bad idea - this is nested
-                                      transaction?
-                                      (first row)
-                                      (rest row))]
-                          result))
-                      stmts)))))))
+        (insert-helper (assoc db :connection con) transaction? stmts)))))
 
 (defn update!
   "Given a database connection, a table name, a map of column values to set and a
