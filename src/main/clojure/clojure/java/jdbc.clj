@@ -544,7 +544,8 @@ generated keys are returned (as a map)." }
     (doseq [^String cmd commands]
       (.addBatch stmt cmd))
     (if transaction?
-      (db-transaction [db (assoc db :connection (.getConnection stmt))] (execute-batch stmt))
+      (db-transaction [t-db (assoc db :connection (.getConnection stmt))]
+                      (execute-batch stmt))
       (try
         (execute-batch stmt)
         (catch Exception e
@@ -571,7 +572,8 @@ generated keys are returned (as a map)." }
                     ;; assume generated keys is unsupported and return counts instead: 
                     counts))))]
       (if transaction?
-        (db-transaction [db (assoc db :connection (.getConnection stmt))] (exec-and-return-keys))
+        (db-transaction [t-db (assoc db :connection (.getConnection stmt))]
+                        (exec-and-return-keys))
         (try
           (exec-and-return-keys)
           (catch Exception e
@@ -586,7 +588,8 @@ generated keys are returned (as a map)." }
   (with-open [^PreparedStatement stmt (prepare-statement (get-connection db) sql)]
     (if (empty? param-groups)
       (if transaction?
-        (db-transaction [db (assoc db :connection (.getConnection stmt))] (vector (.executeUpdate stmt)))
+        (db-transaction [t-db (assoc db :connection (.getConnection stmt))]
+                        (vector (.executeUpdate stmt)))
         (try
           (vector (.executeUpdate stmt))
           (catch Exception e
@@ -596,7 +599,8 @@ generated keys are returned (as a map)." }
           (set-parameters stmt param-group)
           (.addBatch stmt))
         (if transaction?
-          (db-transaction [db (assoc db :connection (.getConnection stmt))] (execute-batch stmt))
+          (db-transaction [t-db (assoc db :connection (.getConnection stmt))]
+                          (execute-batch stmt))
           (try
             (execute-batch stmt)
             (catch Exception e
