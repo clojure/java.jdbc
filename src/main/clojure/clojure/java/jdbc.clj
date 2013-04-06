@@ -899,29 +899,15 @@ generated keys are returned (as a map)." }
   ;; is not (yet) supported in the new API... JDBC-45
   insert-values
   [table column-names & value-groups]
-  (let [column-strs (map as-identifier column-names)
-        n (count (first value-groups))
-        ns (map count value-groups)
-        return-keys (= 1 (count value-groups))
-        prepared-statement (if return-keys do-prepared-return-keys do-prepared)
-        template (apply str (interpose "," (repeat n "?")))
-        columns (if (seq column-names)
-                  (format "(%s)" (apply str (interpose "," column-strs)))
-                  "")]
-    (if (apply = ns)
-      (apply prepared-statement
-             (format "INSERT INTO %s %s VALUES (%s)"
-                     (as-identifier table) columns template)
-             value-groups)
-      (throw (IllegalArgumentException. "insert-values called with inconsistent number of columns / values")))))
+  (apply insert! *db* table column-names (concat value-groups [:entities *as-str*])))
 
 (defn insert-rows
-  "Inserts complete rows into a table. Each row is a vector of values for
-  each of the table's columns in order.
-  If a single row is inserted, returns a map of the generated keys."
+  ^{:doc "Inserts complete rows into a table. Each row is a vector of values for
+          each of the table's columns in order.
+          If a single row is inserted, returns a map of the generated keys."
+    :deprecated "0.3.0"}
   [table & rows]
-  ;; will be deprecated after JDBC-45 is implemented
-  (apply insert-values table nil rows))
+  (apply insert! *db* table nil (concat rows [:entities *as-str*])))
 
 (defn
   ^{:doc "Inserts records into a table. records are maps from strings or keywords
