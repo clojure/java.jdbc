@@ -652,20 +652,17 @@ generated keys are returned (as a map)." }
     :identifiers - applied to each column name in the result set, default lower-case"
   [db sql-params & {:keys [result-set-fn row-fn identifiers]
                     :or {result-set-fn doall row-fn identity identifiers sql/lower-case}}]
-  (if-let [con (:connection db)]
-    (db-with-query-results*
-      db
-      (vec sql-params)
-      (fn [rs]
-        (result-set-fn (map row-fn rs)))
-      identifiers)
-    (with-open [con (get-connection db)]
-      (db-with-query-results*
-        (assoc db :connection con)
-        (vec sql-params)
-        (fn [rs]
-          (result-set-fn (map row-fn rs)))
-        identifiers))))
+  (let [query-helper (fn [db]
+                       (db-with-query-results* db
+                         (vec sql-params)
+                         (fn [rs]
+                           (result-set-fn (map row-fn rs)))
+                         identifiers))]
+    (if-let [con (:connection db)]
+      (query-helper db)
+      (with-open [con (get-connection db)]
+        (query-helper
+         (assoc db :connection con))))))
 
 (defn execute!
   "Given a database connection and a vector containing SQL and optional parameters,
@@ -673,16 +670,15 @@ generated keys are returned (as a map)." }
   whether to run the operation in a transaction or not (default true)."
   [db sql-params & {:keys [transaction?]
                     :or {transaction? true}}]
-  (if-let [con (:connection db)]
-    (db-do-prepared db
-                    transaction?
-                    (first sql-params)
-                    (rest sql-params))
-    (with-open [con (get-connection db)]
-      (db-do-prepared (assoc db :connection con)
-                      transaction?
-                      (first sql-params)
-                      (rest sql-params)))))
+  (let [execute-helper (fn [db]
+                         (db-do-prepared db
+                                         transaction?
+                                         (first sql-params)
+                                         (rest sql-params)))]
+    (if-let [con (:connection db)]
+      (execute-helper db)
+      (with-open [con (get-connection db)]
+        (execute-helper (assoc db :connection con))))))
 
 (defn delete!
   "Given a database connection, a table name and a where clause of columns to match,
