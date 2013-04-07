@@ -105,7 +105,33 @@ generated keys are returned (as a map)." }
       (.setProperty p (as-str identity k) (as-str identity v)))
     p))
 
-(def ^{:private true :dynamic true} *db* {:connection nil :level 0})
+(defprotocol Connectable
+  (add-connection [db connection])
+  (get-level [db]))
+
+(defn- inc-level
+  "Increment the nesting level for a transacted database connection.
+   If we are at the top level, also add in a rollback state."
+  [db]
+  (let [nested-db (update-in db [:level] (fnil inc 0))]
+    (if (= 1 (:level nested-db))
+      (assoc nested-db :rollback (atom false))
+      nested-db)))
+
+(extend-protocol Connectable
+  String
+  (add-connection [_ connection] {:connection connection :level 0})
+  (get-level [_] 0)
+
+  clojure.lang.Associative
+  (add-connection [m connection] (assoc m :connection connection))
+  (get-level [m] (or (:level m) 0))
+
+  nil
+  (add-connection [_ connection] {:connection connection :level 0})
+  (get-level [_] 0))
+
+(def ^{:private true :dynamic true} *db* (add-connection nil nil))
 
 (def ^{:private true :doc "Map of classnames to subprotocols"} classnames
   {"postgresql"     "org.postgresql.Driver"
@@ -454,20 +480,14 @@ generated keys are returned (as a map)." }
 (defn db-find-connection
   "Returns the current database connection (or nil if there is none)"
   ^java.sql.Connection [db]
-  (:connection db))
+  (and (map? db)
+       (:connection db)))
 
 (defn db-connection
   "Returns the current database connection (or throws if there is none)"
   ^java.sql.Connection [db]
   (or (db-find-connection db)
       (throw (Exception. "no current database connection"))))
-
-(defn- db-rollback
-  "Accessor for the rollback flag on the current connection"
-  ([db]
-     (deref (:rollback db)))
-  ([db val]
-     (swap! (:rollback db) (fn [_] val))))
 
 (defn- throw-non-rte
   "This ugliness makes it easier to catch SQLException objects
@@ -479,17 +499,22 @@ generated keys are returned (as a map)." }
         (and (instance? RuntimeException ex) (.getCause ex)) (throw-non-rte (.getCause ex))
         :else (throw ex)))
 
-(defn db-set-rollback-only
+(defn db-set-rollback-only!
   "Marks the outermost transaction such that it will rollback rather than
   commit when complete"
   [db]
-  (db-rollback db true))
+  (reset! (:rollback db) true))
+
+(defn db-unset-rollback-only!
+  "Marks the outermost transaction such that it will not rollback when complete"
+  [db]
+  (reset! (:rollback db) false))
 
 (defn db-is-rollback-only
   "Returns true if the outermost transaction will rollback rather than
   commit when complete"
   [db]
-  (db-rollback db))
+  (deref (:rollback db)))
 
 (defn db-transaction*
   "Evaluates func as a transaction on the open database connection. Any
@@ -500,29 +525,35 @@ generated keys are returned (as a map)." }
   the entire transaction will be rolled back rather than committed when
   complete."
   [db func]
-  (let [nested-db (update-in db [:level] inc)]
-    (if (= (:level nested-db) 1)
-      (let [^java.sql.Connection con (get-connection nested-db)
-            nested-db (assoc nested-db :connection con)
-            auto-commit (.getAutoCommit con)]
-        (io!
-         (.setAutoCommit con false)
-         (try
-           (let [result (func nested-db)]
-             (if (db-rollback nested-db)
-               (.rollback con)
-               (.commit con))
-             result)
-           (catch Throwable t
-             (.rollback con)
-             (throw-non-rte t))
-           (finally
-            (db-rollback nested-db false)
-            (.setAutoCommit con auto-commit)))))
-      (try
-        (func nested-db)
-        (catch Exception e
-          (throw-non-rte e))))))
+  (if (zero? (get-level db))
+    (let [^java.sql.Connection con (get-connection db)
+          nested-db (inc-level (add-connection db con))
+          auto-commit (.getAutoCommit con)]
+      #_(println "db-transaction* top-level: " nested-db)
+      (io!
+       (.setAutoCommit con false)
+       (try
+         (let [result (func nested-db)]
+           (if (db-is-rollback-only nested-db)
+             (do
+               #_(println "-- rolling back")
+               (.rollback con))
+             (do
+               #_(println "-- committing")
+               (.commit con)))
+           result)
+         (catch Throwable t
+           #_(println "-- exception: rolling back" (.getMessage t))
+           (.rollback con)
+           (throw-non-rte t))
+         (finally
+           (db-unset-rollback-only! nested-db)
+           (.setAutoCommit con auto-commit)))))
+    (try
+      #_(println "db-transaction* nested:" (inc-level db))
+      (func (inc-level db))
+      (catch Exception e
+        (throw-non-rte e)))))
 
 (defmacro db-transaction
   "Evaluates body in the context of a transaction on the specified database connection.
@@ -530,10 +561,7 @@ generated keys are returned (as a map)." }
   that is bound for evaluation of the body.
   See db-transaction* for more details."
   [binding & body]
-  `(db-transaction* (let [db# ~(second binding)]
-                      (assoc db#
-                        :level (or (:level db#) 0)
-                        :rollback (or (:rollback db#) (atom false))))
+  `(db-transaction* ~(second binding)
                     (fn [~(first binding)] ~@body)))
 
 (defn db-do-commands
@@ -544,7 +572,7 @@ generated keys are returned (as a map)." }
     (doseq [^String cmd commands]
       (.addBatch stmt cmd))
     (if transaction?
-      (db-transaction [t-db (assoc db :connection (.getConnection stmt))]
+      (db-transaction [t-db (add-connection db (.getConnection stmt))]
                       (execute-batch stmt))
       (try
         (execute-batch stmt)
@@ -572,7 +600,7 @@ generated keys are returned (as a map)." }
                     ;; assume generated keys is unsupported and return counts instead: 
                     counts))))]
       (if transaction?
-        (db-transaction [t-db (assoc db :connection (.getConnection stmt))]
+        (db-transaction [t-db (add-connection db (.getConnection stmt))]
                         (exec-and-return-keys))
         (try
           (exec-and-return-keys)
@@ -588,7 +616,7 @@ generated keys are returned (as a map)." }
   (with-open [^PreparedStatement stmt (prepare-statement (get-connection db) sql)]
     (if (empty? param-groups)
       (if transaction?
-        (db-transaction [t-db (assoc db :connection (.getConnection stmt))]
+        (db-transaction [t-db (add-connection db (.getConnection stmt))]
                         (vector (.executeUpdate stmt)))
         (try
           (vector (.executeUpdate stmt))
@@ -599,7 +627,7 @@ generated keys are returned (as a map)." }
           (set-parameters stmt param-group)
           (.addBatch stmt))
         (if transaction?
-          (db-transaction [t-db (assoc db :connection (.getConnection stmt))]
+          (db-transaction [t-db (add-connection db (.getConnection stmt))]
                           (execute-batch stmt))
           (try
             (execute-batch stmt)
@@ -658,11 +686,11 @@ generated keys are returned (as a map)." }
                          (fn [rs]
                            (result-set-fn (map row-fn rs)))
                          identifiers))]
-    (if-let [con (:connection db)]
+    (if-let [con (and (map? db) (:connection db))]
       (query-helper db)
       (with-open [con (get-connection db)]
         (query-helper
-         (assoc db :connection con))))))
+         (add-connection db con))))))
 
 (defn execute!
   "Given a database connection and a vector containing SQL and optional parameters,
@@ -675,10 +703,10 @@ generated keys are returned (as a map)." }
                                          transaction?
                                          (first sql-params)
                                          (rest sql-params)))]
-    (if-let [con (:connection db)]
+    (if-let [con (and (map? db) (:connection db))]
       (execute-helper db)
       (with-open [con (get-connection db)]
-        (execute-helper (assoc db :connection con))))))
+        (execute-helper (add-connection db con))))))
 
 (defn delete!
   "Given a database connection, a table name and a where clause of columns to match,
@@ -732,10 +760,10 @@ generated keys are returned (as a map)." }
   [db table & options]
   (let [[transaction? maps-or-cols-and-values-etc] (extract-transaction? options)
         stmts (apply sql/insert table maps-or-cols-and-values-etc)]
-    (if-let [con (:connection db)]
+    (if-let [con (and (map? db) (:connection db))]
       (insert-helper db transaction? stmts)
       (with-open [con (get-connection db)]
-        (insert-helper (assoc db :connection con) transaction? stmts)))))
+        (insert-helper (add-connection db con) transaction? stmts)))))
 
 (defn update!
   "Given a database connection, a table name, a map of column values to set and a
@@ -800,7 +828,7 @@ generated keys are returned (as a map)." }
          (.setAutoCommit con false)
          (try
            (let [result (func)]
-             (if (db-rollback *db*)
+             (if (db-is-rollback-only *db*)
                (.rollback con)
                (.commit con))
              result)
@@ -808,7 +836,7 @@ generated keys are returned (as a map)." }
              (.rollback con)
              (throw-non-rte t))
            (finally
-            (db-rollback *db* false)
+            (db-unset-rollback-only! *db*)
             (.setAutoCommit con auto-commit)))))
       (try
         (func)
@@ -834,7 +862,7 @@ generated keys are returned (as a map)." }
     :deprecated "0.3.0"}
   set-rollback-only
   []
-  (db-set-rollback-only *db*))
+  (db-set-rollback-only! *db*))
 
 (defn
   ^{:doc "Returns true if the outermost transaction will rollback rather than
