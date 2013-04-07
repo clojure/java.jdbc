@@ -35,10 +35,17 @@ parameters can be represented as simple vectors where the first element
 is the SQL string, with ? for each parameter, and the remaining elements
 are the parameter values to be substituted. In general, operations return
 the number of rows affected, except for a single record insert where any
-generated keys are returned (as a map)." }
+generated keys are returned (as a map).
+
+As of release 0.3.0, the API has undergone a major overhaul and most of the
+original API has been deprecated in favor of a more idiomatic API, and a
+minimal DSL for generating SQL has been added as an option. The original
+API is still supported but will be deprecated before a 1.0.0 release is
+made at some future date." }
   clojure.java.jdbc
   (:import [java.net URI]
-           [java.sql BatchUpdateException DriverManager PreparedStatement ResultSet SQLException Statement]
+           [java.sql BatchUpdateException DriverManager ParameterMetaData
+            PreparedStatement ResultSet SQLException Statement Types]
            [java.util Hashtable Map Properties]
            [javax.naming InitialContext Name]
            [javax.sql DataSource])
