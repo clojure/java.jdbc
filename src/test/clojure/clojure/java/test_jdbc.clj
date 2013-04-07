@@ -123,20 +123,23 @@
 ;; We start with all tables dropped and each test has to create the tables
 ;; necessary for it to do its job, and populate it as needed...
 
+(defn- mysql? [db]
+  (if (string? db)
+    (re-find #"mysql:" db)
+    (= "mysql" (:subprotocol db))))
+
 (defn- create-test-table
   "Create a standard test table. Must be inside with-connection.
    For MySQL, ensure table uses an engine that supports transactions!"
   [table db]
-  (let [p (:subprotocol db)]
-    (sql/create-table
-      table
-      [:id :int (if (= "mysql" p) "PRIMARY KEY AUTO_INCREMENT" "DEFAULT 0")]
-      [:name "VARCHAR(32)" (if (= "mysql" p) "" "PRIMARY KEY")]
-      [:appearance "VARCHAR(32)"]
-      [:cost :int]
-      [:grade :real]
-      :table-spec (if (or (= "mysql" p) (and (string? db) (re-find #"mysql:" db)))
-                    "ENGINE=InnoDB" ""))))
+  (sql/create-table
+   table
+   [:id :int (if (mysql? db) "PRIMARY KEY AUTO_INCREMENT" "DEFAULT 0")]
+   [:name "VARCHAR(32)" (if (mysql? db) "" "PRIMARY KEY")]
+   [:appearance "VARCHAR(32)"]
+   [:cost :int]
+   [:grade :real]
+   :table-spec (if (mysql? db) "ENGINE=InnoDB" "")))
 
 (deftest test-create-table
   (doseq [db (test-specs)]
@@ -223,7 +226,8 @@
                 {:name "Pomegranate" :appearance "fresh" :cost 585}
                 {:name "Kiwifruit" :grade 93})]
         (condp = (:subprotocol db)
-          nil nil ; for the string connection args
+          nil              (when (mysql? db)
+                             (is (= '({:generated_key 1} {:generated_key 2}) r)))
           "postgresql"     (is (= 2 (count r)))
           "mysql"          (is (= '({:generated_key 1} {:generated_key 2}) r))
           "sqlserver"      (is (= '({:generated_keys nil} {:generated_keys nil}) r))
@@ -369,9 +373,12 @@
 
 (defn- returned-key [db k]
   (condp = (:subprotocol db)
-    "derby" {:1 nil}
+    "derby"  {:1 nil}
     "hsqldb" 1
-    "mysql" {:generated_key k}
+    "mysql"  {:generated_key k}
+    nil      (if (mysql? db) ; string-based tests
+               {:generated_key k}
+               k)
     "jtds:sqlserver" {:id nil}
     "sqlserver" {:generated_keys nil}
     "sqlite" {(keyword "last_insert_rowid()") k}
