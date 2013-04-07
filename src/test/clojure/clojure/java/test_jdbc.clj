@@ -429,6 +429,18 @@
       (is (= [{:id (generated-key db 1) :name "Apple" :appearance nil :grade nil :cost nil}
               {:id (generated-key db 2) :name "Pear" :appearance nil :grade nil :cost nil}] rows)))))
 
+(deftest insert-two-by-map-and-query-as-arrays
+  (doseq [db (test-specs)]
+    (sql/with-connection db
+      (create-test-table :fruit db))
+    (let [new-keys (sql/insert! db :fruit {:name "Apple"} {:name "Pear"})
+          rows (sql/query db (dsl/select * :fruit (dsl/order-by :name))
+                          :as-arrays true)]
+      (is (= [(returned-key db 1) (returned-key db 2)] new-keys))
+      (is (= [[:id :name :appearance :cost :grade]
+              [(generated-key db 1) "Apple" nil nil nil]
+              [(generated-key db 2) "Pear" nil nil nil]] rows)))))
+
 (deftest insert-two-by-cols-and-query
   (doseq [db (test-specs)]
     (sql/with-connection db

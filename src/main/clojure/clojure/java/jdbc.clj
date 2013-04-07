@@ -254,8 +254,8 @@ made at some future date." }
   "Creates and returns a lazy sequence of maps corresponding to the rows in the
    java.sql.ResultSet rs. Loosely based on clojure.core/resultset-seq but it
    respects the specified naming strategy. Duplicate column names are made unique
-    by appending _N before applying the naming strategy (where N is a unique integer)."
-  [^ResultSet rs & {:keys [identifiers]
+   by appending _N before applying the naming strategy (where N is a unique integer)."
+  [^ResultSet rs & {:keys [identifiers as-arrays]
                     :or {identifiers str/lower-case}}]
   (let [rsmeta (.getMetaData rs)
         idxs (range 1 (inc (.getColumnCount rsmeta)))
@@ -271,10 +271,15 @@ made at some future date." }
         ;; guarantee column order in rows but using into {} should preserve order for up
         ;; to 16 columns (because it will use a PersistentArrayMap). If someone is relying
         ;; on the order-preserving behavior of structmaps, we can reconsider...
+        records (fn thisfn []
+                  (when (.next rs)
+                    (cons (zipmap keys (row-values)) (lazy-seq (thisfn)))))
         rows (fn thisfn []
                (when (.next rs)
-                 (cons (zipmap keys (row-values)) (lazy-seq (thisfn)))))]
-    (rows)))
+                 (cons (vec (row-values)) (lazy-seq (thisfn)))))]
+    (if as-arrays
+      (cons (vec keys) (rows))
+      (records))))
 
 (defn resultset-seq
   "A deprecated version of result-set-seq that uses the dynamic *as-key* variable."
@@ -585,7 +590,7 @@ made at some future date." }
     [options sql & params] - options and a SQL query for creating a
                       PreparedStatement, followed by any parameters it needs
   See prepare-statement for supported options."
-  [db sql-params func identifiers]
+  [db sql-params func identifiers as-arrays]
   (when-not (vector? sql-params)
     (let [^Class sql-params-class (class sql-params)
           ^String msg (format "\"%s\" expected %s %s, found %s %s"
@@ -609,7 +614,7 @@ made at some future date." }
                                           (apply prepare-statement (get-connection db) sql prepare-args))]
       (set-parameters stmt params db)
       (with-open [rset (.executeQuery stmt)]
-        (func (result-set-seq rset :identifiers identifiers))))))
+        (func (result-set-seq rset :identifiers identifiers :as-arrays as-arrays))))))
 
 ;; top-level API for actual SQL operations
 
@@ -619,8 +624,9 @@ made at some future date." }
   construct the result set:
     :result-set-fn - applied to the entire result set, default doall
     :row-fn - applied to each row as the result set is constructed, default identity
-    :identifiers - applied to each column name in the result set, default lower-case"
-  [db sql-params & {:keys [result-set-fn row-fn identifiers]
+    :identifiers - applied to each column name in the result set, default lower-case
+    :as-arrays - return the results as a set of arrays, default false."
+  [db sql-params & {:keys [result-set-fn row-fn identifiers as-arrays]
                     :or {result-set-fn doall
                          row-fn identity
                          identifiers sql/lower-case}}]
@@ -628,8 +634,12 @@ made at some future date." }
                        (db-with-query-results* db
                          (vec sql-params)
                          (fn [rs]
-                           (result-set-fn (map row-fn rs)))
-                         identifiers))]
+                           (result-set-fn (if as-arrays
+                                            (cons (first rs)
+                                                  (vec (map row-fn (rest rs))))
+                                            (map row-fn rs))))
+                         identifiers
+                         as-arrays))]
     (if-let [con (and (map? db) (:connection db))]
       (query-helper db)
       (with-open [con (get-connection db)]
