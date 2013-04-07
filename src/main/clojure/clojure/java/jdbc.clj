@@ -251,11 +251,10 @@ made at some future date." }
     (reduce (fn [unique-cols col-name] (conj unique-cols (make-name-unique unique-cols col-name 1))) []  cols)))
 
 (defn result-set-seq
-  "Creates and returns a lazy sequence of maps corresponding to
-   the rows in the java.sql.ResultSet rs. Loosely based on clojure.core/resultset-seq
-   but it respects the specified naming strategy. Duplicate column names are
-   made unique by appending _N before applying the naming strategy (where
-   N is a unique integer)."
+  "Creates and returns a lazy sequence of maps corresponding to the rows in the
+   java.sql.ResultSet rs. Loosely based on clojure.core/resultset-seq but it
+   respects the specified naming strategy. Duplicate column names are made unique
+    by appending _N before applying the naming strategy (where N is a unique integer)."
   [^ResultSet rs & {:keys [identifiers]
                     :or {identifiers str/lower-case}}]
   (let [rsmeta (.getMetaData rs)
