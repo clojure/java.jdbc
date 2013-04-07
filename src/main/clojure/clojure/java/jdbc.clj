@@ -529,28 +529,21 @@ generated keys are returned (as a map)." }
     (let [^java.sql.Connection con (get-connection db)
           nested-db (inc-level (add-connection db con))
           auto-commit (.getAutoCommit con)]
-      #_(println "db-transaction* top-level: " nested-db)
       (io!
        (.setAutoCommit con false)
        (try
          (let [result (func nested-db)]
            (if (db-is-rollback-only nested-db)
-             (do
-               #_(println "-- rolling back")
-               (.rollback con))
-             (do
-               #_(println "-- committing")
-               (.commit con)))
+             (.rollback con)
+             (.commit con))
            result)
          (catch Throwable t
-           #_(println "-- exception: rolling back" (.getMessage t))
            (.rollback con)
            (throw-non-rte t))
          (finally
            (db-unset-rollback-only! nested-db)
            (.setAutoCommit con auto-commit)))))
     (try
-      #_(println "db-transaction* nested:" (inc-level db))
       (func (inc-level db))
       (catch Exception e
         (throw-non-rte e)))))
