@@ -105,6 +105,63 @@ made at some future date." }
   ([x] (as-keyword x *as-key*))
   ([x f-keyword] (as-key f-keyword x)))
 
+(defn as-quoted-str
+  "Given a quoting pattern - either a single character or a vector pair of
+   characters - and a string, return the quoted string:
+     (as-quoted-str X foo) will return XfooX
+     (as-quoted-str [A B] foo) will return AfooB"
+  [q x]
+  (if (vector? q)
+    (str (first q) x (last q))
+    (str q x q)))
+
+(defn as-named-identifier
+  "Given a naming strategy and a keyword, return the keyword as a string using the 
+   entity naming strategy.
+   Given a naming strategy and a string, return the string as-is.
+   The naming strategy should either be a function (the entity naming strategy) or 
+   a map containing :entity and/or :keyword keys which provide the entity naming
+   strategy and/or keyword naming strategy respectively."
+  [naming-strategy x]
+  (as-identifier x (if (map? naming-strategy) (or (:entity naming-strategy) identity) naming-strategy)))
+
+(defn as-named-keyword
+  "Given a naming strategy and a string, return the string as a keyword using the 
+   keyword naming strategy.
+   Given a naming strategy and a keyword, return the keyword as-is.
+   The naming strategy should either be a function (the entity naming strategy) or 
+   a map containing :entity and/or :keyword keys which provide the entity naming
+   strategy and/or keyword naming strategy respectively.
+   Note that providing a single function will cause the default keyword naming
+   strategy to be used!"
+  [naming-strategy x]
+  (as-keyword x (if (and (map? naming-strategy) (:keyword naming-strategy)) (:keyword naming-strategy) str/lower-case)))
+
+(defn as-quoted-identifier
+  "Given a quote pattern - either a single character or a pair of characters in
+   a vector - and a keyword, return the keyword as a string using a simple
+   quoting naming strategy.
+   Given a quote pattern and a string, return the string as-is.
+     (as-quoted-identifier X :name) will return XnameX as a string.
+     (as-quoted-identifier [A B] :name) will return AnameB as a string."
+  [q x]
+  (as-identifier x (partial as-quoted-str q)))
+
+(defmacro with-naming-strategy
+  "Evaluates body in the context of a naming strategy.
+   The naming strategy is either a function - the entity naming strategy - or
+   a map containing :entity and/or :keyword keys which provide the entity naming
+   strategy and/or the keyword naming strategy respectively. The default entity
+   naming strategy is identity; the default keyword naming strategy is lower-case."
+  [naming-strategy & body ]
+  `(binding [*as-str* (if (map? ~naming-strategy) (or (:entity ~naming-strategy) identity) ~naming-strategy)
+             *as-key* (if (map? ~naming-strategy) (or (:keyword ~naming-strategy) str/lower-case))] ~@body))
+
+(defmacro with-quoted-identifiers
+  "Evaluates body in the context of a simple quoting naming strategy."
+  [q & body ]
+  `(binding [*as-str* (partial as-quoted-str ~q)] ~@body))
+
 ;; end of to-be-deprecated section
 
 (defn- ^Properties as-properties
@@ -316,62 +373,13 @@ made at some future date." }
                    (cons (zipmap keys (row-values)) (lazy-seq (thisfn)))))]
       (rows)))
 
-(defn as-quoted-str
-  "Given a quoting pattern - either a single character or a vector pair of
-   characters - and a string, return the quoted string:
-     (as-quoted-str X foo) will return XfooX
-     (as-quoted-str [A B] foo) will return AfooB"
-  [q x]
-  (if (vector? q)
-    (str (first q) x (last q))
-    (str q x q)))
-
-(defn as-named-identifier
-  "Given a naming strategy and a keyword, return the keyword as a string using the 
-   entity naming strategy.
-   Given a naming strategy and a string, return the string as-is.
-   The naming strategy should either be a function (the entity naming strategy) or 
-   a map containing :entity and/or :keyword keys which provide the entity naming
-   strategy and/or keyword naming strategy respectively."
-  [naming-strategy x]
-  (as-identifier x (if (map? naming-strategy) (or (:entity naming-strategy) identity) naming-strategy)))
-
-(defn as-named-keyword
-  "Given a naming strategy and a string, return the string as a keyword using the 
-   keyword naming strategy.
-   Given a naming strategy and a keyword, return the keyword as-is.
-   The naming strategy should either be a function (the entity naming strategy) or 
-   a map containing :entity and/or :keyword keys which provide the entity naming
-   strategy and/or keyword naming strategy respectively.
-   Note that providing a single function will cause the default keyword naming
-   strategy to be used!"
-  [naming-strategy x]
-  (as-keyword x (if (and (map? naming-strategy) (:keyword naming-strategy)) (:keyword naming-strategy) str/lower-case)))
-
-(defn as-quoted-identifier
-  "Given a quote pattern - either a single character or a pair of characters in
-   a vector - and a keyword, return the keyword as a string using a simple
-   quoting naming strategy.
-   Given a quote pattern and a string, return the string as-is.
-     (as-quoted-identifier X :name) will return XnameX as a string.
-     (as-quoted-identifier [A B] :name) will return AnameB as a string."
-  [q x]
-  (as-identifier x (partial as-quoted-str q)))
-
-(defmacro with-naming-strategy
-  "Evaluates body in the context of a naming strategy.
-   The naming strategy is either a function - the entity naming strategy - or
-   a map containing :entity and/or :keyword keys which provide the entity naming
-   strategy and/or the keyword naming strategy respectively. The default entity
-   naming strategy is identity; the default keyword naming strategy is lower-case."
-  [naming-strategy & body ]
-  `(binding [*as-str* (if (map? ~naming-strategy) (or (:entity ~naming-strategy) identity) ~naming-strategy)
-             *as-key* (if (map? ~naming-strategy) (or (:keyword ~naming-strategy) str/lower-case))] ~@body))
-
-(defmacro with-quoted-identifiers
-  "Evaluates body in the context of a simple quoting naming strategy."
-  [q & body ]
-  `(binding [*as-str* (partial as-quoted-str ~q)] ~@body))
+(defn result-set-seq
+  "An alternative name for resultset-seq since result-set-seq is more consistent with
+   the rest of java.jdbc (and resultset-seq is already a clojure.core function, albeit
+   with different functionality)."
+  [rs & {:keys [identifiers]
+         :or {identifiers *as-key*}}]
+  (resultset-seq rs :identifiers identifiers))
 
 (defn- execute-batch
   "Executes a batch of SQL commands and returns a sequence of update counts.
