@@ -537,7 +537,7 @@ made at some future date." }
               (let [counts (.executeUpdate stmt)]
                 (try
                   (let [rs (.getGeneratedKeys stmt)
-                        result (first (resultset-seq rs))]
+                        result (first (result-set-seq rs))]
                     ;; sqlite (and maybe others?) requires
                     ;; record set to be closed
                     (.close rs)
@@ -613,7 +613,7 @@ made at some future date." }
                                           (apply prepare-statement (get-connection db) sql prepare-args))]
       (set-parameters stmt params db)
       (with-open [rset (.executeQuery stmt)]
-        (func (resultset-seq rset :identifiers identifiers))))))
+        (func (result-set-seq rset :identifiers identifiers))))))
 
 ;; top-level API for actual SQL operations
 
@@ -625,7 +625,9 @@ made at some future date." }
     :row-fn - applied to each row as the result set is constructed, default identity
     :identifiers - applied to each column name in the result set, default lower-case"
   [db sql-params & {:keys [result-set-fn row-fn identifiers]
-                    :or {result-set-fn doall row-fn identity identifiers sql/lower-case}}]
+                    :or {result-set-fn doall
+                         row-fn identity
+                         identifiers sql/lower-case}}]
   (let [query-helper (fn [db]
                        (db-with-query-results* db
                          (vec sql-params)

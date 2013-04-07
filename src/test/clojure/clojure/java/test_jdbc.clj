@@ -365,7 +365,7 @@
       (let [metadata (sql/with-connection
                        db
                        (into []
-                             (sql/resultset-seq
+                             (sql/result-set-seq
                               (-> (sql/connection)
                                   (.getMetaData)
                                   (.getTables nil nil nil (into-array ["TABLE" "VIEW"]))))))]
