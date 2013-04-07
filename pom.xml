@@ -62,13 +62,13 @@
       <scope>test</scope>
     </dependency>
     <!-- assumes you have the Microsoft JDBC4 Driver 3.0 installed locally -->
-
+    <!--
     <dependency>
       <groupId>sqljdbc4</groupId>
       <artifactId>sqljdbc4</artifactId>
       <version>3.0</version>
       <scope>test</scope>
     </dependency>
-
+    -->
   </dependencies>
 </project>
