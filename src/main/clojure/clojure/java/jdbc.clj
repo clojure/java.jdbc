@@ -156,6 +156,18 @@ made at some future date." }
 (def ^{:private true :doc "Map of schemes to subprotocols"} subprotocols
   {"postgres" "postgresql"})
 
+(defn- mysql?
+  "Given a db spec, return true if it represents MySQL. This is used for set-parameters."
+  [db]
+  (cond (string? db)
+        (re-find #"mysql:" db)
+
+        (:subprotocol db)
+        (= "mysql" (:subprotocol db))
+
+        (:connection db)
+        (.startsWith (.getName (type (:connection db))) "com.mysql.")))
+
 (defn- parse-properties-uri [^URI uri]
   (let [host (.getHost uri)
         port (if (pos? (.getPort uri)) (.getPort uri))
@@ -398,36 +410,53 @@ made at some future date." }
      :return-keys true | false - default false
      :result-type :forward-only | :scroll-insensitive | :scroll-sensitive
      :concurrency :read-only | :updatable
+     :cursors
      :fetch-size n
      :max-rows n"
-  [^java.sql.Connection con ^String sql & {:keys [return-keys result-type concurrency cursors fetch-size max-rows]}]
-  (let [^PreparedStatement stmt (cond
-                                  return-keys (try
-                                                (.prepareStatement con sql java.sql.Statement/RETURN_GENERATED_KEYS)
-                                                (catch Exception _
-                                                  ;; assume it is unsupported and try basic PreparedStatement:
-                                                  (.prepareStatement con sql)))
-                                  (and result-type concurrency) (if cursors
-                                                                  (.prepareStatement con sql 
-                                                                                     (result-type result-set-type)
-                                                                                     (concurrency result-set-concurrency)
-                                                                                     (cursors result-set-holdability))
-                                                                  (.prepareStatement con sql 
-                                                                                     (result-type result-set-type)
-                                                                                     (concurrency result-set-concurrency)))
-                                  :else (.prepareStatement con sql))]
+  [^java.sql.Connection con ^String sql &
+   {:keys [return-keys result-type concurrency cursors fetch-size max-rows]}]
+  (let [^PreparedStatement
+        stmt (cond return-keys
+                   (try
+                     (.prepareStatement con sql java.sql.Statement/RETURN_GENERATED_KEYS)
+                     (catch Exception _
+                       ;; assume it is unsupported and try basic PreparedStatement:
+                       (.prepareStatement con sql)))
+                   
+                   (and result-type concurrency)
+                   (if cursors
+                     (.prepareStatement con sql 
+                                        (result-type result-set-type)
+                                        (concurrency result-set-concurrency)
+                                        (cursors result-set-holdability))
+                     (.prepareStatement con sql 
+                                        (result-type result-set-type)
+                                        (concurrency result-set-concurrency)))
+                   
+                   :else
+                   (.prepareStatement con sql))]
     (when fetch-size (.setFetchSize stmt fetch-size))
     (when max-rows (.setMaxRows stmt max-rows))
     stmt))
 
 (defn- set-parameters
-  "Add the parameters to the given statement."
-  [^PreparedStatement stmt params]
-  (dorun
-    (map-indexed
-      (fn [ix value]
-        (.setObject stmt (inc ix) value))
-      params)))
+  "Add the parameters to the given statement. Use parameter metadata if it is
+   available, which allows us to specify the SQL type and support NULL better."
+  [^PreparedStatement stmt params db]
+  (let [^ParameterMetaData metadata (when-not (mysql? db)
+                                      (try (.getParameterMetaData stmt)
+                                           (catch SQLException _)))]
+    (dorun (map-indexed (fn [ix value]
+                          (let [ix* (inc ix)
+                                sql-type (when metadata
+                                           (try (.getParameterType metadata ix*)
+                                                (catch SQLException _)))]
+                            (if sql-type
+                              (if (nil? value)
+                                (.setNull stmt ix* sql-type)
+                                (.setObject stmt ix* value))
+                              (.setObject stmt ix* value))))
+                        params))))
 
 (defn create-table-ddl
   "Given a table name and column specs with an optional table-spec
@@ -590,7 +619,7 @@ made at some future date." }
   Return the generated keys for the (single) update/insert."
   [db transaction? sql param-group]
   (with-open [^PreparedStatement stmt (prepare-statement (get-connection db) sql :return-keys true)]
-    (set-parameters stmt param-group)
+    (set-parameters stmt param-group db)
     (letfn [(exec-and-return-keys []
               (let [counts (.executeUpdate stmt)]
                 (try
@@ -628,7 +657,7 @@ made at some future date." }
             (throw-non-rte e))))
       (do
         (doseq [param-group param-groups]
-          (set-parameters stmt param-group)
+          (set-parameters stmt param-group db)
           (.addBatch stmt))
         (if transaction?
           (db-transaction [t-db (add-connection db (.getConnection stmt))]
@@ -669,7 +698,7 @@ made at some future date." }
     (with-open [^PreparedStatement stmt (if (instance? PreparedStatement special)
                                           special
                                           (apply prepare-statement (get-connection db) sql prepare-args))]
-      (set-parameters stmt params)
+      (set-parameters stmt params db)
       (with-open [rset (.executeQuery stmt)]
         (func (resultset-seq rset :identifiers identifiers))))))
 
@@ -1026,7 +1055,7 @@ made at some future date." }
                           :else (rest sql-params)))
         prepare-args (when (map? special) (flatten (seq special)))]
     (with-open [^PreparedStatement stmt (if (instance? PreparedStatement special) special (apply prepare-statement (get-connection *db*) sql prepare-args))]
-      (set-parameters stmt params)
+      (set-parameters stmt params *db*)
       (with-open [rset (.executeQuery stmt)]
         (binding [*db* (assoc *db* :connection (.getConnection stmt))]
           (func (resultset-seq rset)))))))
