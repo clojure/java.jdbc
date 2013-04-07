@@ -250,41 +250,38 @@ made at some future date." }
     cols
     (reduce (fn [unique-cols col-name] (conj unique-cols (make-name-unique unique-cols col-name 1))) []  cols)))
 
-(defn resultset-seq
+(defn result-set-seq
   "Creates and returns a lazy sequence of maps corresponding to
-   the rows in the java.sql.ResultSet rs. Based on clojure.core/resultset-seq
-   but it respects the current naming strategy. Duplicate column names are
+   the rows in the java.sql.ResultSet rs. Loosely based on clojure.core/resultset-seq
+   but it respects the specified naming strategy. Duplicate column names are
    made unique by appending _N before applying the naming strategy (where
    N is a unique integer)."
   [^ResultSet rs & {:keys [identifiers]
-                    :or {identifiers *as-key*}}]
-    (let [rsmeta (.getMetaData rs)
-          idxs (range 1 (inc (.getColumnCount rsmeta)))
-          keys (->> idxs
-                 (map (fn [^Integer i] (.getColumnLabel rsmeta i)))
-                 make-cols-unique
+                    :or {identifiers str/lower-case}}]
+  (let [rsmeta (.getMetaData rs)
+        idxs (range 1 (inc (.getColumnCount rsmeta)))
+        keys (->> idxs
+                  (map (fn [^Integer i] (.getColumnLabel rsmeta i)))
+                  make-cols-unique
                  (map (comp keyword identifiers)))
-          row-values (fn [] (map (fn [^Integer i] (.getObject rs i)) idxs))
-          ;; This used to use create-struct (on keys) and then struct to populate each row.
-          ;; That had the side effect of preserving the order of columns in each row. As
-          ;; part of JDBC-15, this was changed because structmaps are deprecated. We don't
-          ;; want to switch to records so we're using regular maps instead. We no longer
-          ;; guarantee column order in rows but using into {} should preserve order for up
-          ;; to 16 columns (because it will use a PersistentArrayMap). If someone is relying
-          ;; on the order-preserving behavior of structmaps, we can reconsider...
-          rows (fn thisfn []
-                 (when (.next rs)
-                   (cons (zipmap keys (row-values)) (lazy-seq (thisfn)))))]
-      (rows)))
+        row-values (fn [] (map (fn [^Integer i] (.getObject rs i)) idxs))
+        ;; This used to use create-struct (on keys) and then struct to populate each row.
+        ;; That had the side effect of preserving the order of columns in each row. As
+        ;; part of JDBC-15, this was changed because structmaps are deprecated. We don't
+        ;; want to switch to records so we're using regular maps instead. We no longer
+        ;; guarantee column order in rows but using into {} should preserve order for up
+        ;; to 16 columns (because it will use a PersistentArrayMap). If someone is relying
+        ;; on the order-preserving behavior of structmaps, we can reconsider...
+        rows (fn thisfn []
+               (when (.next rs)
+                 (cons (zipmap keys (row-values)) (lazy-seq (thisfn)))))]
+    (rows)))
 
-(defn result-set-seq
-  "An alternative name for resultset-seq since result-set-seq is more consistent with
-   the rest of java.jdbc (and resultset-seq is already a clojure.core function, albeit
-   with different functionality).
-   Note: this does not respect the dynamic *as-key* variable."
-  [rs & {:keys [identifiers]
-         :or {identifiers str/lower-case}}]
-  (resultset-seq rs :identifiers identifiers))
+(defn resultset-seq
+  "A deprecated version of result-set-seq that uses the dynamic *as-key* variable."
+  [^ResultSet rs & {:keys [identifiers]
+                    :or {identifiers *as-key*}}]
+  (result-set-seq rs :identifiers identifiers))
 
 (defn- execute-batch
   "Executes a batch of SQL commands and returns a sequence of update counts.
