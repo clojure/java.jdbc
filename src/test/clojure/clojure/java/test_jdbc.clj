@@ -473,13 +473,13 @@
     (sql/with-connection db
       (create-test-table :fruit db))
     (try
-      (sql/db-transaction [db db]
-       (sql/insert! db
+      (sql/db-transaction [t-db db]
+       (sql/insert! t-db
         :fruit
         [:name :appearance]
         ["Grape" "yummy"]
         ["Pear" "bruised"])
-       (is (= 2 (sql/query db ["SELECT * FROM fruit"] :result-set-fn count)))
+       (is (= 2 (sql/query t-db ["SELECT * FROM fruit"] :result-set-fn count)))
        (throw (Exception. "deliberate exception")))
       (catch Exception _
         (is (= 0 (sql/query db ["SELECT * FROM fruit"] :result-set-fn count)))))))
@@ -489,8 +489,8 @@
     (sql/with-connection db
       (create-test-table :fruit db))
     (try
-      (sql/db-transaction [db db]
-       (sql/insert! db
+      (sql/db-transaction [t-db db]
+       (sql/insert! t-db
         :fruit
         [:name :appearance]
         ["Grape" "yummy"]
@@ -507,17 +507,17 @@
     (sql/with-connection db
       (create-test-table :fruit db))
     (try
-      (sql/db-transaction [db db]
-       (is (not (sql/db-is-rollback-only db)))
-       (sql/db-set-rollback-only db)
-       (is (sql/db-is-rollback-only db))
-       (sql/insert! db
+      (sql/db-transaction [t-db db]
+       (is (not (sql/db-is-rollback-only t-db)))
+       (sql/db-set-rollback-only! t-db)
+       (is (sql/db-is-rollback-only t-db))
+       (sql/insert! t-db
         :fruit
         [:name :appearance]
         ["Grape" "yummy"]
         ["Pear" "bruised"]
         ["Apple" "strange" "whoops"])
-       (is (= 3 (sql/query db ["SELECT * FROM fruit"] :result-set-fn count))))
+       (is (= 3 (sql/query t-db ["SELECT * FROM fruit"] :result-set-fn count))))
       (catch Exception _ ;; insert! throws the exception, not JDBC
         (is (= 0 (sql/query db ["SELECT * FROM fruit"] :result-set-fn count)))))
     (is (= 0 (sql/query db ["SELECT * FROM fruit"] :result-set-fn count)))))
@@ -526,13 +526,12 @@
   (doseq [db (test-specs)]
     (sql/with-connection db
       (create-test-table :fruit db))
-    (try
-      (sql/db-transaction [db db]
-       (sql/db-set-rollback-only db)
-       (sql/insert! db
-        :fruit
-        [:name :appearance]
-        ["Grape" "yummy"])
-       (is (= 1 (sql/query db ["SELECT * FROM fruit"] :result-set-fn count)))))
+    (sql/db-transaction [t-db db]
+     (sql/db-set-rollback-only! t-db)
+     (sql/insert! t-db
+                  :fruit
+                  [:name :appearance]
+                  ["Grape" "yummy"])
+     (is (= 1 (sql/query t-db ["SELECT * FROM fruit"] :result-set-fn count))))
     (is (= 0 (sql/query db ["SELECT * FROM fruit"] :result-set-fn count)))))
 
