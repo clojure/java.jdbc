@@ -131,7 +131,7 @@ made at some future date." }
 
 (extend-protocol Connectable
   String
-  (add-connection [_ connection] {:connection connection :level 0})
+  (add-connection [s connection] {:connection connection :level 0 :connection-string s})
   (get-level [_] 0)
 
   clojure.lang.Associative
@@ -139,7 +139,7 @@ made at some future date." }
   (get-level [m] (or (:level m) 0))
 
   nil
-  (add-connection [_ connection] {:connection connection :level 0})
+  (add-connection [_ connection] {:connection connection :level 0 :legacy true})
   (get-level [_] 0))
 
 (def ^{:private true :dynamic true} *db* (add-connection nil nil))
