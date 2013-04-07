@@ -9,13 +9,15 @@ Major overhaul of the API and deprecation of most of the old API!
 
 * Add insert!, query, update!, delete! and execute! high-level API
   [JDBC-20](http://dev.clojure.org/jira/browse/JDBC-20)
-* Add optional SQL-generating DSL in clojure.java.jdbc.sql
+* Add optional SQL-generating DSL in clojure.java.jdbc.sql (implied by JDBC-20)
 * Add db- prefixed versions of low-level API
 * Add db-transaction macro:
+
 ```
   (db-transaction [t-con db-spec]
     (query t-con (select * :user (where {:id 42}))))
 ```
+
 * Add result-set-seq as replacement for resultset-seq (which will be deprecated)
 * Transaction now correctly rollback on non-Exception Throwables
   [JDBC-43](http://dev.clojure.org/jira/browse/JDBC-43)
