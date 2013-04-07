@@ -53,6 +53,8 @@ made at some future date." }
   (:require [clojure.string :as str]
             [clojure.java.jdbc.sql :as sql]))
 
+;; this whole section needs to be deprecated too as part of 0.3.0
+
 (def ^{:private true :dynamic true
        :doc "The default entity naming strategy is to do nothing."}
   *as-str* 
@@ -102,6 +104,8 @@ made at some future date." }
    Given a keyword, return it as-is."
   ([x] (as-keyword x *as-key*))
   ([x f-keyword] (as-key f-keyword x)))
+
+;; end of to-be-deprecated section
 
 (defn- ^Properties as-properties
   "Convert any seq of pairs to a java.utils.Properties instance.
