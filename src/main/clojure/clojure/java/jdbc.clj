@@ -843,14 +843,12 @@ made at some future date." }
   optional suffix to the CREATE TABLE DDL describing table attributes may
   by provided as :table-spec {table-attributes-string}. All words used to
   describe the table may be supplied as strings or keywords."
-  ;; technically deprecated but we don't yet have a replacement
   [name & specs]
   (do-commands (apply create-table-ddl name specs)))
 
 (defn drop-table
   "Drops a table on the open database connection given its name, a string
   or keyword"
-  ;; technically deprecated but we don't yet have a replacement
   [name]
   (do-commands
    (format "DROP TABLE %s" (sql/as-str identity name))))
