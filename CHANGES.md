@@ -1,6 +1,7 @@
 Changes coming in 0.3.0-alpha2
 
 * Rename :as-arrays to :as-arrays? since it is boolean
+* Add curried version of clojure.java.jdbc.sql/as-quoted-str
 * Officially deprecate resultset-seq
 
 Changes in 0.3.0-alpha1
