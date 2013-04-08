@@ -54,10 +54,13 @@ and update! high-level operations within clojure.java.jdbc directly." }
    characters - and a string, return the quoted string:
      (as-quoted-str X foo) will return XfooX
      (as-quoted-str [A B] foo) will return AfooB"
-  [q x]
-  (if (vector? q)
-    (str (first q) x (last q))
-    (str q x q)))
+  ([q]
+     (fn [x]
+       (as-quoted-str q x)))
+  ([q x]
+     (if (vector? q)
+       (str (first q) x (last q))
+       (str q x q))))
 
 (defn- col-str
   "Transform a column spec to an entity name for SQL. The column spec may be a
@@ -160,11 +163,11 @@ and update! high-level operations within clojure.java.jdbc directly." }
                      (concat form [:identifiers identifiers])
                      form)) sql))
 
-;; some common quoting strategies
+;; some common entity/identifier strategies
 
 (def as-is identity)
 (def lower-case str/lower-case)
-(defn quoted [q] (partial as-quoted-str q))
+(defn quoted [q] (as-quoted-str q))
 
 ;; SQL generation functions
 

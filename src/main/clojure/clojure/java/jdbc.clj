@@ -255,7 +255,7 @@ made at some future date." }
    java.sql.ResultSet rs. Loosely based on clojure.core/resultset-seq but it
    respects the specified naming strategy. Duplicate column names are made unique
    by appending _N before applying the naming strategy (where N is a unique integer)."
-  [^ResultSet rs & {:keys [identifiers as-arrays]
+  [^ResultSet rs & {:keys [identifiers as-arrays?]
                     :or {identifiers str/lower-case}}]
   (let [rsmeta (.getMetaData rs)
         idxs (range 1 (inc (.getColumnCount rsmeta)))
@@ -277,12 +277,14 @@ made at some future date." }
         rows (fn thisfn []
                (when (.next rs)
                  (cons (vec (row-values)) (lazy-seq (thisfn)))))]
-    (if as-arrays
+    (if as-arrays?
       (cons (vec keys) (rows))
       (records))))
 
 (defn resultset-seq
-  "A deprecated version of result-set-seq that uses the dynamic *as-key* variable."
+  ^{doc: "A deprecated version of result-set-seq that uses the
+          dynamic *as-key* variable."
+    :deprecated "0.3.0"}
   [^ResultSet rs & {:keys [identifiers]
                     :or {identifiers *as-key*}}]
   (result-set-seq rs :identifiers identifiers))
@@ -590,7 +592,7 @@ made at some future date." }
     [options sql & params] - options and a SQL query for creating a
                       PreparedStatement, followed by any parameters it needs
   See prepare-statement for supported options."
-  [db sql-params func identifiers as-arrays]
+  [db sql-params func identifiers as-arrays?]
   (when-not (vector? sql-params)
     (let [^Class sql-params-class (class sql-params)
           ^String msg (format "\"%s\" expected %s %s, found %s %s"
@@ -614,7 +616,7 @@ made at some future date." }
                                           (apply prepare-statement (get-connection db) sql prepare-args))]
       (set-parameters stmt params db)
       (with-open [rset (.executeQuery stmt)]
-        (func (result-set-seq rset :identifiers identifiers :as-arrays as-arrays))))))
+        (func (result-set-seq rset :identifiers identifiers :as-arrays? as-arrays?))))))
 
 ;; top-level API for actual SQL operations
 
@@ -625,8 +627,8 @@ made at some future date." }
     :result-set-fn - applied to the entire result set, default doall
     :row-fn - applied to each row as the result set is constructed, default identity
     :identifiers - applied to each column name in the result set, default lower-case
-    :as-arrays - return the results as a set of arrays, default false."
-  [db sql-params & {:keys [result-set-fn row-fn identifiers as-arrays]
+    :as-arrays? - return the results as a set of arrays, default false."
+  [db sql-params & {:keys [result-set-fn row-fn identifiers as-arrays?]
                     :or {result-set-fn doall
                          row-fn identity
                          identifiers sql/lower-case}}]
@@ -634,12 +636,12 @@ made at some future date." }
                        (db-with-query-results* db
                          (vec sql-params)
                          (fn [rs]
-                           (result-set-fn (if as-arrays
+                           (result-set-fn (if as-arrays?
                                             (cons (first rs)
                                                   (vec (map row-fn (rest rs))))
                                             (map row-fn rs))))
                          identifiers
-                         as-arrays))]
+                         as-arrays?))]
     (if-let [con (and (map? db) (:connection db))]
       (query-helper db)
       (with-open [con (get-connection db)]
@@ -668,7 +670,7 @@ made at some future date." }
   column names in the map (default 'as-is') and whether to run the delete in
   a transaction (default true).
   Example:
-    (delete! db :person {:zip 94546})
+    (delete! db :person (where {:zip 94546}))
   is equivalent to:
     (execute! db [\"DELETE FROM person WHERE zip = ?\" 94546])"
   [db table where-clause & {:keys [entities transaction?]
@@ -1071,13 +1073,13 @@ made at some future date." }
             (as-quoted-identifier [A B] :name) will return AnameB as a string."
     :deprecated "0.3.0"}
   [q x]
-  (as-identifier x (partial sql/as-quoted-str q)))
+  (as-identifier x (sql/as-quoted-str q)))
 
 (defmacro with-quoted-identifiers
   ^{:doc "Evaluates body in the context of a simple quoting naming strategy."
     :deprecated "0.3.0"}
   [q & body ]
-  `(binding [*as-str* (partial sql/as-quoted-str ~q)] ~@body))
+  `(binding [*as-str* (sql/as-quoted-str ~q)] ~@body))
 
 (defmacro with-naming-strategy
   ^{:doc "Evaluates body in the context of a naming strategy.
