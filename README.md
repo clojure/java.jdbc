@@ -8,7 +8,7 @@ Formerly known as clojure.contrib.sql.
 Releases and Dependency Information
 ========================================
 
-Latest stable release: 0.2.3
+Latest stable release: 0.3.0-alpha1
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22java.jdbc%22)
 
@@ -16,14 +16,14 @@ Latest stable release: 0.2.3
 
 [Leiningen](https://github.com/technomancy/leiningen) dependency information:
 ```clojure
-[org.clojure/java.jdbc "0.2.3"]
+[org.clojure/java.jdbc "0.3.0-alpha1"]
 ```
 [Maven](http://maven.apache.org/) dependency information:
 ```xml
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>java.jdbc</artifactId>
-  <version>0.2.3</version>
+  <version>0.3.0-alpha1</version>
 </dependency>
 ```
 You will also need to add dependencies for the JDBC driver you intend to use. Here are examples of the drivers currently used for testing,
@@ -52,22 +52,23 @@ has to be downloaded manually and placed in a Maven repository accessible to you
 Example Usage
 ========================================
 ```clojure
-(require '[clojure.java.jdbc :as sql])
+(require '[clojure.java.jdbc :as j]
+         '[clojure.java.jdbc.sql :as s])
 
 (def mysql-db {:subprotocol "mysql"
                :subname "//127.0.0.1:3306/clojure_test"
                :user "clojure_test"
                :password "clojure_test"})
 
-(sql/with-connection mysql-db
-  (sql/insert-records :fruit
-    {:name "Apple" :appearance "rosy" :cost 24}
-    {:name "Orange" :appearance "round" :cost 49}))
+(j/insert! mysql-db :fruit
+  {:name "Apple" :appearance "rosy" :cost 24}
+  {:name "Orange" :appearance "round" :cost 49})
+;; ({:generated_key 1} {:generated_key 2})
 
-(sql/with-connection mysql-db
-  (sql/with-query-results rows
-    ["SELECT * FROM fruit WHERE appearance = ?" "rosy"]
-    (:cost (first rows))))
+(j/query mysql-db
+  (s/select * :fruit (s/where {:appearance "rosy"}))
+  :row-fn :cost)
+;; (24)
 ```
 For more detail see the [generated documentation on github](http://clojure.github.com/java.jdbc/).
 
@@ -103,6 +104,23 @@ Developer Information
 Change Log
 ====================
 
+* Release 0.3.0-alpha1 on 2013-04-07
+  * MAJOR API OVERHAUL!
+  * Most of the old 0.2.x API has been deprecated and a new, more idiomatic API introduced, along with a minimal DSL to generate basic SQL
+  * Specifics:
+  * Add insert!, query, update!, delete! and execute! high-level API [JDBC-20](http://dev.clojure.org/jira/browse/JDBC-20)
+  * Add optional SQL-generating DSL in clojure.java.jdbc.sql (implied by JDBC-20)
+  * Add db- prefixed versions of low-level API
+  * Add db-transaction macro
+  * Add result-set-seq as replacement for resultset-seq (which will be deprecated)
+  * Transaction now correctly rollback on non-Exception Throwables [JDBC-43](http://dev.clojure.org/jira/browse/JDBC-43)
+  * Rewrite old API functions in terms of new API, and deprecate old API [JDBC-43](http://dev.clojure.org/jira/browse/JDBC-43)
+  * Add :as-arrays to query / result-set-seq [JDBC-41](http://dev.clojure.org/jira/browse/JDBC-41)
+  * Better handling of NULL values [JDBC-40](http://dev.clojure.org/jira/browse/JDBC-40) and [JDBC-18](http://dev.clojure.org/jira/browse/JDBC-18)
+  * db-do-command allows you to execute SQL without a transaction wrapping it [JDBC-38](http://dev.clojure.org/jira/browse/JDBC-38)
+  * Remove reflection warning from execute-batch
+  * Add notes to README about 3rd party database driver dependencies
+  * Add optional :identifiers argument to resultset-seq so you can explicitly pass in the naming strategy
 * Release 0.2.3 on 2012-06-18
   * as-str now treats a.b as two identifiers separated by . so quoting produces [a].[b] instead of [a.b]
   * Add :connection-uri option [JDBC-34](http://dev.clojure.org/jira/browse/JDBC-34)
@@ -166,7 +184,7 @@ Change Log
 Copyright and License
 ========================================
 
-Copyright (c) Stephen Gilardi, Sean Corfield, 2011-2012. All rights reserved.  The use and
+Copyright (c) Sean Corfield, Stephen Gilardi, 2011-2013. All rights reserved.  The use and
 distribution terms for this software are covered by the Eclipse Public
 License 1.0 (http://opensource.org/licenses/eclipse-1.0.php) which can
 be found in the file epl-v10.html at the root of this distribution.

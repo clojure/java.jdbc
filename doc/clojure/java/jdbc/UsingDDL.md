@@ -28,10 +28,9 @@ To retrieve the metadata for a table, you can operate on the connection itself. 
 
     (defn db-get-tables
       "Demonstrate getting table info"
-      []
-      (sql/with-connection db
-        (into []
-              (sql/resultset-seq
-               (-> (sql/connection)
+      [db]
+      (into []
+            (j/result-set-seq
+               (-> (j/get-connection db)
                    (.getMetaData)
-                   (.getTables nil nil nil (into-array ["TABLE" "VIEW"])))))))
+                   (.getTables nil nil nil (into-array ["TABLE" "VIEW"]))))))
