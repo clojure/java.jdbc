@@ -282,7 +282,7 @@ made at some future date." }
       (records))))
 
 (defn resultset-seq
-  ^{doc: "A deprecated version of result-set-seq that uses the
+  ^{:doc "A deprecated version of result-set-seq that uses the
           dynamic *as-key* variable."
     :deprecated "0.3.0"}
   [^ResultSet rs & {:keys [identifiers]
