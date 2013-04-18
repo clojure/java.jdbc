@@ -435,7 +435,7 @@
       (create-test-table :fruit db))
     (let [new-keys (sql/insert! db :fruit {:name "Apple"} {:name "Pear"})
           rows (sql/query db (dsl/select * :fruit (dsl/order-by :name))
-                          :as-arrays true)]
+                          :as-arrays? true)]
       (is (= [(returned-key db 1) (returned-key db 2)] new-keys))
       (is (= [[:id :name :appearance :cost :grade]
               [(generated-key db 1) "Apple" nil nil nil]
