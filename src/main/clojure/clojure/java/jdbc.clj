@@ -117,18 +117,6 @@ made at some future date." }
 (def ^{:private true :doc "Map of schemes to subprotocols"} subprotocols
   {"postgres" "postgresql"})
 
-(defn- mysql?
-  "Given a db spec, return true if it represents MySQL. This is used for set-parameters."
-  [db]
-  (cond (string? db)
-        (re-find #"mysql:" db)
-
-        (:subprotocol db)
-        (= "mysql" (:subprotocol db))
-
-        (:connection db)
-        (.startsWith (.getName (type (:connection db))) "com.mysql.")))
-
 (defn- parse-properties-uri [^URI uri]
   (let [host (.getHost uri)
         port (if (pos? (.getPort uri)) (.getPort uri))
@@ -359,20 +347,9 @@ made at some future date." }
   "Add the parameters to the given statement. Use parameter metadata if it is
    available, which allows us to specify the SQL type and support NULL better."
   [^PreparedStatement stmt params db]
-  (let [^ParameterMetaData metadata (when-not (mysql? db)
-                                      (try (.getParameterMetaData stmt)
-                                           (catch SQLException _)))]
-    (dorun (map-indexed (fn [ix value]
-                          (let [ix* (inc ix)
-                                sql-type (when metadata
-                                           (try (.getParameterType metadata ix*)
-                                                (catch SQLException _)))]
-                            (if sql-type
-                              (if (nil? value)
-                                (.setNull stmt ix* sql-type)
-                                (.setObject stmt ix* value))
-                              (.setObject stmt ix* value))))
-                        params))))
+  (dorun (map-indexed (fn [ix value]
+                        (.setObject stmt (inc ix) value))
+                      params)))
 
 (defn create-table-ddl
   "Given a table name and column specs with an optional table-spec
