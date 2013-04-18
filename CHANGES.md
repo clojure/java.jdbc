@@ -1,5 +1,6 @@
 Changes coming in 0.3.0-alpha2
 
+* Reverted specialized handling of NULL values (reopens [JDBC-40](http://dev.clojure.org/jira/browse/JDBC-40))
 * Rename :as-arrays to :as-arrays? since it is boolean
 * Add curried version of clojure.java.jdbc.sql/as-quoted-str
 * Officially deprecate resultset-seq
@@ -28,6 +29,7 @@ Major overhaul of the API and deprecation of most of the old API!
   [JDBC-41](http://dev.clojure.org/jira/browse/JDBC-41)
 * Better handling of NULL values [JDBC-40](http://dev.clojure.org/jira/browse/JDBC-40)
   and [JDBC-18](http://dev.clojure.org/jira/browse/JDBC-18)
+  Note: JDBC-40 has been reverted in 0.3.0-alpha2 because it introduced regressions for PostgreSQL
 * db-do-command allows you to execute SQL without a transaction wrapping it
   [JDBC-38](http://dev.clojure.org/jira/browse/JDBC-38)
 * Remove reflection warning from execute-batch

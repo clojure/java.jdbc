@@ -117,6 +117,7 @@ Change Log
   * Rewrite old API functions in terms of new API, and deprecate old API [JDBC-43](http://dev.clojure.org/jira/browse/JDBC-43)
   * Add :as-arrays to query / result-set-seq [JDBC-41](http://dev.clojure.org/jira/browse/JDBC-41)
   * Better handling of NULL values [JDBC-40](http://dev.clojure.org/jira/browse/JDBC-40) and [JDBC-18](http://dev.clojure.org/jira/browse/JDBC-18)
+    Note: JDBC-40 is being reverted in 0.3.0-alpha2 because it introduces regressions in PostgreSQL
   * db-do-command allows you to execute SQL without a transaction wrapping it [JDBC-38](http://dev.clojure.org/jira/browse/JDBC-38)
   * Remove reflection warning from execute-batch
   * Add notes to README about 3rd party database driver dependencies
