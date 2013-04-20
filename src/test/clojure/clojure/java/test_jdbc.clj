@@ -584,3 +584,27 @@
       (is (= [{:id (generated-key db 1) :name "Apple" :appearance "rosy" :cost nil :grade nil}
               {:id (generated-key db 3) :name "Orange" :appearance "round" :cost nil :grade nil}
               {:id (generated-key db 2) :name "Pear" :appearance "yellow" :cost nil :grade nil}] rows)))))
+
+(deftest test-resultset-read-column
+  (extend-protocol sql/IResultSetReadColumn
+    String
+    (result-set-read-column [s] ::FOO))
+
+  (doseq [db (test-specs)]
+    (sql/with-connection db
+      (create-test-table :fruit db)
+      (sql/insert! db
+                   :fruit
+                   [:name :cost]
+                   ["Crepes" 12]
+                   ["Vegetables" -88]
+                   ["Teenage Mutant Ninja Turtles" 0])
+      (is (= {:name ::FOO, :cost -88}
+             (sql/with-query-results res ["SELECT name, cost FROM fruit WHERE name = ?"
+                                          "Vegetables"]
+               (first res))))))
+
+  ;; somewhat "undo" the first extension
+  (extend-protocol sql/IResultSetReadColumn
+    String
+    (result-set-read-column [s] s)))
