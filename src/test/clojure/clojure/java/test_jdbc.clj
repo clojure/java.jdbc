@@ -554,3 +554,33 @@
      (is (= 1 (sql/query t-db ["SELECT * FROM fruit"] :result-set-fn count))))
     (is (= 0 (sql/query db ["SELECT * FROM fruit"] :result-set-fn count)))))
 
+(deftest test-execute!-fails-with-multi-param-groups
+  (doseq [db (test-specs)]
+    (sql/with-connection db
+      (create-test-table :fruit db))
+    ;; RuntimeException -> SQLException -> ArrayIndexOutOfBoundsException
+    (is (thrown? Exception
+                 (sql/execute!
+                  db
+                  ["INSERT INTO fruit (name,appearance) VALUES (?,?)"
+                   ["Apple" "rosy"]
+                   ["Pear" "yellow"]
+                   ["Orange" "round"]])))))
+
+(deftest test-execute!-with-multi?-true-param-groups
+  (doseq [db (test-specs)]
+    (sql/with-connection db
+      (create-test-table :fruit db))
+    ;; RuntimeException -> SQLException -> ArrayIndexOutOfBoundsException
+    (let [counts (sql/execute!
+                  db
+                  ["INSERT INTO fruit (name,appearance) VALUES (?,?)"
+                   ["Apple" "rosy"]
+                   ["Pear" "yellow"]
+                   ["Orange" "round"]]
+                  :multi? true)
+          rows (sql/query db (dsl/select * :fruit (dsl/order-by :name)))]
+      (is (= [1 1 1] counts))
+      (is (= [{:id (generated-key db 1) :name "Apple" :appearance "rosy" :cost nil :grade nil}
+              {:id (generated-key db 3) :name "Orange" :appearance "round" :cost nil :grade nil}
+              {:id (generated-key db 2) :name "Pear" :appearance "yellow" :cost nil :grade nil}] rows)))))
