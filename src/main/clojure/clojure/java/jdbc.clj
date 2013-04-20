@@ -629,13 +629,13 @@ made at some future date." }
   "Given a database connection and a vector containing SQL and optional parameters,
   perform a general (non-select) SQL operation. The optional keyword argument specifies
   whether to run the operation in a transaction or not (default true)."
-  [db sql-params & {:keys [transaction?]
-                    :or {transaction? true}}]
-  (let [execute-helper (fn [db]
-                         (db-do-prepared db
-                                         transaction?
-                                         (first sql-params)
-                                         (rest sql-params)))]
+  [db sql-params & {:keys [transaction? multi?]
+                    :or {transaction? true multi? false}}]
+  (let [execute-helper
+        (fn [db]
+          (if multi?
+            (apply db-do-prepared db transaction? (first sql-params) (rest sql-params))
+            (db-do-prepared db transaction? (first sql-params) (rest sql-params))))]
     (if-let [con (and (map? db) (:connection db))]
       (execute-helper db)
       (with-open [con (get-connection db)]
