@@ -1,5 +1,6 @@
 Changes coming in 0.3.0-alpha2
 
+* Add :multi? to execute! so it can be used for repeated operations [JDBC-52](http://dev.clojure.org/jira/browse/JDBC-52)
 * Reverted specialized handling of NULL values (reopens [JDBC-40](http://dev.clojure.org/jira/browse/JDBC-40))
 * Rename :as-arrays to :as-arrays? since it is boolean
 * Add curried version of clojure.java.jdbc.sql/as-quoted-str
