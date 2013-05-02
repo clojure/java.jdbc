@@ -578,10 +578,10 @@ made at some future date." }
 (defn db-with-query-results*
   "Executes a query, then evaluates func passing in a seq of the results as
   an argument. The first argument is a vector containing either:
-    [sql & params] - a SQL query, followed by any parameters it needs
-    [stmt & params] - a PreparedStatement, followed by any parameters it needs
+    [db sql & params] - a SQL query, followed by any parameters it needs
+    [db stmt & params] - a PreparedStatement, followed by any parameters it needs
                       (the PreparedStatement already contains the SQL query)
-    [options sql & params] - options and a SQL query for creating a
+    [db options sql & params] - options and a SQL query for creating a
                       PreparedStatement, followed by any parameters it needs
   See prepare-statement for supported options."
   [db sql-params func identifiers as-arrays?]
@@ -611,6 +611,20 @@ made at some future date." }
         (func (result-set-seq rset :identifiers identifiers :as-arrays? as-arrays?))))))
 
 ;; top-level API for actual SQL operations
+
+(defmacro
+  ^{:doc "Executes a query, then evaluates body with results bound to a seq of the
+          results. sql-params is a vector containing either:
+            [db sql & params] - a SQL query, followed by any parameters it needs
+            [db stmt & params] - a PreparedStatement, followed by any parameters it needs
+                              (the PreparedStatement already contains the SQL query)
+            [db options sql & params] - options and a SQL query for creating a
+                              PreparedStatement, followed by any parameters it needs
+          See prepare-statement for supported options."
+    :deprecated "0.3.0"}
+  db-with-query-results
+  [db results sql-params & body]
+  `(db-with-query-results* ~db ~sql-params (fn [~results] ~@body) ~[] ~false))
 
 (defn query
   "Given a database connection and a vector containing SQL and optional parameters,
@@ -848,12 +862,30 @@ made at some future date." }
   [name & specs]
   (do-commands (apply create-table-ddl name specs)))
 
+(defn create-table!
+  "Creates a table given a database, table name and
+  specs. Each spec is either a column spec: a vector containing a column
+  name and optionally a type and other constraints, or a table-level
+  constraint: a vector containing words that express the constraint. An
+  optional suffix to the CREATE TABLE DDL describing table attributes may
+  by provided as :table-spec {table-attributes-string}. All words used to
+  describe the table may be supplied as strings or keywords."
+  [db name & specs]
+  (execute! db 
+    [(apply create-table-ddl name specs)]))
+
 (defn drop-table
   "Drops a table on the open database connection given its name, a string
   or keyword"
   [name]
   (do-commands
-   (format "DROP TABLE %s" (sql/as-str identity name))))
+   (format "DROP TABLE %s" (sql/as-str sql/as-is name))))
+
+(defn drop-table!
+  "Drops a table given a database and table name as string or keyword"
+  [db name]
+  (execute! db
+    [(format "DROP TABLE %s" (sql/as-str sql/as-is name))]))
 
 (defn
   ^{:doc "Executes an (optionally parameterized) SQL prepared statement on the
