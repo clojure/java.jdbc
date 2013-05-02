@@ -129,10 +129,9 @@
     (= "mysql" (:subprotocol db))))
 
 (defn- create-test-table
-  "Create a standard test table. Must be inside with-connection.
-   For MySQL, ensure table uses an engine that supports transactions!"
+  "Create a standard test table. For MySQL, ensure table uses an engine that supports transactions!"
   [table db]
-  (sql/create-table
+  (sql/create-table! db
    table
    [:id :int (if (mysql? db) "PRIMARY KEY AUTO_INCREMENT" "DEFAULT 0")]
    [:name "VARCHAR(32)" (if (mysql? db) "" "PRIMARY KEY")]
@@ -143,23 +142,20 @@
 
 (deftest test-create-table
   (doseq [db (test-specs)]
-    (sql/with-connection db
-      (create-test-table :fruit db)
-      (is (= 0 (sql/with-query-results res ["SELECT * FROM fruit"] (count res)))))))
+    (create-test-table :fruit db)
+    (is (= 0 (sql/db-with-query-results db res ["SELECT * FROM fruit"] (count res))))))
 
 (deftest test-drop-table
   (doseq [db (test-specs)]
-    (sql/with-connection db
-      (create-test-table :fruit2 db)
-      (sql/drop-table :fruit2)
-      (is (thrown? java.sql.SQLException (sql/with-query-results res ["SELECT * FROM fruit2"] (count res)))))))
+    (create-test-table :fruit2 db)
+    (sql/drop-table! db :fruit2)
+    (is (thrown? java.sql.SQLException (sql/db-with-query-results db res ["SELECT * FROM fruit2"] (count res))))))
 
 (deftest test-do-commands
   (doseq [db (test-specs)]
-    (sql/with-connection db
-      (create-test-table :fruit2 db)
-      (sql/do-commands "DROP TABLE fruit2")
-      (is (thrown? java.sql.SQLException (sql/with-query-results res ["SELECT * FROM fruit2"] (count res)))))))
+    (create-test-table :fruit2 db)
+    (sql/db-do-commands db true "DROP TABLE fruit2")
+    (is (thrown? java.sql.SQLException (sql/db-with-query-results db res ["SELECT * FROM fruit2"] (count res))))))
 
 (deftest test-do-prepared1
   (doseq [db (test-specs)]
