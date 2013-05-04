@@ -1,3 +1,7 @@
+Changes in 0.3.0-alpha3
+
+* Fix macro / import interaction by fully qualifying Connection type.
+
 Changes in 0.3.0-alpha2
 
 * Address [JDBC-51](http://dev.clojure.org/jira/browse/JDBC-51) by declaring get-connection returns java.sql.Connection
