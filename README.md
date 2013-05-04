@@ -8,7 +8,7 @@ Formerly known as clojure.contrib.sql.
 Releases and Dependency Information
 ========================================
 
-Latest stable release: 0.3.0-alpha1
+Latest stable release: 0.3.0-alpha2
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22java.jdbc%22)
 
@@ -16,14 +16,14 @@ Latest stable release: 0.3.0-alpha1
 
 [Leiningen](https://github.com/technomancy/leiningen) dependency information:
 ```clojure
-[org.clojure/java.jdbc "0.3.0-alpha1"]
+[org.clojure/java.jdbc "0.3.0-alpha2"]
 ```
 [Maven](http://maven.apache.org/) dependency information:
 ```xml
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>java.jdbc</artifactId>
-  <version>0.3.0-alpha1</version>
+  <version>0.3.0-alpha2</version>
 </dependency>
 ```
 You will also need to add dependencies for the JDBC driver you intend to use. Here are examples of the drivers currently used for testing,
@@ -103,6 +103,15 @@ Developer Information
 
 Change Log
 ====================
+
+* Release 0.3.0-alpha2 on 2013-05-03
+  * Address [JDBC-51](http://dev.clojure.org/jira/browse/JDBC-51) by declaring get-connection returns java.sql.Connection
+  * Add IResultSetReadColumn protocol extension point for custom read conversions [JDBC-46](http://dev.clojure.org/jira/browse/JDBC-46)
+  * Add :multi? to execute! so it can be used for repeated operations [JDBC-52](http://dev.clojure.org/jira/browse/JDBC-52)
+  * Reverted specialized handling of NULL values (reopens [JDBC-40](http://dev.clojure.org/jira/browse/JDBC-40))
+  * Rename :as-arrays to :as-arrays? since it is boolean
+  * Add curried version of clojure.java.jdbc.sql/as-quoted-str
+  * Officially deprecate resultset-seq
 
 * Release 0.3.0-alpha1 on 2013-04-07
   * MAJOR API OVERHAUL!

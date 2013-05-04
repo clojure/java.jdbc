@@ -1,4 +1,4 @@
-Changes coming in 0.3.0-alpha2
+Changes in 0.3.0-alpha2
 
 * Address [JDBC-51](http://dev.clojure.org/jira/browse/JDBC-51) by declaring get-connection returns java.sql.Connection
 * Add IResultSetReadColumn protocol extension point for custom read conversions [JDBC-46](http://dev.clojure.org/jira/browse/JDBC-46)
