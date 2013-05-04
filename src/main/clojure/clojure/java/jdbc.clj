@@ -44,7 +44,7 @@ API is still supported but will be deprecated before a 1.0.0 release is
 made at some future date." }
   clojure.java.jdbc
   (:import [java.net URI]
-           [java.sql BatchUpdateException Connection DriverManager
+           [java.sql BatchUpdateException DriverManager
             PreparedStatement ResultSet SQLException Statement Types]
            [java.util Hashtable Map Properties]
            [javax.naming InitialContext Name]
@@ -174,7 +174,7 @@ made at some future date." }
   String:
     subprotocol://user:password@host:post/subname
                  An optional prefix of jdbc: is allowed."
-  ^Connection
+  ^java.sql.Connection
   [{:keys [connection
            factory
            connection-uri
