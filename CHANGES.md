@@ -1,3 +1,7 @@
+Changes coming up in 0.3.0-alpha4
+
+* Fix connection leaks [JDBC-54](http://dev.clojure.org/jira/browser/JDBC-54)
+
 Changes in 0.3.0-alpha3
 
 * Fix macro / import interaction by fully qualifying Connection type.
