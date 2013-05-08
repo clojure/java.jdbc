@@ -359,8 +359,7 @@ made at some future date." }
     stmt))
 
 (defn- set-parameters
-  "Add the parameters to the given statement. Use parameter metadata if it is
-   available, which allows us to specify the SQL type and support NULL better."
+  "Add the parameters to the given statement."
   [^PreparedStatement stmt params db]
   (dorun (map-indexed (fn [ix value]
                         (.setObject stmt (inc ix) value))
