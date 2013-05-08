@@ -59,6 +59,7 @@
          (select * :a (where {:b 2 :c nil})))))
 
 (deftest order-by-dsl
+  (is (= "" (order-by [])))
   (is (= "ORDER BY a ASC" (order-by :a)))
   (is (= "ORDER BY a ASC" (order-by [:a])))
   (is (= "ORDER BY a DESC" (order-by {:a :desc})))

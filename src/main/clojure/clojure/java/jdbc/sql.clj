@@ -218,10 +218,13 @@ and update! high-level operations within clojure.java.jdbc directly." }
   SQL string for the ORDER BY clause. A column order spec may be a column name or a
   map of the column name to the desired order."
   [cols & {:keys [entities] :or {entities as-is}}]
-  (str "ORDER BY "
-       (if (or (string? cols) (keyword? cols) (map? cols))
-         (order-direction cols entities)
-         (str/join "," (map #(order-direction % entities) cols)))))
+  (let [singleton (or (string? cols) (keyword? cols) (map? cols))]
+    (if (or singleton (seq cols))
+      (str "ORDER BY "
+           (if singleton
+             (order-direction cols entities)
+             (str/join "," (map #(order-direction % entities) cols))))
+      "")))
 
 (defn select
   "Given a sequence of column names (or *) and a table name, followed by optional SQL
