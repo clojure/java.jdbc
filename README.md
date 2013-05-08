@@ -36,7 +36,7 @@ shown as Leiningen dependencies:
 ;; Microsoft SQL Server using the jTDS driver
 [net.sourceforge.jtds/jtds "1.2.4"]
 ;; MySQL
-[mysql/mysql-connector-java "5.1.6"]
+[mysql/mysql-connector-java "5.1.25"]
 ;; PostgreSQL
 [postgresql/postgresql "8.4-702.jdbc4"]
 ;; SQLite
