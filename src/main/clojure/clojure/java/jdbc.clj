@@ -473,23 +473,25 @@ made at some future date." }
   complete."
   [db func]
   (if (zero? (get-level db))
-    (let [^java.sql.Connection con (get-connection db)
-          nested-db (inc-level (add-connection db con))
-          auto-commit (.getAutoCommit con)]
-      (io!
-       (.setAutoCommit con false)
-       (try
-         (let [result (func nested-db)]
-           (if (db-is-rollback-only nested-db)
+    (if-let [^java.sql.Connection con (db-find-connection db)]
+      (let [nested-db (inc-level db)
+            auto-commit (.getAutoCommit con)]
+        (io!
+         (.setAutoCommit con false)
+         (try
+           (let [result (func nested-db)]
+             (if (db-is-rollback-only nested-db)
+               (.rollback con)
+               (.commit con))
+             result)
+           (catch Throwable t
              (.rollback con)
-             (.commit con))
-           result)
-         (catch Throwable t
-           (.rollback con)
-           (throw-non-rte t))
-         (finally
-           (db-unset-rollback-only! nested-db)
-           (.setAutoCommit con auto-commit)))))
+             (throw-non-rte t))
+           (finally
+             (db-unset-rollback-only! nested-db)
+             (.setAutoCommit con auto-commit)))))
+      (with-open [^java.sql.Connection con (get-connection db)]
+        (db-transaction* (add-connection db con) func)))
     (try
       (func (inc-level db))
       (catch Exception e
@@ -508,16 +510,19 @@ made at some future date." }
   "Executes SQL commands on the specified database connection. Wraps the commands
   in a transaction if transaction? is true."
   [db transaction? & commands]
-  (with-open [^Statement stmt (let [^java.sql.Connection con (get-connection db)] (.createStatement con))]
-    (doseq [^String cmd commands]
-      (.addBatch stmt cmd))
-    (if transaction?
-      (db-transaction [t-db (add-connection db (.getConnection stmt))]
-                      (execute-batch stmt))
-      (try
-        (execute-batch stmt)
-        (catch Exception e
-          (throw-non-rte e))))))
+  (if-let [^java.sql.Connection con (db-find-connection db)]
+    (with-open [^Statement stmt (.createStatement con)]
+      (doseq [^String cmd commands]
+        (.addBatch stmt cmd))
+      (if transaction?
+        (db-transaction [t-db (add-connection db (.getConnection stmt))]
+                        (execute-batch stmt))
+        (try
+          (execute-batch stmt)
+          (catch Exception e
+            (throw-non-rte e)))))
+    (with-open [^java.sql.Connection con (get-connection db)]
+      (apply db-do-commands (add-connection db con) transaction? commands))))
 
 (defn db-do-prepared-return-keys
   "Executes an (optionally parameterized) SQL prepared statement on the
@@ -525,27 +530,30 @@ made at some future date." }
   the parameters.
   Return the generated keys for the (single) update/insert."
   [db transaction? sql param-group]
-  (with-open [^PreparedStatement stmt (prepare-statement (get-connection db) sql :return-keys true)]
-    (set-parameters stmt param-group db)
-    (letfn [(exec-and-return-keys []
-              (let [counts (.executeUpdate stmt)]
-                (try
-                  (let [rs (.getGeneratedKeys stmt)
-                        result (first (result-set-seq rs))]
-                    ;; sqlite (and maybe others?) requires
-                    ;; record set to be closed
-                    (.close rs)
-                    result)
-                  (catch Exception _
-                    ;; assume generated keys is unsupported and return counts instead: 
-                    counts))))]
-      (if transaction?
-        (db-transaction [t-db (add-connection db (.getConnection stmt))]
-                        (exec-and-return-keys))
-        (try
-          (exec-and-return-keys)
-          (catch Exception e
-            (throw-non-rte e)))))))
+  (if-let [^java.sql.Connection con (db-find-connection db)]
+    (with-open [^PreparedStatement stmt (prepare-statement con sql :return-keys true)]
+      (set-parameters stmt param-group)
+      (letfn [(exec-and-return-keys []
+                (let [counts (.executeUpdate stmt)]
+                  (try
+                    (let [rs (.getGeneratedKeys stmt)
+                          result (first (result-set-seq rs))]
+                      ;; sqlite (and maybe others?) requires
+                      ;; record set to be closed
+                      (.close rs)
+                      result)
+                    (catch Exception _
+                      ;; assume generated keys is unsupported and return counts instead: 
+                      counts))))]
+        (if transaction?
+          (db-transaction [t-db (add-connection db (.getConnection stmt))]
+                          (exec-and-return-keys))
+          (try
+            (exec-and-return-keys)
+            (catch Exception e
+              (throw-non-rte e))))))
+    (with-open [^java.sql.Connection con (get-connection db)]
+      (db-do-prepared-return-keys (add-connection db con) transaction? sql param-group))))
 
 (defn db-do-prepared
   "Executes an (optionally parameterized) SQL prepared statement on the
@@ -553,28 +561,31 @@ made at some future date." }
   the parameters.
   Return a seq of update counts (one count for each param-group)."
   [db transaction? sql & param-groups]
-  (with-open [^PreparedStatement stmt (prepare-statement (get-connection db) sql)]
-    (if (empty? param-groups)
-      (if transaction?
-        (db-transaction [t-db (add-connection db (.getConnection stmt))]
-                        (vector (.executeUpdate stmt)))
-        (try
-          (vector (.executeUpdate stmt))
-          (catch Exception e
-            (throw-non-rte e))))
-      (do
-        (doseq [param-group param-groups]
-          (set-parameters stmt param-group db)
-          (.addBatch stmt))
+  (if-let [^java.sql.Connection con (db-find-connection db)]
+    (with-open [^PreparedStatement stmt (prepare-statement con sql)]
+      (if (empty? param-groups)
         (if transaction?
           (db-transaction [t-db (add-connection db (.getConnection stmt))]
-                          (execute-batch stmt))
+                          (vector (.executeUpdate stmt)))
           (try
-            (execute-batch stmt)
+            (vector (.executeUpdate stmt))
             (catch Exception e
-              (throw-non-rte e))))))))
+              (throw-non-rte e))))
+        (do
+          (doseq [param-group param-groups]
+            (set-parameters stmt param-group)
+            (.addBatch stmt))
+          (if transaction?
+            (db-transaction [t-db (add-connection db (.getConnection stmt))]
+                            (execute-batch stmt))
+            (try
+              (execute-batch stmt)
+              (catch Exception e
+                (throw-non-rte e)))))))
+    (with-open [^java.sql.Connection con (get-connection db)]
+      (apply db-do-prepared (add-connection db con) transaction? sql param-groups))))
 
-(defn db-with-query-results*
+(defn- db-with-query-results*
   "Executes a query, then evaluates func passing in a seq of the results as
   an argument. The first argument is a vector containing either:
     [sql & params] - a SQL query, followed by any parameters it needs
@@ -601,13 +612,22 @@ made at some future date." }
         params (vec (cond sql-is-first (rest sql-params)
                           options-are-first (rest (rest sql-params))
                           :else (rest sql-params)))
-        prepare-args (when (map? special) (flatten (seq special)))]
-    (with-open [^PreparedStatement stmt (if (instance? PreparedStatement special)
-                                          special
-                                          (apply prepare-statement (get-connection db) sql prepare-args))]
-      (set-parameters stmt params db)
-      (with-open [rset (.executeQuery stmt)]
-        (func (result-set-seq rset :identifiers identifiers :as-arrays? as-arrays?))))))
+        prepare-args (when (map? special) (flatten (seq special)))
+        run-query-with-params (fn [stmt]
+                                (set-parameters stmt params)
+                                (with-open [rset (.executeQuery stmt)]
+                                  (func (result-set-seq rset
+                                                        :identifiers identifiers
+                                                        :as-arrays? as-arrays?))))]
+    (if (instance? PreparedStatement special)
+      (let [^PreparedStatement stmt special]
+        (run-query-with-params stmt))
+      (if-let [^java.sql.Connection con (db-find-connection db)]
+        (with-open [^PreparedStatement stmt (apply prepare-statement con sql prepare-args)]
+          (run-query-with-params stmt))
+        (with-open [^java.sql.Connection con (get-connection db)]
+          (with-open [^PreparedStatement stmt (apply prepare-statement con sql prepare-args)]
+            (run-query-with-params stmt)))))))
 
 ;; top-level API for actual SQL operations
 
@@ -623,21 +643,14 @@ made at some future date." }
                     :or {result-set-fn doall
                          row-fn identity
                          identifiers sql/lower-case}}]
-  (let [query-helper (fn [db]
-                       (db-with-query-results* db
-                         (vec sql-params)
-                         (fn [rs]
-                           (result-set-fn (if as-arrays?
-                                            (cons (first rs)
-                                                  (vec (map row-fn (rest rs))))
-                                            (map row-fn rs))))
-                         identifiers
-                         as-arrays?))]
-    (if-let [con (and (map? db) (:connection db))]
-      (query-helper db)
-      (with-open [con (get-connection db)]
-        (query-helper
-         (add-connection db con))))))
+  (db-with-query-results* db (vec sql-params)
+    (fn [rs]
+      (result-set-fn (if as-arrays?
+                       (cons (first rs)
+                             (vec (map row-fn (rest rs))))
+                       (map row-fn rs))))
+    identifiers
+    as-arrays?))
 
 (defn execute!
   "Given a database connection and a vector containing SQL and optional parameters,
@@ -650,9 +663,9 @@ made at some future date." }
           (if multi?
             (apply db-do-prepared db transaction? (first sql-params) (rest sql-params))
             (db-do-prepared db transaction? (first sql-params) (rest sql-params))))]
-    (if-let [con (and (map? db) (:connection db))]
+    (if-let [con (db-find-connection db)]
       (execute-helper db)
-      (with-open [con (get-connection db)]
+      (with-open [^java.sql.Connection con (get-connection db)]
         (execute-helper (add-connection db con))))))
 
 (defn delete!
@@ -707,9 +720,9 @@ made at some future date." }
   [db table & options]
   (let [[transaction? maps-or-cols-and-values-etc] (extract-transaction? options)
         stmts (apply sql/insert table maps-or-cols-and-values-etc)]
-    (if-let [con (and (map? db) (:connection db))]
+    (if-let [con (db-find-connection db)]
       (insert-helper db transaction? stmts)
-      (with-open [con (get-connection db)]
+      (with-open [^java.sql.Connection con (get-connection db)]
         (insert-helper (add-connection db con) transaction? stmts)))))
 
 (defn update!
