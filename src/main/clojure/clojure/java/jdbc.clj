@@ -360,7 +360,7 @@ made at some future date." }
 
 (defn- set-parameters
   "Add the parameters to the given statement."
-  [^PreparedStatement stmt params db]
+  [^PreparedStatement stmt params]
   (dorun (map-indexed (fn [ix value]
                         (.setObject stmt (inc ix) value))
                       params)))
@@ -965,7 +965,7 @@ made at some future date." }
                           :else (rest sql-params)))
         prepare-args (when (map? special) (flatten (seq special)))]
     (with-open [^PreparedStatement stmt (if (instance? PreparedStatement special) special (apply prepare-statement (get-connection *db*) sql prepare-args))]
-      (set-parameters stmt params *db*)
+      (set-parameters stmt params)
       (with-open [rset (.executeQuery stmt)]
         (binding [*db* (assoc *db* :connection (.getConnection stmt))]
           (func (resultset-seq rset)))))))
