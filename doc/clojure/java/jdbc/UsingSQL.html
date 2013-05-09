@@ -25,7 +25,7 @@ namespace.
       <div id="leftcolumn"><div style="text-align: center;"></div>
 <div class="menu">
   <div class="WikiCustomNav WikiElement wiki">
-    <span class="toc-header"><span id="project-name">JDBC-based SQL Interface</span> <span id="version">0.2.4</span> API</span><br />
+    <span class="toc-header"><span id="project-name">JDBC-based SQL Interface</span> <span id="version">0.3.0</span> API</span><br />
     <ul>
       <li><a class="wiki_link" href="../../../../index.html">Overview</a></li>
       <li><a class="wiki_link" href="../../../../api-index.html">API Index</a></li>
@@ -48,27 +48,29 @@ These examples assume a simple table called fruit (see <a href="https://github.c
 
 <h2>Inserting multiple rows</h2>
 
-<p>If you want to insert complete rows, you can use <em>insert-rows</em> and provide the values as a simple vector for each row. Every column's value must be present in the same order the columns are declared in the table. This performs a single insert statement. If you attempt to insert a single row, a map of the generated keys will be returned.</p>
+<p>If you want to insert complete rows, you can use <em>insert!</em> and provide the values as a simple vector for each row. Every column's value must be present in the same order the columns are declared in the table. This performs a series of insert statement. If you attempt to insert a single row, a map of the generated keys will be returned.</p>
 
 <pre><code>(defn insert-rows-fruit
   "Insert complete rows"
-  []
-  (sql/insert-rows
+  [db]
+  (j/insert! db
     :fruit
-    ["Apple" "red" 59 87]
-    ["Banana" "yellow" 29 92.2]
-    ["Peach" "fuzzy" 139 90.0]
-    ["Orange" "juicy" 89 88.6]))
+    nil ; column names not supplied
+    [1 "Apple" "red" 59 87]
+    [2 "Banana" "yellow" 29 92.2]
+    [3 "Peach" "fuzzy" 139 90.0]
+    [4 "Orange" "juicy" 89 88.6]))
+;; (1 1 1 1) - row counts modified
 </code></pre>
 
 <h2>Inserting partial rows</h2>
 
-<p>If you want to insert rows but only specify some columns' values, you can use <em>insert-values</em> and provide the names of the columns following by vectors containing values for those columns. This performs a single insert statement. If you attempt to insert a single row, a map of the generated keys will be returned.</p>
+<p>If you want to insert rows but only specify some columns' values, you can use <em>insert!</em> and provide the names of the columns following by vectors containing values for those columns. This performs a single insert statement. If you attempt to insert a single row, a map of the generated keys will be returned.</p>
 
 <pre><code>(defn insert-values-fruit
   "Insert rows with values for only specific columns"
-  []
-  (sql/insert-values
+  [db]
+  (j/insert! db
     :fruit
     [:name :cost]
     ["Mango" 722]
@@ -77,24 +79,24 @@ These examples assume a simple table called fruit (see <a href="https://github.c
 
 <h2>Inserting a record</h2>
 
-<p>If you want to insert a single record, you can use <em>insert-record</em> and specify the columns and their values as a map. This performs a single insert statement. A map of the generated keys will be returned.</p>
+<p>If you want to insert a single record, you can use <em>insert!</em> and specify the columns and their values as a map. This performs a single insert statement. A map of the generated keys will be returned.</p>
 
 <pre><code>(defn insert-record-fruit
   "Insert a single record, map from keys specifying columsn to values"
-  []
-  (sql/insert-record
+  [db]
+  (j/insert! db
     :fruit
     {:name "Pear" :appearance "green" :cost 99}))
 </code></pre>
 
 <h2>Inserting multiple records</h2>
 
-<p>If you want to insert multiple records, you can use <em>insert-records</em> and specify each record as a map of columns and their values. This performs a separate insert statement for each record. The generated keys are returned in a sequence of maps.</p>
+<p>If you want to insert multiple records, you can use <em>insert!</em> and specify each record as a map of columns and their values. This performs a separate insert statement for each record. The generated keys are returned in a sequence of maps.</p>
 
 <pre><code>(defn insert-records-fruit
   "Insert records, maps from keys specifying columns to values"
-  []
-  (sql/insert-records
+  [db]
+  (j/insert! db
     :fruit
     {:name "Pomegranate" :appearance "fresh" :cost 585}
     {:name "Kiwifruit" :grade 93}))
@@ -106,90 +108,96 @@ These examples assume a simple table called fruit (see <a href="https://github.c
 
 <pre><code>(defn db-write
   "Write initial values to the database as a transaction"
-  []
-(sql/with-connection db
-    (sql/transaction
-     (drop-fruit)
-     (create-fruit)
-     (insert-rows-fruit)
-     (insert-values-fruit)
-     (insert-records-fruit)))
-  nil)
+  [db]
+  (j/db-transaction [t-con db]
+    (insert-rows-fruit t-con)
+    (insert-values-fruit t-con)
+    (insert-records-fruit t-con)))
 </code></pre>
+
+<p>The <em>db-transaction</em> macro creates a transaction-aware connection from the database specification and that should be used in the body of the transaction code.</p>
 
 <h2>Reading and processing rows</h2>
 
-<p>To execute code against each row in a result set, use <em>with-query-results</em> with SQL.</p>
+<p>To execute code against each row in a result set, use <em>query</em> with SQL.</p>
 
 <pre><code>(defn db-read
   "Read the entire fruit table"
-  []
-  (sql/with-connection db
-    (sql/with-query-results res
-      ["SELECT * FROM fruit"]
-      (doseq [rec res]
-        (println rec)))))
+  [db]
+  (j/query db
+    ["SELECT * FROM fruit"]
+    :row-fn println))
 
 (defn db-read-all
   "Return all the rows of the fruit table as a vector"
-  []
-  (sql/with-connection db
-    (sql/with-query-results res
-      ["SELECT * FROM fruit"]
-      (into [] res))))
+  [db]
+  (j/query db
+    ["SELECT * FROM fruit"]
+    :as-arrays? true))
+
+;; ([:id :name :appearance :cost :grade]
+;;  [1 "Apple" "red" 59 87.0]
+;;  [2 "Banana" "yellow" 29 92.2]
+;;  ...)
 
 (defn db-grade-range
   "Print rows describing fruit that are within a grade range"
-  [min max]
-  (sql/with-connection db
-    (sql/with-query-results res
-      [(str "SELECT name, cost, grade "
-            "FROM fruit "
-            "WHERE grade &gt;= ? AND grade &lt;= ?")
-       min max]
-      (doseq [rec res]
-        (println rec)))))
+  [db min max]
+  (j/query db
+    [(str "SELECT name, cost, grade "
+          "FROM fruit "
+          "WHERE grade &gt;= ? AND grade &lt;= ?")
+     min max]
+    :row-fn println))
 
 (defn db-grade-a 
   "Print rows describing all grade a fruit (grade between 90 and 100)"
-  []
-  (db-grade-range 90 100))
+  [db]
+  (db-grade-range db 90 100))
 </code></pre>
 
 <h2>Updating values across a table</h2>
 
-<p>To update column values based on a SQL predicate, use <em>update-values</em> with a SQL where clause and a map of columns to new values. The result is a sequence of update counts, indicating the number of records affected by each update (in this case, a single update and therefore a single count in the sequence).</p>
+<p>To update column values based on a SQL predicate, use <em>update!</em> with a SQL where clause and a map of columns to new values. The result is a sequence of update counts, indicating the number of records affected by each update (in this case, a single update and therefore a single count in the sequence).</p>
 
 <pre><code>(defn db-update-appearance-cost
   "Update the appearance and cost of the named fruit"
-  [name appearance cost]
-  (sql/update-values
+  [db name appearance cost]
+  (j/update! mysql-db
    :fruit
-   ["name=?" name]
-   {:appearance appearance :cost cost}))
+   {:appearance appearance :cost cost}
+   ["name=?" name]))
 
 (defn db-update
   "Update two fruits as a transaction"
-  []
-  (sql/with-connection db
-    (sql/transaction
-     (db-update-appearance-cost "Banana" "bruised" 14)
-     (db-update-appearance-cost "Feijoa" "green" 400)))
-  nil)
+  [db]
+  (j/db-transaction [t-con db]
+    (db-update-appearance-cost t-con "Banana" "bruised" 14)
+    (db-update-appearance-cost t-con "Feijoa" "green" 400)))
 </code></pre>
 
 <h2>Updating values or Inserting records conditionally</h2>
 
-<p>If you want to update existing records that match a SQL predicate or insert a new record if no existing records match, use <em>update-or-insert-values</em> with a SQL where clause and a map of columns to values. This calls <em>update-values</em> first and if no rows were updated, this calls <em>insert-values</em>. The result is either the sequence of update counts from the update or the sequence of generated key maps from the insert.</p>
+<p>If you want to update existing records that match a SQL predicate or insert a new record if no existing records match, you can use a transaction wrapped around an <em>update!</em> and a conditional <em>insert!</em>.
+use <em>update-or-insert-values</em> with a SQL where clause and a map of columns to values. This calls <em>update-values</em> first and if no rows were updated, this calls <em>insert-values</em>. The result is either the sequence of update counts from the update or the sequence of generated key maps from the insert.</p>
 
 <pre><code>(defn db-update-or-insert
   "Updates or inserts a fruit"
-  [record]
-  (sql/with-connection db
-    (sql/update-or-insert-values
-     :fruit
-     ["name=?" (:name record)]
-     record)))
+  [db record where-clause]
+  (j/db-transaction [t-con db]
+    (let [result (j/update! t-con :fruit record where-clause)]
+      (if (zero? (first result))
+        (j/insert! t-con :fruit record)
+        result))))
+
+(db-update-or-insert mysql-db
+  {:name "Cactus" :appearance "Spiky" :cost 2000}
+  ["name = ?" "Cactus"])
+;; inserts Cactus
+(db-update-or-insert mysql-db
+  {:name "Cactus" :appearance "Spiky" :cost 2500}
+  ["name = ?" "Cactus"])
+;; updates the Cactus we just inserted
 </code></pre>
 
 <h2>Exception Handling and Transaction Rollback</h2>
@@ -198,62 +206,40 @@ These examples assume a simple table called fruit (see <a href="https://github.c
 
 <pre><code>(defn db-exception
   "Demonstrate rolling back a partially completed transaction on exception"
-  []
-  (sql/with-connection db
-    (sql/transaction
-     (sql/insert-values
+  [db]
+  (j/db-transaction [t-con db]
+    (j/insert! t-con
       :fruit
       [:name :appearance]
       ["Grape" "yummy"]
       ["Pear" "bruised"])
-     ;; at this point the insert-values call is complete, but the transaction
-     ;; is not. the exception will cause it to roll back leaving the database
-     ;; untouched.
-     (throw (Exception. "sql/test exception")))))
+    ;; at this point the insert-values call is complete, but the transaction
+    ;; is not. the exception will cause it to roll back leaving the database
+    ;; untouched.
+    (throw (Exception. "sql/test exception")))))
+</code></pre>
 
-(defn db-sql-exception
-  "Demonstrate an sql exception"
-  []
-  (sql/with-connection db
-    (sql/transaction
-     (sql/insert-values
-      :fruit
-      [:name :appearance]
-      ["Grape" "yummy"]
-      ["Pear" "bruised"]
-      ["Apple" "strange" "whoops"]))))
+<p>Transactions can also be set explicitly to rollback instead of commit:</p>
 
-(defn db-batchupdate-exception
-  "Demonstrate a batch update exception"
-  []
-  (sql/with-connection db
-    (sql/transaction
-     (sql/do-commands
-      "DROP TABLE fruit"
-      "DROP TABLE fruit"))))
-
-(defn db-rollback
+<pre><code>(defn db-rollback
   "Demonstrate a rollback-only trasaction"
-  []
-  (sql/with-connection db
-    (sql/transaction
-     (prn "is-rollback-only" (sql/is-rollback-only))
-     (sql/set-rollback-only)
-     (sql/insert-values
+  [db]
+  (j/db-transaction [t-con db]
+    (prn "is-rollback-only" (j/db-is-rollback-only t-con))
+    (j/db-set-rollback-only! t-con)
+    (j/insert! t-con
       :fruit
       [:name :appearance]
       ["Grape" "yummy"]
       ["Pear" "bruised"])
-     (prn "is-rollback-only" (sql/is-rollback-only))
-     (sql/with-query-results res
+     (prn "is-rollback-only" (j/db-is-rollback-only t-con))
+     (j/query t-con
        ["SELECT * FROM fruit"]
-       (doseq [rec res]
-         (println rec))))
+       :row-fn println))
     (prn)
-    (sql/with-query-results res
+    (j/query db
       ["SELECT * FROM fruit"]
-      (doseq [rec res]
-        (println rec)))))
+      :row-fn println))
 </code></pre>
 </body></html></div>
               </div>

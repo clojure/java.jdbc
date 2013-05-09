@@ -25,7 +25,7 @@ namespace.
       <div id="leftcolumn"><div style="text-align: center;"></div>
 <div class="menu">
   <div class="WikiCustomNav WikiElement wiki">
-    <span class="toc-header"><span id="project-name">JDBC-based SQL Interface</span> <span id="version">0.2.4</span> API</span><br />
+    <span class="toc-header"><span id="project-name">JDBC-based SQL Interface</span> <span id="version">0.3.0</span> API</span><br />
     <ul>
       <li><a class="wiki_link" href="../../../../index.html">Overview</a></li>
       <li><a class="wiki_link" href="../../../../api-index.html">API Index</a></li>
@@ -45,48 +45,49 @@ namespace.
 
 <p>Entity names in SQL may be specified as strings or as keywords. It's convenient to represent records as Clojure maps with keywords for the keys but this means that a mapping is required when moving from Clojure to SQL and back again. Historically, clojure.contrib.sql simply called (name) on keywords passed in and used clojure.core/resultset-seq to convert Java ResultSet objects back to Clojure maps, which had the side-effect of lowercasing all entity names as they became keywords. Whilst that is still the default behavior of clojure.java.jdbc, it is now possible to override this behavior in a couple of ways.</p>
 
-<h2>Quoted Identifiers</h2>
+<h2>Quoted Entities</h2>
 
-<p>The first problem that the old approach exposed was when table names or column names were the same as a SQL keyword. Databases provide a way to quote identifier names so that entity names do not get treated as SQL keywords (often referred to as 'stropping'). Unfortunately, the way quoting works tends to be vendor-specific so that Microsoft SQL Server accepts [name] and "name" whilst MySQL traditionally uses \<code>name\</code> (although recent versions also accept "name"). In order to support multiple approaches to quoted, clojure.java.jdbc now has a function <em>as-quoted-identifier</em> and a macro <em>with-quoted-identifiers</em> to allow you to specify how quoting should be handled.</p>
+<p>The first problem that the old approach exposed was when table names or column names were the same as a SQL keyword. Databases provide a way to quote identifier names so that entity names do not get treated as SQL keywords (often referred to as 'stropping'). Unfortunately, the way quoting works tends to be vendor-specific so that Microsoft SQL Server accepts [name] and "name" whilst MySQL traditionally uses \<code>name\</code> (although recent versions also accept "name"). In order to support multiple approaches to quoting, clojure.java.jdbc supports the concept of identifier functions and entity functions. The former are used to convert entity names in result sets into Clojure identifiers. The latter are used to convert Clojure identifiers (table names, keys in maps) into SQL entity names.</p>
+
+<p>The function clojure.java.jdbc.sql/quoted can be used to create an entity function. It takes a quote spec and returns a function that will quote its argument appropriately. Other entity functions are clojure.java.jdbc.sql/as-is which leaves names untouched (and is the default) and clojure.java.jdbc.sql/lower-case which lowercases name (and is the default identifier function for result-set-seq.</p>
 
 <p>A quote spec is either a single character or a pair of characters in a vector. For the former, the entity name is wrapped in a pair of that character. For the latter, the entity name is wrapped in the specified pair:</p>
 
-<pre><code>(as-quoted-identifier \` :name) ;; produces "`name`"
-(as-quoted-identifier [[ ]] :name) ;; produces "[name]"
+<pre><code>((s/quoted \`) "name") ;; produces "`name`"
+((s/quoted [\[ \]]) "name") ;; produces "[name]"
 </code></pre>
 
-<p>Any code can be wrapped in the <em>with-quoted-identifiers</em> macro to influence how keywords are mapped to entity names:</p>
+<p>Code can either be passed an entity function or be wrapped in the <em>entities</em> macro to influence how keywords are mapped to entity names:</p>
 
-<pre><code>(sql/with-quoted-identifiers \`
-  (sql/insert-record
-    :fruit
-    { :name "Pear" :appearance "green" :cost 99}))
+<pre><code>(j/insert! mysql-db :fruit
+  {:name "Pear" :appearance "green" :cost 99}
+  :entities (s/quoted \`))
+
+(s/entities (s/quoted \`)
+  (j/insert! mysql-db :fruit
+    {:name "Pear" :appearance "green" :cost 99}))
+
 ;; INSERT INTO `fruit` ( `name`, `appearance`, `cost` )
 ;; VALUES ( 'Pear', 'green', 99 )
 </code></pre>
 
 <p>Note that if a string is used for an entity name, rather than a keyword, it is passed through unchanged, on the assumption that if you're explicitly passing strings, you want to control exactly what goes into the SQL.</p>
 
-<h2>Naming Strategies</h2>
+<h2>Entity to Identifier</h2>
 
-<p>The second problem with the old approach was that in returned results, all entity names were mapped to lowercase so any case sensitivity in the original entity names was lost. In addition to the option to determine a quoting strategy, clojure.java.jdbc now has functions <em>as-named-identifier</em>, <em>as-named-keyword</em> and a macro <em>with-naming-strategy</em> to allow you to specify how entity name / keyword mapping should be performed in both directions.</p>
+<p>The second problem with the old approach was that in returned results, all entity names were mapped to lowercase so any case sensitivity in the original entity names was lost. In addition to the option to determine a quoting strategy, clojure.java.jdbc support identifier functions for <em>query</em> and <em>result-set-seq</em>.</p>
 
-<p>A naming strategy may be a single function or a map containing the keys <code>:entity</code> and/or <code>:keyword</code>, whose values are functions. If a single function <code>f</code> is provided, it is treated as <code>{ :entity f }</code>, i.e., an entity naming strategy. The <code>:entity</code> mapping is used on keywords that need to be converted to entity names. The <code>:keyword</code> mapping is used on entity names that need to be converted to keywords.</p>
+<pre><code>(j/query mysql-db
+  (s/select * :fruit)
+  :identifiers clojure.string/upper-case)
 
-<pre><code>(as-named-identifier clojure.string/upper-case :name) ;; produces "NAME"
-(def quote-dash
-  { :entity (partial as-quoted-str \`) :keyword #(.replace % "_" "-") })
-(as-named-identifier quote-dash :name) ;; produces "`name`"
-(as-named-keyword quote-dash "item_id") ;; produces :item-id
+(s/identifiers clojure.string/upper-case
+  (j/query mysql-db
+    (s/select * :fruit)))
+
+;; ({:GRADE nil, :COST 24, :APPEARANCE "rosy", :NAME "Apple", :ID 1}
+;;  ...)
 </code></pre>
-
-<p>The default naming strategy is <code>{ :entity identity :keyword clojure.string/lower-case }</code>. clojure.java.jdbc provides its own version of <em>resultset-seq</em> that respects the current naming strategy (for entity names mapped to keywords). You cannot specify a naming strategy that produces strings instead of keywords (but you could use a keyword naming strategy of <em>identity</em> to preserve case and spelling).</p>
-
-<h2>Convenience Functions</h2>
-
-<p>In addition to <em>as-quoted-identifier</em>, <em>as-named-identifier</em> and <em>as-named-keyword</em> described above, clojure.java.jdbc exposes <em>as-identifier</em> which maps strings/keywords to entity names under the current naming strategy and <em>as-keyword</em> which maps strings/keywords to keywords under the current naming strategy.</p>
-
-<p>The core of the quoting strategy is also exposed as <em>as-quoted-str</em> (shown in the <code>quote-dash</code> example above).</p>
 </body></html></div>
               </div>
             </div>
