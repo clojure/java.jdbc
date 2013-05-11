@@ -8,7 +8,7 @@ Formerly known as clojure.contrib.sql.
 Releases and Dependency Information
 ========================================
 
-Latest stable release: 0.3.0-alpha3
+Latest stable release: 0.3.0-alpha4
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22java.jdbc%22)
 
@@ -16,14 +16,14 @@ Latest stable release: 0.3.0-alpha3
 
 [Leiningen](https://github.com/technomancy/leiningen) dependency information:
 ```clojure
-[org.clojure/java.jdbc "0.3.0-alpha3"]
+[org.clojure/java.jdbc "0.3.0-alpha4"]
 ```
 [Maven](http://maven.apache.org/) dependency information:
 ```xml
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>java.jdbc</artifactId>
-  <version>0.3.0-alpha3</version>
+  <version>0.3.0-alpha4</version>
 </dependency>
 ```
 You will also need to add dependencies for the JDBC driver you intend to use. Here are examples of the drivers currently used for testing,
@@ -103,6 +103,11 @@ Developer Information
 
 Change Log
 ====================
+
+* Release 0.3.0-alpha4 on 2013-05-11
+  * Fix connection leaks [JDBC-54](http://dev.clojure.org/jira/browser/JDBC-54)
+  * Allow order-by to accept empty sequence (and return empty string)
+
 
 * Release 0.3.0-alpha3 on 2013-05-04
   * Fix macro / import interaction by fully qualifying Connection type.
