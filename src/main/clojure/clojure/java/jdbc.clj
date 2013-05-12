@@ -860,6 +860,18 @@ made at some future date." }
   [name & specs]
   (do-commands (apply create-table-ddl name specs)))
 
+(defn db-create-table
+  "Creates a table on the specified database connection given a table
+  name and specs. Each spec is either a column spec: a vector
+  containing a column name and optionally a type and other
+  constraints, or a table-level constraint: a vector containing words
+  that express the constraint. An optional suffix to the CREATE TABLE
+  DDL describing table attributes may by provided as :table-spec
+  {table-attributes-string}. All words used to describe the table may
+  be supplied as strings or keywords."
+  [db name & specs]
+  (db-do-commands db true (apply create-table-ddl name specs)))
+
 (defn drop-table
   "Drops a table on the open database connection given its name, a string
   or keyword"
