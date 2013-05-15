@@ -613,7 +613,7 @@ made at some future date." }
                           options-are-first (rest (rest sql-params))
                           :else (rest sql-params)))
         prepare-args (when (map? special) (flatten (seq special)))
-        run-query-with-params (fn [stmt]
+        run-query-with-params (fn [^PreparedStatement stmt]
                                 (set-parameters stmt params)
                                 (with-open [rset (.executeQuery stmt)]
                                   (func (result-set-seq rset
