@@ -625,7 +625,7 @@ made at some future date." }
       (if-let [^java.sql.Connection con (db-find-connection db)]
         (with-open [^PreparedStatement stmt (apply prepare-statement con sql prepare-args)]
           (run-query-with-params stmt))
-        (with-open [^java.sql.Connection con (get-connection db)]
+        (with-open [^java.sql.Connection con (get-connection {:connection db})]
           (with-open [^PreparedStatement stmt (apply prepare-statement con sql prepare-args)]
             (run-query-with-params stmt)))))))
 
