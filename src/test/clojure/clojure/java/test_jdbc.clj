@@ -588,7 +588,7 @@
 (deftest test-resultset-read-column
   (extend-protocol sql/IResultSetReadColumn
     String
-    (result-set-read-column [s] ::FOO))
+    (result-set-read-column [s _ _] ::FOO))
 
   (doseq [db (test-specs)]
     (sql/with-connection db
@@ -607,4 +607,4 @@
   ;; somewhat "undo" the first extension
   (extend-protocol sql/IResultSetReadColumn
     String
-    (result-set-read-column [s] s)))
+    (result-set-read-column [s _ _] s)))
