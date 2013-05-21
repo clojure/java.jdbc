@@ -1,3 +1,7 @@
+Changes coming in 0.3.0-alpha5
+
+* Improve hooks for Oracle data type handling [JDBC-57](http://dev.clojure.org/jira/browser/JDBC-57)
+
 Changes in 0.3.0-alpha4
 
 * Fix connection leaks [JDBC-54](http://dev.clojure.org/jira/browser/JDBC-54)
