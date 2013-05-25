@@ -88,7 +88,7 @@ Developer Information
 
 * To test against PostgreSQL, first create the user and database:
 
-        $ sudo -u postgres createuser clojure_test -P # password: clojure_test
+        $ sudo -u postgres createuser clojure_test -P clojure_test
         $ sudo -u postgres createdb clojure_test -O clojure_test
 
 * Or similarly with MySQL:
