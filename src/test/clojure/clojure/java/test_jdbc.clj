@@ -128,18 +128,52 @@
     (re-find #"mysql:" db)
     (= "mysql" (:subprotocol db))))
 
-(defn- create-test-table
+(defn- postgres? [db]
+  (if (string? db)
+    (re-find #"postgres" db)
+    (= "postgresql" (:subprotocol db))))
+
+(defmulti create-test-table
   "Create a standard test table. Must be inside with-connection.
    For MySQL, ensure table uses an engine that supports transactions!"
+  (fn [table db]
+    (cond
+     (mysql? db) :mysql
+     (postgres? db) :postgres
+     :else :default)))
+
+(defmethod create-test-table :mysql
   [table db]
   (sql/create-table
    table
-   [:id :int (if (mysql? db) "PRIMARY KEY AUTO_INCREMENT" "DEFAULT 0")]
-   [:name "VARCHAR(32)" (if (mysql? db) "" "PRIMARY KEY")]
+   [:id :int "PRIMARY KEY AUTO_INCREMENT"]
+   [:name "VARCHAR(32)"]
    [:appearance "VARCHAR(32)"]
    [:cost :int]
    [:grade :real]
-   :table-spec (if (mysql? db) "ENGINE=InnoDB" "")))
+   :table-spec "ENGINE=InnoDB"))
+
+(defmethod create-test-table :postgres
+  [table db]
+  (sql/create-table
+   table
+   [:id :serial "PRIMARY KEY"]
+   [:name "VARCHAR(32)"]
+   [:appearance "VARCHAR(32)"]
+   [:cost :int]
+   [:grade :real]
+   :table-spec ""))
+
+(defmethod create-test-table :default
+  [table db]
+  (sql/create-table
+   table
+   [:id :int "DEFAULT 0"]
+   [:name "VARCHAR(32)" "PRIMARY KEY"]
+   [:appearance "VARCHAR(32)"]
+   [:cost :int]
+   [:grade :real]
+   :table-spec ""))
 
 (deftest test-create-table
   (doseq [db (test-specs)]
