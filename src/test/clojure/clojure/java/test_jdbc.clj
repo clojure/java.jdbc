@@ -445,20 +445,25 @@
   (doseq [db (test-specs)]
     (sql/with-connection db
       (create-test-table :fruit db))
-    (is (= [(returned-key db 1)] (sql/insert! db :fruit {:name "Apple"})))))
+    (let [new-keys (sql/insert! db :fruit {:name "Apple"})
+          new-keys (if (postgres? db) (map :id new-keys) new-keys)]
+      (is (= [(returned-key db 1)] new-keys)))))
 
 (deftest insert-query
   (doseq [db (test-specs)]
     (sql/with-connection db
       (create-test-table :fruit db))
-    (is (= [(returned-key db 1)] (sql/insert! db :fruit {:name "Apple"})))
-    (is (= [{:id (generated-key db 1) :name "Apple" :appearance nil :grade nil :cost nil}] (sql/query db (dsl/select * :fruit))))))
+    (let [new-keys (sql/insert! db :fruit {:name "Apple"})
+          new-keys (if (postgres? db) (map :id new-keys) new-keys)]
+      (is (= [(returned-key db 1)] new-keys))
+      (is (= [{:id (generated-key db 1) :name "Apple" :appearance nil :grade nil :cost nil}] (sql/query db (dsl/select * :fruit)))))))
 
 (deftest insert-two-by-map-and-query
   (doseq [db (test-specs)]
     (sql/with-connection db
       (create-test-table :fruit db))
     (let [new-keys (sql/insert! db :fruit {:name "Apple"} {:name "Pear"})
+          new-keys (if (postgres? db) (map :id new-keys) new-keys)
           rows (sql/query db (dsl/select * :fruit (dsl/order-by :name)))]
       (is (= [(returned-key db 1) (returned-key db 2)] new-keys))
       (is (= [{:id (generated-key db 1) :name "Apple" :appearance nil :grade nil :cost nil}
@@ -469,6 +474,7 @@
     (sql/with-connection db
       (create-test-table :fruit db))
     (let [new-keys (sql/insert! db :fruit {:name "Apple"} {:name "Pear"})
+          new-keys (if (postgres? db) (map :id new-keys) new-keys)
           rows (sql/query db (dsl/select * :fruit (dsl/order-by :name))
                           :as-arrays? true)]
       (is (= [(returned-key db 1) (returned-key db 2)] new-keys))
@@ -490,11 +496,12 @@
   (doseq [db (test-specs)]
     (sql/with-connection db
       (create-test-table :fruit db))
-    (let [new-key (sql/insert! db :fruit {:name "Apple"})
+    (let [new-keys (sql/insert! db :fruit {:name "Apple"})
+          new-keys (if (postgres? db) (map :id new-keys) new-keys)
           update-result (sql/update! db :fruit {:cost 12 :grade 1.2 :appearance "Green"}
                                      (dsl/where {:id (generated-key db 1)}))
           rows (sql/query db (dsl/select * :fruit))]
-      (is (= [(returned-key db 1)] new-key))
+      (is (= [(returned-key db 1)] new-keys))
       (is (= [1] update-result))
       (is (= [{:id (generated-key db 1)
                :name "Apple" :appearance "Green"
@@ -505,11 +512,12 @@
   (doseq [db (test-specs)]
     (sql/with-connection db
       (create-test-table :fruit db))
-    (let [new-key (sql/insert! db :fruit {:name "Apple"})
+    (let [new-keys (sql/insert! db :fruit {:name "Apple"})
+          new-keys (if (postgres? db) (map :id new-keys) new-keys)
           delete-result (sql/delete! db :fruit
                                      (dsl/where {:id (generated-key db 1)}))
           rows (sql/query db (dsl/select * :fruit))]
-      (is (= [(returned-key db 1)] new-key))
+      (is (= [(returned-key db 1)] new-keys))
       (is (= [1] delete-result))
       (is (= [] rows)))))
 
