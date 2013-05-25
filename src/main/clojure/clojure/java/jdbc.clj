@@ -934,12 +934,14 @@ made at some future date." }
   [table where-params record]
   (apply update! *db* table record where-params [:entities *as-str*]))
 
-(defn update-or-insert-values
-  "Updates values on selected rows in a table, or inserts a new row when no
-  existing row matches the selection criteria. where-params is a vector
-  containing a string providing the (optionally parameterized) selection
-  criteria followed by values for any parameters. record is a map from
-  strings or keywords (identifying columns) to updated values."
+(defn
+  ^{:doc "Updates values on selected rows in a table, or inserts a new row when no
+          existing row matches the selection criteria. where-params is a vector
+          containing a string providing the (optionally parameterized) selection
+          criteria followed by values for any parameters. record is a map from
+          strings or keywords (identifying columns) to updated values."
+    :deprecated "0.3.0"}
+  update-or-insert-values
   [table where-params record]
   (transaction
    (let [result (update-values table where-params record)]
