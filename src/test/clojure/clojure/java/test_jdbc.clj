@@ -432,6 +432,7 @@
     "derby" (Float. v)
     "jtds:sqlserver" (Float. v)
     "sqlserver" (Float. v)
+    "postgresql" (Float. v)
     v))
 
 (deftest empty-query
