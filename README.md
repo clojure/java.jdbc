@@ -88,7 +88,7 @@ Developer Information
 
 * To test against PostgreSQL, first create the user and database:
 
-        $ sudo -u postgres createuser clojure_test -P # password: clojure_test
+        $ sudo -u postgres createuser clojure_test -P clojure_test
         $ sudo -u postgres createdb clojure_test -O clojure_test
 
 * Or similarly with MySQL:
@@ -107,7 +107,6 @@ Change Log
 * Release 0.3.0-alpha4 on 2013-05-11
   * Fix connection leaks [JDBC-54](http://dev.clojure.org/jira/browser/JDBC-54)
   * Allow order-by to accept empty sequence (and return empty string)
-
 
 * Release 0.3.0-alpha3 on 2013-05-04
   * Fix macro / import interaction by fully qualifying Connection type.
