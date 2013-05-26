@@ -1,5 +1,7 @@
 Changes coming in 0.3.0-alpha5
 
+* Update README to clarify PostgreSQL instructions.
+* Fix test suite for PostgreSQL [JDBC-59](http://dev.clojure.org/jira/browser/JDBC-59)
 * Improve hooks for Oracle data type handling [JDBC-57](http://dev.clojure.org/jira/browser/JDBC-57)
 * Fix reflection warnings [JDBC-55](http://dev.clojure.org/jira/browser/JDBC-55)
 
