@@ -99,6 +99,16 @@ To execute code against each row in a result set, use *query* with SQL.
       [db]
       (db-grade-range db 90 100))
 
+    (defn db-group-by-alias
+      "Transform the rows to group the result per alias. SQL alias like 'f_name' is split info :f alias and :name column alias
+      Result: [{:bike {:name \"abc\" :price 22} :category {:name \"Mountain\"}}]"
+      [db]
+      (j/query db ["select b.name as bike_name, b.price as bike_price, c.name :as category_name from bike b join category c on b.cat_id = c.id"]
+                        :row-fn sql/group-by-alias))
+
+
+
+
 ## Updating values across a table
 To update column values based on a SQL predicate, use *update!* with a SQL where clause and a map of columns to new values. The result is a sequence of update counts, indicating the number of records affected by each update (in this case, a single update and therefore a single count in the sequence).
 
