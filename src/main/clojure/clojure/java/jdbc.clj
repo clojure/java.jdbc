@@ -285,10 +285,11 @@ made at some future date." }
       (cons (vec keys) (rows))
       (records))))
 
-(defn resultset-seq
+(defn
   ^{:doc "A deprecated version of result-set-seq that uses the
           dynamic *as-key* variable."
     :deprecated "0.3.0"}
+  resultset-seq
   [^ResultSet rs & {:keys [identifiers]
                     :or {identifiers *as-key*}}]
   (result-set-seq rs :identifiers identifiers))
@@ -752,7 +753,7 @@ made at some future date." }
   [db-spec & body]
   `(with-connection* ~db-spec (fn [] ~@body)))
 
-(defn transaction*
+(defn
   ^{:doc "Evaluates func as a transaction on the open database connection. Any
           nested transactions are absorbed into the outermost transaction. By
           default, all database updates are committed together as a group after
@@ -761,6 +762,7 @@ made at some future date." }
           the entire transaction will be rolled back rather than committed when
           complete."
     :deprecated "0.3.0"}
+  transaction*
   [func]
   (binding [*db* (update-in *db* [:level] inc)]
     (if (= (:level *db*) 1)
@@ -881,11 +883,12 @@ made at some future date." }
   [table column-names & value-groups]
   (apply insert! *db* table column-names (concat value-groups [:entities *as-str*])))
 
-(defn insert-rows
+(defn
   ^{:doc "Inserts complete rows into a table. Each row is a vector of values for
           each of the table's columns in order.
           If a single row is inserted, returns a map of the generated keys."
     :deprecated "0.3.0"}
+  insert-rows
   [table & rows]
   (apply insert! *db* table nil (concat rows [:entities *as-str*])))
 
@@ -989,25 +992,27 @@ made at some future date." }
   [results sql-params & body]
   `(with-query-results* ~sql-params (fn [~results] ~@body)))
 
-(defn as-key
+(defn
   ^{:doc "Given a naming strategy and a string, return the string as a
           keyword per that naming strategy. Given (a naming strategy and)
           a keyword, return it as-is."
     :deprecated "0.3.0"}
+  as-key
   [f x]
   (if (instance? clojure.lang.Named x)
     x
     (keyword (f (str x)))))
 
-(defn as-keyword
+(defn
   ^{:doc "Given an entity name (string), convert it to a keyword using the
           current naming strategy.
           Given a keyword, return it as-is."
     :deprecated "0.3.0"}
+  as-keyword
   ([x] (as-keyword x *as-key*))
   ([x f-keyword] (as-key f-keyword x)))
 
-(defn as-named-keyword
+(defn
   ^{:doc "Given a naming strategy and a string, return the string as a keyword using
           the keyword naming strategy.
           Given a naming strategy and a keyword, return the keyword as-is.
@@ -1017,10 +1022,11 @@ made at some future date." }
           Note that providing a single function will cause the default keyword naming
           strategy to be used!"
     :deprecated "0.3.0"}
+  as-named-keyword
   [naming-strategy x]
   (as-keyword x (if (and (map? naming-strategy) (:keyword naming-strategy)) (:keyword naming-strategy) str/lower-case)))
 
-(defn as-str
+(defn
   ^{:doc "Given a naming strategy and a keyword, return the keyword as a
           string per that naming strategy. Given (a naming strategy and)
           a string, return it as-is.
@@ -1029,27 +1035,30 @@ made at some future date." }
           joined back together so :x.y might become `x`.`y` if the naming
           strategy quotes identifiers with `."
     :deprecated "0.3.0"}
+  as-str
   [f x]
   (sql/as-str f x))
 
-(defn as-identifier
+(defn
   ^{:doc "Given a keyword, convert it to a string using the current naming
           strategy.
           Given a string, return it as-is."
     :deprecated "0.3.0"}
+  as-identifier
   ([x] (as-identifier x *as-str*))
   ([x f-entity] (as-str f-entity x)))
 
-(defn as-quoted-str
+(defn
   ^{:doc "Given a quoting pattern - either a single character or a vector pair of
           characters - and a string, return the quoted string:
             (as-quoted-str X foo) will return XfooX
             (as-quoted-str [A B] foo) will return AfooB"
     :deprecated "0.3.0"}
+  as-quoted-str
   [q x]
   (sql/as-quoted-str q x))
 
-(defn as-named-identifier
+(defn
   ^{:doc "Given a naming strategy and a keyword, return the keyword as a string using
           the entity naming strategy.
           Given a naming strategy and a string, return the string as-is.
@@ -1057,10 +1066,11 @@ made at some future date." }
           or a map containing :entity and/or :keyword keys which provide the entity
           naming strategy and/or keyword naming strategy respectively."
     :deprecated "0.3.0"}
+  as-named-identifier
   [naming-strategy x]
   (as-identifier x (if (map? naming-strategy) (or (:entity naming-strategy) identity) naming-strategy)))
 
-(defn as-quoted-identifier
+(defn
   ^{:doc "Given a quote pattern - either a single character or a pair of characters in
           a vector - and a keyword, return the keyword as a string using a simple
           quoting naming strategy.
@@ -1068,16 +1078,18 @@ made at some future date." }
             (as-quoted-identifier X :name) will return XnameX as a string.
             (as-quoted-identifier [A B] :name) will return AnameB as a string."
     :deprecated "0.3.0"}
+  as-quoted-identifier
   [q x]
   (as-identifier x (sql/as-quoted-str q)))
 
-(defmacro with-quoted-identifiers
+(defmacro
   ^{:doc "Evaluates body in the context of a simple quoting naming strategy."
     :deprecated "0.3.0"}
+  with-quoted-identifiers
   [q & body ]
   `(binding [*as-str* (sql/as-quoted-str ~q)] ~@body))
 
-(defmacro with-naming-strategy
+(defmacro
   ^{:doc "Evaluates body in the context of a naming strategy.
           The naming strategy is either a function - the entity naming strategy - or
           a map containing :entity and/or :keyword keys which provide the entity naming
@@ -1085,6 +1097,7 @@ made at some future date." }
           naming strategy is identity; the default keyword naming strategy is
           lower-case."
     :deprecated "0.3.0"}
+  with-naming-strategy
   [naming-strategy & body ]
   `(binding [*as-str* (if (map? ~naming-strategy) (or (:entity ~naming-strategy) identity) ~naming-strategy)
              *as-key* (if (map? ~naming-strategy) (or (:keyword ~naming-strategy) str/lower-case))] ~@body))
