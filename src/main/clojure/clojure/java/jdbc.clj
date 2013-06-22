@@ -491,82 +491,89 @@ made at some future date." }
 
 (defn db-do-commands
   "Executes SQL commands on the specified database connection. Wraps the commands
-  in a transaction if transaction? is true."
+  in a transaction if transaction? is true. transaction? can be ommitted and it
+  defaults to true."
   [db transaction? & commands]
-  (if-let [^java.sql.Connection con (db-find-connection db)]
-    (with-open [^Statement stmt (.createStatement con)]
-      (doseq [^String cmd commands]
-        (.addBatch stmt cmd))
-      (if transaction?
-        (db-transaction [t-db (add-connection db (.getConnection stmt))]
-                        (execute-batch stmt))
-        (try
-          (execute-batch stmt)
-          (catch Exception e
-            (throw-non-rte e)))))
-    (with-open [^java.sql.Connection con (get-connection db)]
-      (apply db-do-commands (add-connection db con) transaction? commands))))
+  (if (string? transaction?)
+    (apply db-do-commands db true transaction? commands)
+    (if-let [^java.sql.Connection con (db-find-connection db)]
+      (with-open [^Statement stmt (.createStatement con)]
+        (doseq [^String cmd commands]
+          (.addBatch stmt cmd))
+        (if transaction?
+          (db-transaction [t-db (add-connection db (.getConnection stmt))]
+                          (execute-batch stmt))
+          (try
+            (execute-batch stmt)
+            (catch Exception e
+              (throw-non-rte e)))))
+      (with-open [^java.sql.Connection con (get-connection db)]
+        (apply db-do-commands (add-connection db con) transaction? commands)))))
 
 (defn db-do-prepared-return-keys
   "Executes an (optionally parameterized) SQL prepared statement on the
   open database connection. The param-group is a seq of values for all of
-  the parameters.
+  the parameters. transaction? can be ommitted and will default to true.
   Return the generated keys for the (single) update/insert."
-  [db transaction? sql param-group]
-  (if-let [^java.sql.Connection con (db-find-connection db)]
-    (with-open [^PreparedStatement stmt (prepare-statement con sql :return-keys true)]
-      (set-parameters stmt param-group)
-      (letfn [(exec-and-return-keys []
-                (let [counts (.executeUpdate stmt)]
-                  (try
-                    (let [rs (.getGeneratedKeys stmt)
-                          result (first (result-set-seq rs))]
-                      ;; sqlite (and maybe others?) requires
-                      ;; record set to be closed
-                      (.close rs)
-                      result)
-                    (catch Exception _
-                      ;; assume generated keys is unsupported and return counts instead: 
-                      counts))))]
-        (if transaction?
-          (db-transaction [t-db (add-connection db (.getConnection stmt))]
-                          (exec-and-return-keys))
-          (try
-            (exec-and-return-keys)
-            (catch Exception e
-              (throw-non-rte e))))))
-    (with-open [^java.sql.Connection con (get-connection db)]
-      (db-do-prepared-return-keys (add-connection db con) transaction? sql param-group))))
+  ([db sql param-group]
+     (db-do-prepared-return-keys db true sql param-group))
+  ([db transaction? sql param-group]
+     (if-let [^java.sql.Connection con (db-find-connection db)]
+       (with-open [^PreparedStatement stmt (prepare-statement con sql :return-keys true)]
+         (set-parameters stmt param-group)
+         (letfn [(exec-and-return-keys []
+                   (let [counts (.executeUpdate stmt)]
+                     (try
+                       (let [rs (.getGeneratedKeys stmt)
+                             result (first (result-set-seq rs))]
+                         ;; sqlite (and maybe others?) requires
+                         ;; record set to be closed
+                         (.close rs)
+                         result)
+                       (catch Exception _
+                         ;; assume generated keys is unsupported and return counts instead: 
+                         counts))))]
+           (if transaction?
+             (db-transaction [t-db (add-connection db (.getConnection stmt))]
+                             (exec-and-return-keys))
+             (try
+               (exec-and-return-keys)
+               (catch Exception e
+                 (throw-non-rte e))))))
+       (with-open [^java.sql.Connection con (get-connection db)]
+         (db-do-prepared-return-keys (add-connection db con) transaction? sql param-group)))))
 
 (defn db-do-prepared
   "Executes an (optionally parameterized) SQL prepared statement on the
   open database connection. Each param-group is a seq of values for all of
-  the parameters.
+  the parameters. transaction? can be omitted and defaults to true.
   Return a seq of update counts (one count for each param-group)."
-  [db transaction? sql & param-groups]
-  (if-let [^java.sql.Connection con (db-find-connection db)]
-    (with-open [^PreparedStatement stmt (prepare-statement con sql)]
-      (if (empty? param-groups)
-        (if transaction?
-          (db-transaction [t-db (add-connection db (.getConnection stmt))]
-                          (vector (.executeUpdate stmt)))
-          (try
-            (vector (.executeUpdate stmt))
-            (catch Exception e
-              (throw-non-rte e))))
-        (do
-          (doseq [param-group param-groups]
-            (set-parameters stmt param-group)
-            (.addBatch stmt))
+  [db transaction? & [sql & param-groups :as opts]]
+  (if (string? transaction?)
+    (apply db-do-prepared db true transaction? opts)
+    (if-let [^java.sql.Connection con (db-find-connection db)]
+      (with-open [^PreparedStatement stmt (prepare-statement con sql)]
+        (if (empty? param-groups)
           (if transaction?
             (db-transaction [t-db (add-connection db (.getConnection stmt))]
-                            (execute-batch stmt))
+                            (vector (.executeUpdate stmt)))
             (try
-              (execute-batch stmt)
+              (vector (.executeUpdate stmt))
               (catch Exception e
-                (throw-non-rte e)))))))
-    (with-open [^java.sql.Connection con (get-connection db)]
-      (apply db-do-prepared (add-connection db con) transaction? sql param-groups))))
+                (throw-non-rte e))))
+          (do
+            (doseq [param-group param-groups]
+              (set-parameters stmt param-group)
+              (.addBatch stmt))
+            (if transaction?
+              (db-transaction [t-db (add-connection db (.getConnection stmt))]
+                              (execute-batch stmt))
+              (try
+                (execute-batch stmt)
+                (catch Exception e
+                  (throw-non-rte e)))))))
+      (with-open [^java.sql.Connection con (get-connection db)]
+        (apply db-do-prepared (add-connection db con) transaction? sql param-groups)))))
 
 (defn- db-with-query-results*
   "Executes a query, then evaluates func passing in a seq of the results as
@@ -821,7 +828,7 @@ made at some future date." }
     :deprecated "0.3.0"}
   do-commands
   [& commands]
-  (apply db-do-commands *db* true commands))
+  (apply db-do-commands *db* commands))
 
 (defn
   ^{:doc "Executes an (optionally parameterized) SQL prepared statement on the
@@ -869,7 +876,7 @@ made at some future date." }
     :deprecated "0.3.0"}
   do-prepared-return-keys
   [sql param-group]
-  (db-do-prepared-return-keys *db* true sql param-group))
+  (db-do-prepared-return-keys *db* sql param-group))
 
 (defn
   ^{:doc "Inserts rows into a table with values for specified columns only.
