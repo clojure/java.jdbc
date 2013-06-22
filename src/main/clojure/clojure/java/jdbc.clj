@@ -51,6 +51,7 @@ made at some future date." }
            [javax.sql DataSource])
   (:refer-clojure :exclude [resultset-seq])
   (:require [clojure.string :as str]
+            [clojure.java.jdbc.ddl :as ddl]
             [clojure.java.jdbc.sql :as sql]))
 
 ;; technically deprecated but still used as defaults in a couple of
@@ -364,25 +365,6 @@ made at some future date." }
   (dorun (map-indexed (fn [ix value]
                         (.setObject stmt (inc ix) value))
                       params)))
-
-(defn create-table-ddl
-  "Given a table name and column specs with an optional table-spec
-   return the DDL string for creating a table based on that."
-  [name & specs]
-  (let [split-specs (partition-by #(= :table-spec %) specs)
-        col-specs (first split-specs)
-        table-spec (first (second (rest split-specs)))
-        table-spec-str (or (and table-spec (str " " table-spec)) "")
-        specs-to-string (fn [specs]
-                          (apply str
-                                 (map (sql/as-str identity)
-                                      (apply concat
-                                             (interpose [", "]
-                                                        (map (partial interpose " ") specs))))))]
-    (format "CREATE TABLE %s (%s)%s"
-            (sql/as-str identity name)
-            (specs-to-string col-specs)
-            table-spec-str)))
 
 (defn print-sql-exception
   "Prints the contents of an SQLException to *out*"
@@ -847,25 +829,35 @@ made at some future date." }
     :deprecated "0.3.0"}
   do-prepared
   [sql & param-groups]
-  (apply db-do-prepared *db* true sql param-groups))
+  (apply db-do-prepared *db* sql param-groups))
 
-(defn create-table
-  "Creates a table on the open database connection given a table name and
-  specs. Each spec is either a column spec: a vector containing a column
-  name and optionally a type and other constraints, or a table-level
-  constraint: a vector containing words that express the constraint. An
-  optional suffix to the CREATE TABLE DDL describing table attributes may
-  by provided as :table-spec {table-attributes-string}. All words used to
-  describe the table may be supplied as strings or keywords."
+(defn ^{:doc "See clojure.java.jdbc.ddl/create-table for details.
+              This version is deprecated in favor of the version in the DDL namespace."
+        :deprecated "0.3.0"}
+  create-table-ddl
   [name & specs]
-  (do-commands (apply create-table-ddl name specs)))
+  (apply ddl/create-table name specs))
 
-(defn drop-table
-  "Drops a table on the open database connection given its name, a string
-  or keyword"
+(defn
+  ^{:doc "Creates a table on the open database connection given a table name and
+          specs. Each spec is either a column spec: a vector containing a column
+          name and optionally a type and other constraints, or a table-level
+          constraint: a vector containing words that express the constraint. An
+          optional suffix to the CREATE TABLE DDL describing table attributes may
+          by provided as :table-spec {table-attributes-string}. All words used to
+          describe the table may be supplied as strings or keywords."
+    :deprecated "0.3.0"}
+  create-table
+  [name & specs]
+  (db-do-commands *db* (apply ddl/create-table name specs)))
+
+(defn
+  ^{:doc "Drops a table on the open database connection given its name, a string
+          or keyword"
+    :deprecated "0.3.0"}
+  drop-table
   [name]
-  (do-commands
-   (format "DROP TABLE %s" (sql/as-str identity name))))
+  (db-do-commands *db* (ddl/drop-table name)))
 
 (defn
   ^{:doc "Executes an (optionally parameterized) SQL prepared statement on the
