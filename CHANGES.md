@@ -1,5 +1,11 @@
 Changes coming in 0.3.0-alpha5
 
+* Make transaction? boolean optional in various db-do-* functions
+  * It will ultimately change to a function argument I think when [JDBC-37](http://dev.clojure.org/jira/browser/JDBC-37) is dealt with
+* Create clojure.java.jdbc.ddl namespace
+  * Add create-table and drop-table
+  * Deprecate create-table, create-table-ddl and drop-table in main namespace
+  * More DDL is coming soon
 * Update README to clarify PostgreSQL instructions.
 * Fix test suite for PostgreSQL [JDBC-59](http://dev.clojure.org/jira/browser/JDBC-59)
 * Improve hooks for Oracle data type handling [JDBC-57](http://dev.clojure.org/jira/browser/JDBC-57)
