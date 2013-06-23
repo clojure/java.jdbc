@@ -1,7 +1,10 @@
 clojure.java.jdbc
 ========================================
 
-A Clojure wrapper for JDBC-based access to databases.
+A low-level Clojure wrapper for JDBC-based access to databases. A minimal DSL is provided to generate basic SQL (in clojure.java.jdbc.sql) and basic DDL (in clojure.java.jdbc.ddl). For a more sophisticated DSL that is compatible with this library, consider:
+
+* [HoneySQL](https://github.com/jkk/honeysql)
+* [Korma](http://sqlkorma.com)
 
 Formerly known as clojure.contrib.sql.
 
