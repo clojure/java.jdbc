@@ -1,3 +1,5 @@
+*Note: this documentation will soon move to [clojure-doc.org](http://clojure-doc.org) where it can be more easily maintained and accept community contributions.*
+
 # Connection Pooling
 clojure.java.jdbc does not provide connection pooling directly but it is relatively easy to add to your project. The following example shows how to configure connection pooling use c3p0.
 ## Add the c3p0 dependency

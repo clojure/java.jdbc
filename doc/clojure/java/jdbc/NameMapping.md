@@ -1,3 +1,5 @@
+*Note: this documentation will soon move to [clojure-doc.org](http://clojure-doc.org) where it can be more easily maintained and accept community contributions.*
+
 # Mapping Keywords to/from Entity Names
 Entity names in SQL may be specified as strings or as keywords. It's convenient to represent records as Clojure maps with keywords for the keys but this means that a mapping is required when moving from Clojure to SQL and back again. Historically, clojure.contrib.sql simply called (name) on keywords passed in and used clojure.core/resultset-seq to convert Java ResultSet objects back to Clojure maps, which had the side-effect of lowercasing all entity names as they became keywords. Whilst that is still the default behavior of clojure.java.jdbc, it is now possible to override this behavior in a couple of ways.
 ## Quoted Entities

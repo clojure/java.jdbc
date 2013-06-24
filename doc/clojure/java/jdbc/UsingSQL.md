@@ -1,3 +1,5 @@
+*Note: this documentation will soon move to [clojure-doc.org](http://clojure-doc.org) where it can be more easily maintained and accept community contributions.*
+
 # Manipulating Data with SQL
 Here are some examples of using clojure.java.jdbc to manipulate data with SQL.
 These examples assume a simple table called fruit (see [Manipulating Tables with DDL](https://github.com/clojure/java.jdbc/blob/master/doc/clojure/java/jdbc/UsingDDL.md)).
