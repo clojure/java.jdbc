@@ -8,7 +8,7 @@
    :doc
    "A Clojure interface to SQL databases via JDBC\n\nclojure.java.jdbc provides a simple abstraction for CRUD (create, read,\nupdate, delete) operations on a SQL database, along with basic transaction\nsupport. Basic DDL operations are also supported (create table, drop table,\naccess to table metadata).\n\nMaps are used to represent records, making it easy to store and retrieve\ndata. Results can be processed using any standard sequence operations.\n\nFor most operations, Java's PreparedStatement is used so your SQL and\nparameters can be represented as simple vectors where the first element\nis the SQL string, with ? for each parameter, and the remaining elements\nare the parameter values to be substituted. In general, operations return\nthe number of rows affected, except for a single record insert where any\ngenerated keys are returned (as a map).\n\nAs of release 0.3.0, the API has undergone a major overhaul and most of the\noriginal API has been deprecated in favor of a more idiomatic API, and a\nminimal DSL for generating SQL has been added as an option. The original\nAPI is still supported but will be deprecated before a 1.0.0 release is\nmade at some future date."}
   {:source-url
-   "https://github.com/clojure/java.jdbc/blob/9edf85327bd2e76d0f75125b50f3cc53776c45e3/src/main/clojure/clojure/java/jdbc/ddl.clj",
+   "https://github.com/clojure/java.jdbc/blob/45f3d990040a5b8e6ec8bd322fe8c04cab4bd933/src/main/clojure/clojure/java/jdbc/ddl.clj",
    :wiki-url
    "http://clojure.github.com/java.jdbc/clojure.java.jdbc.ddl-api.html",
    :name "clojure.java.jdbc.ddl",
@@ -902,13 +902,27 @@
    :doc
    "Function for transforming values after reading them\nfrom the database",
    :name "result-set-read-column"}
+  {:arglists ([index-name table-name cols & is-unique]),
+   :name "create-index",
+   :namespace "clojure.java.jdbc.ddl",
+   :source-url
+   "https://github.com/clojure/java.jdbc/blob/45f3d990040a5b8e6ec8bd322fe8c04cab4bd933/src/main/clojure/clojure/java/jdbc/ddl.clj#L52",
+   :raw-source-url
+   "https://github.com/clojure/java.jdbc/raw/45f3d990040a5b8e6ec8bd322fe8c04cab4bd933/src/main/clojure/clojure/java/jdbc/ddl.clj",
+   :wiki-url
+   "http://clojure.github.com/java.jdbc//clojure.java.jdbc-api.html#clojure.java.jdbc.ddl/create-index",
+   :doc
+   "Given an index name, table name, vector of column names, and\n(optional) is-unique, return the DDL string for creating an index.\n\n Examples:\n (create-index :indexname :tablename [:field1 :field2] :unique)\n \"CREATE UNIQUE INDEX indexname ON tablename (field1, field2)\"\n\n (create-index :indexname :tablename [:field1 :field2])\n \"CREATE INDEX indexname ON tablename (field1, field2)\"",
+   :var-type "function",
+   :line 52,
+   :file "src/main/clojure/clojure/java/jdbc/ddl.clj"}
   {:arglists ([name & specs]),
    :name "create-table",
    :namespace "clojure.java.jdbc.ddl",
    :source-url
-   "https://github.com/clojure/java.jdbc/blob/9edf85327bd2e76d0f75125b50f3cc53776c45e3/src/main/clojure/clojure/java/jdbc/ddl.clj#L28",
+   "https://github.com/clojure/java.jdbc/blob/45f3d990040a5b8e6ec8bd322fe8c04cab4bd933/src/main/clojure/clojure/java/jdbc/ddl.clj#L28",
    :raw-source-url
-   "https://github.com/clojure/java.jdbc/raw/9edf85327bd2e76d0f75125b50f3cc53776c45e3/src/main/clojure/clojure/java/jdbc/ddl.clj",
+   "https://github.com/clojure/java.jdbc/raw/45f3d990040a5b8e6ec8bd322fe8c04cab4bd933/src/main/clojure/clojure/java/jdbc/ddl.clj",
    :wiki-url
    "http://clojure.github.com/java.jdbc//clojure.java.jdbc-api.html#clojure.java.jdbc.ddl/create-table",
    :doc
@@ -917,12 +931,26 @@
    :line 28,
    :file "src/main/clojure/clojure/java/jdbc/ddl.clj"}
   {:arglists ([name]),
+   :name "drop-index",
+   :namespace "clojure.java.jdbc.ddl",
+   :source-url
+   "https://github.com/clojure/java.jdbc/blob/45f3d990040a5b8e6ec8bd322fe8c04cab4bd933/src/main/clojure/clojure/java/jdbc/ddl.clj#L74",
+   :raw-source-url
+   "https://github.com/clojure/java.jdbc/raw/45f3d990040a5b8e6ec8bd322fe8c04cab4bd933/src/main/clojure/clojure/java/jdbc/ddl.clj",
+   :wiki-url
+   "http://clojure.github.com/java.jdbc//clojure.java.jdbc-api.html#clojure.java.jdbc.ddl/drop-index",
+   :doc
+   "Given an index name, return the DDL string for dropping that index.",
+   :var-type "function",
+   :line 74,
+   :file "src/main/clojure/clojure/java/jdbc/ddl.clj"}
+  {:arglists ([name]),
    :name "drop-table",
    :namespace "clojure.java.jdbc.ddl",
    :source-url
-   "https://github.com/clojure/java.jdbc/blob/9edf85327bd2e76d0f75125b50f3cc53776c45e3/src/main/clojure/clojure/java/jdbc/ddl.clj#L47",
+   "https://github.com/clojure/java.jdbc/blob/45f3d990040a5b8e6ec8bd322fe8c04cab4bd933/src/main/clojure/clojure/java/jdbc/ddl.clj#L47",
    :raw-source-url
-   "https://github.com/clojure/java.jdbc/raw/9edf85327bd2e76d0f75125b50f3cc53776c45e3/src/main/clojure/clojure/java/jdbc/ddl.clj",
+   "https://github.com/clojure/java.jdbc/raw/45f3d990040a5b8e6ec8bd322fe8c04cab4bd933/src/main/clojure/clojure/java/jdbc/ddl.clj",
    :wiki-url
    "http://clojure.github.com/java.jdbc//clojure.java.jdbc-api.html#clojure.java.jdbc.ddl/drop-table",
    :doc

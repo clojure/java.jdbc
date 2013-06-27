@@ -227,7 +227,13 @@ namespace.
   </div><div style="margin-left: 1em;" class="toc-section">
     <a href="#clojure.java.jdbc.ddl" style="margin-top: 3px;">clojure.java.jdbc.ddl</a>
     <div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.java.jdbc.ddl/create-index">create-index</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
       <a class="toc-entry-anchor" href="#clojure.java.jdbc.ddl/create-table">create-table</a>
+      
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a class="toc-entry-anchor" href="#clojure.java.jdbc.ddl/drop-index">drop-index</a>
       
     </div><div style="margin-left: 1em;" class="toc-entry">
       <a class="toc-entry-anchor" href="#clojure.java.jdbc.ddl/drop-table">drop-table</a>
@@ -1170,6 +1176,25 @@ not very sophisticated.</pre>
   <div id="var-entry">
     <br />
     <hr />
+    <h2 id="clojure.java.jdbc.ddl/create-index">create-index</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (create-index index-name table-name cols &amp; is-unique)
+</pre>
+    <pre id="var-docstr">Given an index name, table name, vector of column names, and
+(optional) is-unique, return the DDL string for creating an index.
+
+ Examples:
+ (create-index :indexname :tablename [:field1 :field2] :unique)
+ "CREATE UNIQUE INDEX indexname ON tablename (field1, field2)"
+
+ (create-index :indexname :tablename [:field1 :field2])
+ "CREATE INDEX indexname ON tablename (field1, field2)"</pre>
+    
+    
+    <a href="https://github.com/clojure/java.jdbc/blob/45f3d990040a5b8e6ec8bd322fe8c04cab4bd933/src/main/clojure/clojure/java/jdbc/ddl.clj#L52" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
     <h2 id="clojure.java.jdbc.ddl/create-table">create-table</h2>
     <span id="var-type">function</span><br />
     <pre id="var-usage">Usage: (create-table name &amp; specs)
@@ -1178,7 +1203,18 @@ not very sophisticated.</pre>
 return the DDL string for creating that table.</pre>
     
     
-    <a href="https://github.com/clojure/java.jdbc/blob/9edf85327bd2e76d0f75125b50f3cc53776c45e3/src/main/clojure/clojure/java/jdbc/ddl.clj#L28" id="var-source">Source</a>
+    <a href="https://github.com/clojure/java.jdbc/blob/45f3d990040a5b8e6ec8bd322fe8c04cab4bd933/src/main/clojure/clojure/java/jdbc/ddl.clj#L28" id="var-source">Source</a>
+  </div><div id="var-entry">
+    <br />
+    <hr />
+    <h2 id="clojure.java.jdbc.ddl/drop-index">drop-index</h2>
+    <span id="var-type">function</span><br />
+    <pre id="var-usage">Usage: (drop-index name)
+</pre>
+    <pre id="var-docstr">Given an index name, return the DDL string for dropping that index.</pre>
+    
+    
+    <a href="https://github.com/clojure/java.jdbc/blob/45f3d990040a5b8e6ec8bd322fe8c04cab4bd933/src/main/clojure/clojure/java/jdbc/ddl.clj#L74" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -1189,7 +1225,7 @@ return the DDL string for creating that table.</pre>
     <pre id="var-docstr">Given a table name, return the DDL string for dropping that table.</pre>
     
     
-    <a href="https://github.com/clojure/java.jdbc/blob/9edf85327bd2e76d0f75125b50f3cc53776c45e3/src/main/clojure/clojure/java/jdbc/ddl.clj#L47" id="var-source">Source</a>
+    <a href="https://github.com/clojure/java.jdbc/blob/45f3d990040a5b8e6ec8bd322fe8c04cab4bd933/src/main/clojure/clojure/java/jdbc/ddl.clj#L47" id="var-source">Source</a>
   </div>
 </div>
 <br />
