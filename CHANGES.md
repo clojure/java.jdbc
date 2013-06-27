@@ -1,5 +1,6 @@
 Changes coming in 0.3.0-alpha5
 
+* Added create-index / drop-index DDL [JDBC-62](http://dev.clojure.org/jira/browse/JDBC-62) - moquist
 * Make transaction? boolean optional in various db-do-* functions
   * It will ultimately change to a function argument I think when [JDBC-37](http://dev.clojure.org/jira/browser/JDBC-37) is dealt with
 * Create clojure.java.jdbc.ddl namespace
