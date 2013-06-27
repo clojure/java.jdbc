@@ -36,7 +36,7 @@
       (ddl/drop-table :table)))
 
 (deftest test-create-index
-  (is (= "CREATE  INDEX index ON table (col1, col2)"
+  (is (= "CREATE INDEX index ON table (col1, col2)"
          (ddl/create-index :index :table [:col1 "col2"])))
   (is (= "CREATE UNIQUE INDEX index ON table (col1, col2)"
          (ddl/create-index :index :table [:col1 "col2"] :unique))))

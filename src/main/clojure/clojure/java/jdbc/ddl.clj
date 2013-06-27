@@ -58,14 +58,14 @@ not very sophisticated." }
    \"CREATE UNIQUE INDEX indexname ON tablename (field1, field2)\"
 
    (create-index :indexname :tablename [:field1 :field2])
-   \"CREATE  INDEX indexname ON tablename (field1, field2)\""
+   \"CREATE INDEX indexname ON tablename (field1, field2)\""
   [index-name table-name cols & is-unique]
   (let [cols-string (apply str
                            (interpose ", "
                                       (map (sql/as-str identity)
                                            cols)))
-        is-unique (if is-unique "UNIQUE" "")]
-    (format "CREATE %s INDEX %s ON %s (%s)"
+        is-unique (if is-unique "UNIQUE " "")]
+    (format "CREATE %sINDEX %s ON %s (%s)"
             is-unique
             (sql/as-str identity index-name)
             (sql/as-str identity table-name)
