@@ -11,3 +11,4 @@ target
 test-all.sh
 settings.xml
 /clojure_test_sqlite
+/.lein-failures
