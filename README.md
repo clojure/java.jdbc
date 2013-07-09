@@ -8,6 +8,8 @@ A low-level Clojure wrapper for JDBC-based access to databases. A minimal DSL is
 
 Formerly known as clojure.contrib.sql.
 
+Additional documentation can be found in the [java.jdbc section of clojure-doc.org](http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html).
+
 Releases and Dependency Information
 ========================================
 
