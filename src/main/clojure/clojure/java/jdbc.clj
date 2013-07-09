@@ -37,6 +37,10 @@ are the parameter values to be substituted. In general, operations return
 the number of rows affected, except for a single record insert where any
 generated keys are returned (as a map).
 
+For more documentation, see:
+
+http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html
+
 As of release 0.3.0, the API has undergone a major overhaul and most of the
 original API has been deprecated in favor of a more idiomatic API, and a
 minimal DSL for generating SQL has been added as an option. The original
