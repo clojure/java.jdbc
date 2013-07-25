@@ -641,7 +641,7 @@ made at some future date." }
     (fn [rs]
       (result-set-fn (if as-arrays?
                        (cons (first rs)
-                             (vec (map row-fn (rest rs))))
+                             (lazy-seq (map row-fn (rest rs))))
                        (map row-fn rs))))
     identifiers
     as-arrays?))
