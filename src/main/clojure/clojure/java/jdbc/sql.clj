@@ -292,16 +292,16 @@ and update! high-level operations within clojure.java.jdbc directly." }
 (defn where
   "Given a map of columns and values, return a vector containing the where clause SQL
   followed by its parameters. Example:
-    (where {:a 42 :b nil})
+  (where {:a 42 \"b LIKE 'Johnson'\" nil \"c IS NULL\" nil})
   returns:
-    [\"a = ? AND b IS NULL\" 42]"
+  [\"a = ? AND b LIKE 'Johnson' AND c IS NULL\" 42]"
   [param-map & {:keys [entities] :or {entities as-is}}]
   (let [ks (keys param-map)
         vs (vals param-map)]
     (cons (str/join
-           " AND "
-           (map (fn [k v]
-                  (str (as-str entities k)
-                       (if (nil? v) " IS NULL" " = ?")))
-                ks vs))
+            " AND "
+            (map (fn [k v]
+                   (str (as-str entities k)
+                        (if (nil? v) "" " = ?")))
+                 ks vs))
           (remove nil? vs))))
