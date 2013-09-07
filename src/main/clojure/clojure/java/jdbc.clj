@@ -270,7 +270,7 @@ made at some future date." }
         keys (->> idxs
                   (map (fn [^Integer i] (.getColumnLabel rsmeta i)))
                   make-cols-unique
-                 (map (comp keyword identifiers)))
+                  (map (comp keyword identifiers)))
         row-values (fn [] (map (fn [^Integer i] (result-set-read-column (.getObject rs i) rsmeta i)) idxs))
         ;; This used to use create-struct (on keys) and then struct to populate each row.
         ;; That had the side effect of preserving the order of columns in each row. As
