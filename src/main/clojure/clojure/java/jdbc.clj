@@ -491,7 +491,7 @@ made at some future date." }
   See db-transaction* for more details."
   [binding & body]
   `(db-transaction* ~(second binding)
-                    (fn [~(first binding)] ~@body)))
+                    (^{:once true} fn* [~(first binding)] ~@body)))
 
 (defn db-do-commands
   "Executes SQL commands on the specified database connection. Wraps the commands
@@ -638,11 +638,11 @@ made at some future date." }
                          row-fn identity
                          identifiers sql/lower-case}}]
   (db-with-query-results* db (vec sql-params)
-    (fn [rs]
-      (result-set-fn (if as-arrays?
-                       (cons (first rs)
-                             (vec (map row-fn (rest rs))))
-                       (map row-fn rs))))
+    (^{:once true} fn* [rs]
+     (result-set-fn (if as-arrays?
+                      (cons (first rs)
+                            (vec (map row-fn (rest rs))))
+                      (map row-fn rs))))
     identifiers
     as-arrays?))
 
@@ -762,7 +762,7 @@ made at some future date." }
             :deprecated "0.3.0"}
   with-connection
   [db-spec & body]
-  `(with-connection* ~db-spec (fn [] ~@body)))
+  `(with-connection* ~db-spec (^{:once true} fn* [] ~@body)))
 
 (defn
   ^{:doc "Evaluates func as a transaction on the open database connection. Any
@@ -809,7 +809,7 @@ made at some future date." }
     :deprecated "0.3.0"}
   transaction
   [& body]
-  `(transaction* (fn [] ~@body)))
+  `(transaction* (^{:once true} fn* [] ~@body)))
 
 (defn
   ^{:doc "Marks the outermost transaction such that it will rollback rather than
@@ -1001,7 +1001,7 @@ made at some future date." }
     :deprecated "0.3.0"}
   with-query-results
   [results sql-params & body]
-  `(with-query-results* ~sql-params (fn [~results] ~@body)))
+  `(with-query-results* ~sql-params (^{:once true} fn* [~results] ~@body)))
 
 (defn
   ^{:doc "Given a naming strategy and a string, return the string as a
