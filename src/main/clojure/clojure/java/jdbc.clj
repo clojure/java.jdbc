@@ -242,7 +242,8 @@ made at some future date." }
   [cols]
   (if (or (empty? cols) (apply distinct? cols))
     cols
-    (reduce (fn [unique-cols col-name] (conj unique-cols (make-name-unique unique-cols col-name 1))) []  cols)))
+    (reduce (fn [unique-cols col-name]
+              (conj unique-cols (make-name-unique unique-cols col-name 1))) []  cols)))
 
 (defprotocol IResultSetReadColumn
   "Protocol for reading objects from the java.sql.ResultSet. Default
@@ -525,18 +526,19 @@ made at some future date." }
      (if-let [^java.sql.Connection con (db-find-connection db)]
        (with-open [^PreparedStatement stmt (prepare-statement con sql :return-keys true)]
          (set-parameters stmt param-group)
-         (letfn [(exec-and-return-keys []
-                   (let [counts (.executeUpdate stmt)]
-                     (try
-                       (let [rs (.getGeneratedKeys stmt)
-                             result (first (result-set-seq rs))]
-                         ;; sqlite (and maybe others?) requires
-                         ;; record set to be closed
-                         (.close rs)
-                         result)
-                       (catch Exception _
-                         ;; assume generated keys is unsupported and return counts instead: 
-                         counts))))]
+         (let [exec-and-return-keys
+               (^{:once true} fn* []
+                (let [counts (.executeUpdate stmt)]
+                  (try
+                    (let [rs (.getGeneratedKeys stmt)
+                          result (first (result-set-seq rs))]
+                      ;; sqlite (and maybe others?) requires
+                      ;; record set to be closed
+                      (.close rs)
+                      result)
+                    (catch Exception _
+                      ;; assume generated keys is unsupported and return counts instead: 
+                      counts))))]
            (if transaction?
              (db-transaction [t-db (add-connection db (.getConnection stmt))]
                              (exec-and-return-keys))
@@ -607,12 +609,12 @@ made at some future date." }
                           options-are-first (rest (rest sql-params))
                           :else (rest sql-params)))
         prepare-args (when (map? special) (flatten (seq special)))
-        run-query-with-params (fn [^PreparedStatement stmt]
-                                (set-parameters stmt params)
-                                (with-open [rset (.executeQuery stmt)]
-                                  (func (result-set-seq rset
-                                                        :identifiers identifiers
-                                                        :as-arrays? as-arrays?))))]
+        run-query-with-params (^{:once true} fn* [^PreparedStatement stmt]
+                               (set-parameters stmt params)
+                               (with-open [rset (.executeQuery stmt)]
+                                 (func (result-set-seq rset
+                                                       :identifiers identifiers
+                                                       :as-arrays? as-arrays?))))]
     (if (instance? PreparedStatement special)
       (let [^PreparedStatement stmt special]
         (run-query-with-params stmt))
@@ -653,10 +655,10 @@ made at some future date." }
   [db sql-params & {:keys [transaction? multi?]
                     :or {transaction? true multi? false}}]
   (let [execute-helper
-        (fn [db]
-          (if multi?
-            (apply db-do-prepared db transaction? (first sql-params) (rest sql-params))
-            (db-do-prepared db transaction? (first sql-params) (rest sql-params))))]
+        (^{:once true} fn* [db]
+         (if multi?
+           (apply db-do-prepared db transaction? (first sql-params) (rest sql-params))
+           (db-do-prepared db transaction? (first sql-params) (rest sql-params))))]
     (if-let [con (db-find-connection db)]
       (execute-helper db)
       (with-open [^java.sql.Connection con (get-connection db)]
