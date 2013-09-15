@@ -1172,7 +1172,7 @@ not very sophisticated.</pre>
     <hr />
     <h2 id="clojure.java.jdbc.ddl/create-index">create-index</h2>
     <span id="var-type">function</span><br />
-    <pre id="var-usage">Usage: (create-index index-name table-name cols &amp; is-unique)
+    <pre id="var-usage">Usage: (create-index index-name table-name cols &amp; specs)
 </pre>
     <pre id="var-docstr">Given an index name, table name, vector of column names, and
 (optional) is-unique, return the DDL string for creating an index.
@@ -1185,7 +1185,7 @@ not very sophisticated.</pre>
  "CREATE INDEX indexname ON tablename (field1, field2)"</pre>
     
     
-    <a href="https://github.com/clojure/java.jdbc/blob/45f3d990040a5b8e6ec8bd322fe8c04cab4bd933/src/main/clojure/clojure/java/jdbc/ddl.clj#L52" id="var-source">Source</a>
+    <a href="https://github.com/clojure/java.jdbc/blob/1602c824505608b8192f798bac3eb7db0a9599a2/src/main/clojure/clojure/java/jdbc/ddl.clj#L54" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -1197,29 +1197,29 @@ not very sophisticated.</pre>
 return the DDL string for creating that table.</pre>
     
     
-    <a href="https://github.com/clojure/java.jdbc/blob/45f3d990040a5b8e6ec8bd322fe8c04cab4bd933/src/main/clojure/clojure/java/jdbc/ddl.clj#L28" id="var-source">Source</a>
+    <a href="https://github.com/clojure/java.jdbc/blob/1602c824505608b8192f798bac3eb7db0a9599a2/src/main/clojure/clojure/java/jdbc/ddl.clj#L28" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
     <h2 id="clojure.java.jdbc.ddl/drop-index">drop-index</h2>
     <span id="var-type">function</span><br />
-    <pre id="var-usage">Usage: (drop-index name)
+    <pre id="var-usage">Usage: (drop-index name &amp; {:keys [entities], :or {entities as-is}})
 </pre>
     <pre id="var-docstr">Given an index name, return the DDL string for dropping that index.</pre>
     
     
-    <a href="https://github.com/clojure/java.jdbc/blob/45f3d990040a5b8e6ec8bd322fe8c04cab4bd933/src/main/clojure/clojure/java/jdbc/ddl.clj#L74" id="var-source">Source</a>
+    <a href="https://github.com/clojure/java.jdbc/blob/1602c824505608b8192f798bac3eb7db0a9599a2/src/main/clojure/clojure/java/jdbc/ddl.clj#L79" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
     <h2 id="clojure.java.jdbc.ddl/drop-table">drop-table</h2>
     <span id="var-type">function</span><br />
-    <pre id="var-usage">Usage: (drop-table name)
+    <pre id="var-usage">Usage: (drop-table name &amp; {:keys [entities], :or {entities as-is}})
 </pre>
     <pre id="var-docstr">Given a table name, return the DDL string for dropping that table.</pre>
     
     
-    <a href="https://github.com/clojure/java.jdbc/blob/45f3d990040a5b8e6ec8bd322fe8c04cab4bd933/src/main/clojure/clojure/java/jdbc/ddl.clj#L47" id="var-source">Source</a>
+    <a href="https://github.com/clojure/java.jdbc/blob/1602c824505608b8192f798bac3eb7db0a9599a2/src/main/clojure/clojure/java/jdbc/ddl.clj#L49" id="var-source">Source</a>
   </div>
 </div>
 <br />
@@ -1253,7 +1253,7 @@ characters - and a string, return the quoted string:
   (as-quoted-str [A B] foo) will return AfooB</pre>
     
     
-    <a href="https://github.com/clojure/java.jdbc/blob/f9ecadd03c1c2e01f107155b03061ac0b20f976c/src/main/clojure/clojure/java/jdbc/sql.clj#L52" id="var-source">Source</a>
+    <a href="https://github.com/clojure/java.jdbc/blob/1602c824505608b8192f798bac3eb7db0a9599a2/src/main/clojure/clojure/java/jdbc/sql.clj#L52" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -1271,7 +1271,7 @@ joined back together so :x.y might become `x`.`y` if the naming
 strategy quotes identifiers with `.</pre>
     
     
-    <a href="https://github.com/clojure/java.jdbc/blob/f9ecadd03c1c2e01f107155b03061ac0b20f976c/src/main/clojure/clojure/java/jdbc/sql.clj#L32" id="var-source">Source</a>
+    <a href="https://github.com/clojure/java.jdbc/blob/1602c824505608b8192f798bac3eb7db0a9599a2/src/main/clojure/clojure/java/jdbc/sql.clj#L32" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -1284,7 +1284,7 @@ return a vector of the SQL for that delete operation followed by its parameters.
 entities spec (default 'as-is') specifies how to transform column names.</pre>
     
     
-    <a href="https://github.com/clojure/java.jdbc/blob/f9ecadd03c1c2e01f107155b03061ac0b20f976c/src/main/clojure/clojure/java/jdbc/sql.clj#L174" id="var-source">Source</a>
+    <a href="https://github.com/clojure/java.jdbc/blob/1602c824505608b8192f798bac3eb7db0a9599a2/src/main/clojure/clojure/java/jdbc/sql.clj#L175" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -1297,7 +1297,7 @@ to inject an :entities keyword argument with the function at the end of each app
 form.</pre>
     
     
-    <a href="https://github.com/clojure/java.jdbc/blob/f9ecadd03c1c2e01f107155b03061ac0b20f976c/src/main/clojure/clojure/java/jdbc/sql.clj#L142" id="var-source">Source</a>
+    <a href="https://github.com/clojure/java.jdbc/blob/1602c824505608b8192f798bac3eb7db0a9599a2/src/main/clojure/clojure/java/jdbc/sql.clj#L143" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -1310,7 +1310,7 @@ to inject an :identifiers keyword argument with the function at the end of each
 appropriate form.</pre>
     
     
-    <a href="https://github.com/clojure/java.jdbc/blob/f9ecadd03c1c2e01f107155b03061ac0b20f976c/src/main/clojure/clojure/java/jdbc/sql.clj#L154" id="var-source">Source</a>
+    <a href="https://github.com/clojure/java.jdbc/blob/1602c824505608b8192f798bac3eb7db0a9599a2/src/main/clojure/clojure/java/jdbc/sql.clj#L155" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -1323,7 +1323,7 @@ return a vector of the SQL for that insert operation followed by its parameters.
 optional entities spec (default 'as-is') specifies how to transform column names.</pre>
     
     
-    <a href="https://github.com/clojure/java.jdbc/blob/f9ecadd03c1c2e01f107155b03061ac0b20f976c/src/main/clojure/clojure/java/jdbc/sql.clj#L183" id="var-source">Source</a>
+    <a href="https://github.com/clojure/java.jdbc/blob/1602c824505608b8192f798bac3eb7db0a9599a2/src/main/clojure/clojure/java/jdbc/sql.clj#L184" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -1336,7 +1336,7 @@ retun the SQL string for the JOIN clause. The optional entities spec (default 'a
 specifies how to transform column names.</pre>
     
     
-    <a href="https://github.com/clojure/java.jdbc/blob/f9ecadd03c1c2e01f107155b03061ac0b20f976c/src/main/clojure/clojure/java/jdbc/sql.clj#L206" id="var-source">Source</a>
+    <a href="https://github.com/clojure/java.jdbc/blob/1602c824505608b8192f798bac3eb7db0a9599a2/src/main/clojure/clojure/java/jdbc/sql.clj#L207" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -1349,7 +1349,7 @@ SQL string for the ORDER BY clause. A column order spec may be a column name or 
 map of the column name to the desired order.</pre>
     
     
-    <a href="https://github.com/clojure/java.jdbc/blob/f9ecadd03c1c2e01f107155b03061ac0b20f976c/src/main/clojure/clojure/java/jdbc/sql.clj#L216" id="var-source">Source</a>
+    <a href="https://github.com/clojure/java.jdbc/blob/1602c824505608b8192f798bac3eb7db0a9599a2/src/main/clojure/clojure/java/jdbc/sql.clj#L217" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -1371,7 +1371,7 @@ other parts of the DSL:
           (order-by :p.name))</pre>
     
     
-    <a href="https://github.com/clojure/java.jdbc/blob/f9ecadd03c1c2e01f107155b03061ac0b20f976c/src/main/clojure/clojure/java/jdbc/sql.clj#L229" id="var-source">Source</a>
+    <a href="https://github.com/clojure/java.jdbc/blob/1602c824505608b8192f798bac3eb7db0a9599a2/src/main/clojure/clojure/java/jdbc/sql.clj#L230" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -1387,7 +1387,7 @@ returns:
   ["UPDATE person SET zip = ? WHERE zip = ?" 94540 94546]</pre>
     
     
-    <a href="https://github.com/clojure/java.jdbc/blob/f9ecadd03c1c2e01f107155b03061ac0b20f976c/src/main/clojure/clojure/java/jdbc/sql.clj#L267" id="var-source">Source</a>
+    <a href="https://github.com/clojure/java.jdbc/blob/1602c824505608b8192f798bac3eb7db0a9599a2/src/main/clojure/clojure/java/jdbc/sql.clj#L268" id="var-source">Source</a>
   </div><div id="var-entry">
     <br />
     <hr />
@@ -1402,7 +1402,7 @@ returns:
   ["a = ? AND b IS NULL" 42]</pre>
     
     
-    <a href="https://github.com/clojure/java.jdbc/blob/f9ecadd03c1c2e01f107155b03061ac0b20f976c/src/main/clojure/clojure/java/jdbc/sql.clj#L292" id="var-source">Source</a>
+    <a href="https://github.com/clojure/java.jdbc/blob/1602c824505608b8192f798bac3eb7db0a9599a2/src/main/clojure/clojure/java/jdbc/sql.clj#L293" id="var-source">Source</a>
   </div>
 </div>
 
