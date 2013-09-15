@@ -23,24 +23,54 @@
 
 (ns clojure.java.test-ddl
   (:use clojure.test)
-  (:require [clojure.java.jdbc.ddl :as ddl]))
+  (:require [clojure.java.jdbc.ddl :as ddl]
+            [clojure.java.jdbc.sql :as sql]
+            [clojure.string :as str]))
 
 (deftest test-create-table
   (is (= "CREATE TABLE table (col1 int, col2 int)"
          (ddl/create-table :table ["col1 int"] [:col2 :int])))
+  (is (= "CREATE TABLE TABLE (col1 int, COL2 INT)"
+         (ddl/create-table :table ["col1 int"] [:col2 :int] :entities str/upper-case)))
+  (is (= "CREATE TABLE TABLE (col1 int, COL2 INT)"
+         (sql/entities str/upper-case
+                       (ddl/create-table :table ["col1 int"] [:col2 :int]))))
   (is (= "CREATE TABLE table (col1 int, col2 int) ENGINE=MyISAM"
-         (ddl/create-table :table [:col1 "int"] ["col2" :int] :table-spec "ENGINE=MyISAM"))))
+         (ddl/create-table :table [:col1 "int"] ["col2" :int] :table-spec "ENGINE=MyISAM")))
+  (is (= "CREATE TABLE TABLE (COL1 int, col2 INT) ENGINE=MyISAM"
+         (ddl/create-table :table [:col1 "int"] ["col2" :int] :entities str/upper-case :table-spec "ENGINE=MyISAM")))
+  (is (= "CREATE TABLE TABLE (COL1 int, col2 INT) ENGINE=MyISAM"
+         (ddl/create-table :table [:col1 "int"] ["col2" :int] :table-spec "ENGINE=MyISAM" :entities str/upper-case))))
 
 (deftest test-drop-table
   (is (= "DROP TABLE table")
-      (ddl/drop-table :table)))
+      (ddl/drop-table :table))
+  (is (= "DROP TABLE TABLE")
+      (ddl/drop-table :table :entities str/upper-case))
+  (is (= "DROP TABLE TABLE")
+      (sql/entities str/upper-case
+                    (ddl/drop-table :table))))
 
 (deftest test-create-index
   (is (= "CREATE INDEX index ON table (col1, col2)"
          (ddl/create-index :index :table [:col1 "col2"])))
+  (is (= "CREATE INDEX INDEX ON TABLE (COL1, col2)"
+         (ddl/create-index :index :table [:col1 "col2"] :entities str/upper-case)))
+  (is (= "CREATE INDEX INDEX ON TABLE (COL1, col2)"
+         (sql/entities str/upper-case
+                       (ddl/create-index :index :table [:col1 "col2"]))))
   (is (= "CREATE UNIQUE INDEX index ON table (col1, col2)"
-         (ddl/create-index :index :table [:col1 "col2"] :unique))))
+         (ddl/create-index :index :table [:col1 "col2"] :unique)))
+  (is (= "CREATE UNIQUE INDEX INDEX ON TABLE (COL1, col2)"
+         (ddl/create-index :index :table [:col1 "col2"] :unique :entities str/upper-case)))
+  (is (= "CREATE UNIQUE INDEX INDEX ON TABLE (COL1, col2)"
+         (ddl/create-index :index :table [:col1 "col2"] :entities str/upper-case :unique))))
 
 (deftest test-drop-index
   (is (= "DROP INDEX index")
-      (ddl/drop-index :index)))
+      (ddl/drop-index :index))
+  (is (= "DROP INDEX INDEX")
+      (ddl/drop-index :index :entities str/upper-case))
+  (is (= "DROP INDEX INDEX")
+      (sql/entities str/upper-case
+                    (ddl/drop-index :index))))

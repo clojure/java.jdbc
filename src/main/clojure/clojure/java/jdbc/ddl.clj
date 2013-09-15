@@ -29,25 +29,27 @@ not very sophisticated." }
   "Given a table name and column specs with an optional table-spec
    return the DDL string for creating that table."
   [name & specs]
-  (let [split-specs (partition-by #(= :table-spec %) specs)
-        col-specs (first split-specs)
-        table-spec (first (second (rest split-specs)))
+  (let [col-specs (take-while (fn [s]
+                                (not (or (= :table-spec s)
+                                         (= :entities s)))) specs)
+        other-specs (drop (count col-specs) specs)
+        {:keys [table-spec entities] :or {entities sql/as-is}} other-specs
         table-spec-str (or (and table-spec (str " " table-spec)) "")
         specs-to-string (fn [specs]
                           (apply str
-                                 (map (sql/as-str identity)
+                                 (map (sql/as-str entities)
                                       (apply concat
                                              (interpose [", "]
                                                         (map (partial interpose " ") specs))))))]
     (format "CREATE TABLE %s (%s)%s"
-            (sql/as-str identity name)
+            (sql/as-str entities name)
             (specs-to-string col-specs)
             table-spec-str)))
 
 (defn drop-table
   "Given a table name, return the DDL string for dropping that table."
-  [name]
-  (format "DROP TABLE %s" (sql/as-str identity name)))
+  [name & {:keys [entities] :or {entities sql/as-is}}]
+  (format "DROP TABLE %s" (sql/as-str entities name)))
 
 (defn create-index
   "Given an index name, table name, vector of column names, and
@@ -59,20 +61,23 @@ not very sophisticated." }
 
    (create-index :indexname :tablename [:field1 :field2])
    \"CREATE INDEX indexname ON tablename (field1, field2)\""
-  [index-name table-name cols & is-unique]
-  (let [cols-string (apply str
+  [index-name table-name cols & specs]
+  (let [is-unique (seq (filter #(= :unique %) specs))
+        entities-spec (drop-while #(not= :entities %) specs)
+        {:keys [entities] :or {entities sql/as-is}} (take 2 entities-spec)
+        cols-string (apply str
                            (interpose ", "
-                                      (map (sql/as-str identity)
+                                      (map (sql/as-str entities)
                                            cols)))
         is-unique (if is-unique "UNIQUE " "")]
     (format "CREATE %sINDEX %s ON %s (%s)"
             is-unique
-            (sql/as-str identity index-name)
-            (sql/as-str identity table-name)
+            (sql/as-str entities index-name)
+            (sql/as-str entities table-name)
             cols-string)))
 
 (defn drop-index
   "Given an index name, return the DDL string for dropping that index."
-  [name]
-  (format "DROP INDEX %s" (sql/as-str identity name)))
+  [name & {:keys [entities] :or {entities sql/as-is}}]
+  (format "DROP INDEX %s" (sql/as-str entities name)))
 
