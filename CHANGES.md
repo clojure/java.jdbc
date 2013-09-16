@@ -1,4 +1,4 @@
-Changes coming in 0.3.0-alpha5
+Changes in 0.3.0-alpha5
 
 * DDL now supports entities naming strategy [JDBC-53](http://dev.clojure.org/jira/browse/JDBC-53).
 * Attempt to address potential memory leaks due to closures - see [Christophe Grand's blog post on Macros, closures and unexpected object retention](http://clj-me.cgrand.net/2013/09/11/macros-closures-and-unexpected-object-retention/).
