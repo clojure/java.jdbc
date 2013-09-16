@@ -6,6 +6,20 @@ Changes in 0.3.0-alpha5
 * Added Leiningen support for easier development/testing (Maven is still the primary build tool).
 * Added create-index / drop-index DDL [JDBC-62](http://dev.clojure.org/jira/browse/JDBC-62) - moquist
 * Make transaction? boolean optional in various db-do-* functions
+* Create clojure.java.jdbc.ddl namespace
+* Add create-table, drop-table, create-index and drop-index
+* Deprecate create-table, create-table-ddl and drop-table in main namespace
+* Update README to clarify PostgreSQL instructions.
+* Fix test suite for PostgreSQL [JDBC-59](http://dev.clojure.org/jira/browser/JDBC-59)
+* Improve hooks for Oracle data type handling [JDBC-57](http://dev.clojure.org/jira/browser/JDBC-57)
+* Fix reflection warnings [JDBC-55](http://dev.clojure.org/jira/browser/JDBC-55)
+
+* DDL now supports entities naming strategy [JDBC-53](http://dev.clojure.org/jira/browse/JDBC-53).
+* Attempt to address potential memory leaks due to closures - see [Christophe Grand's blog post on Macros, closures and unexpected object retention](http://clj-me.cgrand.net/2013/09/11/macros-closures-and-unexpected-object-retention/).
+* Documentation has moved to [Using java.jdbc on Clojure-Doc.org](http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html)
+* Added Leiningen support for easier development/testing (Maven is still the primary build tool).
+* Added create-index / drop-index DDL [JDBC-62](http://dev.clojure.org/jira/browse/JDBC-62) - moquist
+* Make transaction? boolean optional in various db-do-* functions
   * It will ultimately change to a function argument I think when [JDBC-37](http://dev.clojure.org/jira/browser/JDBC-37) is dealt with
 * Create clojure.java.jdbc.ddl namespace
   * Add create-table and drop-table
