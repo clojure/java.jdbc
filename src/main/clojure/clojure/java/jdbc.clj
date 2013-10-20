@@ -63,7 +63,7 @@ made at some future date." }
 
 (def ^{:private true :dynamic true
        :doc "The default entity naming strategy is to do nothing."}
-  *as-str*
+  *as-str* 
   identity)
 
 (def ^{:private true :dynamic true
@@ -176,7 +176,7 @@ made at some future date." }
 
   URI:
     Parsed JDBC connection string - see below
-
+  
   String:
     subprotocol://user:password@host:post/subname
                  An optional prefix of jdbc: is allowed."
@@ -191,38 +191,38 @@ made at some future date." }
   (cond
    connection
    connection
-
+   
    (instance? URI db-spec)
    (get-connection (parse-properties-uri db-spec))
-
+   
    (string? db-spec)
    (get-connection (URI. (strip-jdbc db-spec)))
-
+   
    factory
    (factory (dissoc db-spec :factory))
-
+   
    connection-uri
    (DriverManager/getConnection connection-uri)
-
+   
    (and subprotocol subname)
    (let [url (format "jdbc:%s:%s" subprotocol subname)
          etc (dissoc db-spec :classname :subprotocol :subname)
          classname (or classname (classnames subprotocol))]
      (clojure.lang.RT/loadClassForName classname)
      (DriverManager/getConnection url (as-properties etc)))
-
+   
    (and datasource username password)
    (.getConnection ^DataSource datasource ^String username ^String password)
-
+   
    datasource
    (.getConnection ^DataSource datasource)
-
+   
    name
    (let [env (and environment (Hashtable. ^Map environment))
          context (InitialContext. env)
          ^DataSource datasource (.lookup context ^String name)]
      (.getConnection datasource))
-
+   
    :else
    (let [^String msg (format "db-spec %s is missing a required parameter" db-spec)]
      (throw (IllegalArgumentException. msg)))))
@@ -313,19 +313,19 @@ made at some future date." }
       (seq result))))
 
 (def ^{:private true
-       :doc "Map friendly :concurrency values to ResultSet constants."}
+       :doc "Map friendly :concurrency values to ResultSet constants."} 
   result-set-concurrency
   {:read-only ResultSet/CONCUR_READ_ONLY
    :updatable ResultSet/CONCUR_UPDATABLE})
 
 (def ^{:private true
-       :doc "Map friendly :cursors values to ResultSet constants."}
+       :doc "Map friendly :cursors values to ResultSet constants."} 
   result-set-holdability
   {:hold ResultSet/HOLD_CURSORS_OVER_COMMIT
    :close ResultSet/CLOSE_CURSORS_AT_COMMIT})
 
 (def ^{:private true
-       :doc "Map friendly :type values to ResultSet constants."}
+       :doc "Map friendly :type values to ResultSet constants."} 
   result-set-type
   {:forward-only ResultSet/TYPE_FORWARD_ONLY
    :scroll-insensitive ResultSet/TYPE_SCROLL_INSENSITIVE
@@ -349,17 +349,17 @@ made at some future date." }
                      (catch Exception _
                        ;; assume it is unsupported and try basic PreparedStatement:
                        (.prepareStatement con sql)))
-
+                   
                    (and result-type concurrency)
                    (if cursors
-                     (.prepareStatement con sql
+                     (.prepareStatement con sql 
                                         (result-type result-set-type)
                                         (concurrency result-set-concurrency)
                                         (cursors result-set-holdability))
-                     (.prepareStatement con sql
+                     (.prepareStatement con sql 
                                         (result-type result-set-type)
                                         (concurrency result-set-concurrency)))
-
+                   
                    :else
                    (.prepareStatement con sql))]
     (when fetch-size (.setFetchSize stmt fetch-size))
@@ -403,12 +403,12 @@ made at some future date." }
   "Prints the update counts from a BatchUpdateException to *out*"
   [^BatchUpdateException exception]
   (println "Update counts:")
-  (dorun
-    (map-indexed
-      (fn [index count]
+  (dorun 
+    (map-indexed 
+      (fn [index count] 
         (println (format " Statement %d: %s"
                          index
-                         (get special-counts count count))))
+                         (get special-counts count count)))) 
       (.getUpdateCounts exception))))
 
 ;; java.jdbc pieces rewritten to not use dynamic bindings
@@ -538,7 +538,7 @@ made at some future date." }
                       (.close rs)
                       result)
                     (catch Exception _
-                      ;; assume generated keys is unsupported and return counts instead:
+                      ;; assume generated keys is unsupported and return counts instead: 
                       counts))))]
            (if transaction?
              (db-transaction [t-db (add-connection db (.getConnection stmt))]
@@ -599,12 +599,12 @@ made at some future date." }
                               "vector"
                               "[sql param*]"
                               (.getName sql-params-class)
-                              (pr-str sql-params))]
+                              (pr-str sql-params))] 
       (throw (IllegalArgumentException. msg))))
   (let [special (first sql-params)
         sql-is-first (string? special)
         options-are-first (map? special)
-        sql (cond sql-is-first special
+        sql (cond sql-is-first special 
                   options-are-first (second sql-params))
         params (vec (cond sql-is-first (rest sql-params)
                           options-are-first (rest (rest sql-params))
@@ -975,12 +975,12 @@ made at some future date." }
                               "vector"
                               "[sql param*]"
                               (.getName sql-params-class)
-                              (pr-str sql-params))]
+                              (pr-str sql-params))] 
       (throw (IllegalArgumentException. msg))))
   (let [special (first sql-params)
         sql-is-first (string? special)
         options-are-first (map? special)
-        sql (cond sql-is-first special
+        sql (cond sql-is-first special 
                   options-are-first (second sql-params))
         params (vec (cond sql-is-first (rest sql-params)
                           options-are-first (rest (rest sql-params))
