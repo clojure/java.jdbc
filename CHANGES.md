@@ -1,3 +1,7 @@
+Changes coming in 0.3.0-alpha6 (or beta1)
+
+* "h2" is recognized as a protocol shorthand for org.h2.Driver
+
 Changes in 0.3.0-alpha5
 
 * DDL now supports entities naming strategy [JDBC-53](http://dev.clojure.org/jira/browse/JDBC-53).
