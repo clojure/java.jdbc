@@ -117,6 +117,7 @@ made at some future date." }
    "jtds:sqlserver" "net.sourceforge.jtds.jdbc.Driver"
    "derby"          "org.apache.derby.jdbc.EmbeddedDriver"
    "hsqldb"         "org.hsqldb.jdbcDriver"
+   "h2"             "org.h2.Driver"
    "sqlite"         "org.sqlite.JDBC"})
 
 (def ^{:private true :doc "Map of schemes to subprotocols"} subprotocols
