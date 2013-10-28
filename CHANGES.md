@@ -1,6 +1,7 @@
 Changes coming in 0.3.0-alpha6 (or beta1)
 
 * "h2" is recognized as a protocol shorthand for org.h2.Driver
+* Tests no longer use :1 literal [JDBC-71](http://dev.clojure.org/jira/browse/JDBC-71).
 
 Changes in 0.3.0-alpha5
 
