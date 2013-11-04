@@ -51,7 +51,6 @@ made at some future date." }
            [java.sql BatchUpdateException DriverManager
             PreparedStatement ResultSet SQLException Statement Types]
            [java.util Hashtable Map Properties]
-           [javax.naming InitialContext Name]
            [javax.sql DataSource])
   (:refer-clojure :exclude [resultset-seq])
   (:require [clojure.string :as str]
@@ -142,6 +141,14 @@ made at some future date." }
     (.substring spec 5)
     spec))
 
+;; feature testing macro, based on suggestion from Chas Emerick:
+(defmacro when-available
+  [sym & body]
+  (try
+    (when (resolve sym)
+      (list* 'do body))
+    (catch ClassNotFoundException _#)))
+
 (defn get-connection
   "Creates a connection to a database. db-spec is a map containing connection
   parameters. db-spec is a map containing values for one of the following
@@ -218,10 +225,12 @@ made at some future date." }
    (.getConnection ^DataSource datasource)
    
    name
-   (let [env (and environment (Hashtable. ^Map environment))
-         context (InitialContext. env)
-         ^DataSource datasource (.lookup context ^String name)]
-     (.getConnection datasource))
+   (when-available
+    javax.naming.InitialContext
+    (let [env (and environment (Hashtable. ^Map environment))
+          context (javax.naming.InitialContext. env)
+          ^DataSource datasource (.lookup context ^String name)]
+      (.getConnection datasource)))
    
    :else
    (let [^String msg (format "db-spec %s is missing a required parameter" db-spec)]
