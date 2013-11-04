@@ -632,20 +632,22 @@ made at some future date." }
   "Given a database connection and a vector containing SQL and optional parameters,
   perform a simple database query. The optional keyword arguments specify how to
   construct the result set:
-    :result-set-fn - applied to the entire result set, default doall
+    :result-set-fn - applied to the entire result set, default doall / vec
+        if :as-arrays? true, :result-set-fn will default to vec
+        if :as-arrays? false, :result-set-fn will default to doall
     :row-fn - applied to each row as the result set is constructed, default identity
     :identifiers - applied to each column name in the result set, default lower-case
     :as-arrays? - return the results as a set of arrays, default false."
   [db sql-params & {:keys [result-set-fn row-fn identifiers as-arrays?]
-                    :or {result-set-fn doall
-                         row-fn identity
+                    :or {row-fn identity
                          identifiers sql/lower-case}}]
   (db-with-query-results* db (vec sql-params)
     (^{:once true} fn* [rs]
-     (result-set-fn (if as-arrays?
-                      (cons (first rs)
-                            (vec (map row-fn (rest rs))))
-                      (map row-fn rs))))
+     (let [result-set-fn (or result-set-fn (if as-arrays? vec doall))]
+       (result-set-fn (if as-arrays?
+                        (cons (first rs)
+                              (map row-fn (rest rs)))
+                        (map row-fn rs)))))
     identifiers
     as-arrays?))
 
