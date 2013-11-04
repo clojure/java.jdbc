@@ -535,7 +535,7 @@ made at some future date." }
   ([db transaction? sql param-group]
      (if-let [^java.sql.Connection con (db-find-connection db)]
        (with-open [^PreparedStatement stmt (prepare-statement con sql :return-keys true)]
-         (set-parameters stmt param-group)
+         ((or (:set-parameters db) set-parameters) stmt param-group)
          (let [exec-and-return-keys
                (^{:once true} fn* []
                 (let [counts (.executeUpdate stmt)]
@@ -579,7 +579,7 @@ made at some future date." }
                 (throw-non-rte e))))
           (do
             (doseq [param-group param-groups]
-              (set-parameters stmt param-group)
+              ((or (:set-parameters db) set-parameters) stmt param-group)
               (.addBatch stmt))
             (if transaction?
               (db-transaction [t-db (add-connection db (.getConnection stmt))]
@@ -620,7 +620,7 @@ made at some future date." }
                           :else (rest sql-params)))
         prepare-args (when (map? special) (flatten (seq special)))
         run-query-with-params (^{:once true} fn* [^PreparedStatement stmt]
-                               (set-parameters stmt params)
+                               ((or (:set-parameters db) set-parameters) stmt params)
                                (with-open [rset (.executeQuery stmt)]
                                  (func rset)))]
     (if (instance? PreparedStatement special)
@@ -996,7 +996,7 @@ made at some future date." }
                           :else (rest sql-params)))
         prepare-args (when (map? special) (flatten (seq special)))]
     (with-open [^PreparedStatement stmt (if (instance? PreparedStatement special) special (apply prepare-statement (get-connection *db*) sql prepare-args))]
-      (set-parameters stmt params)
+      (set-parameters stmt params) ; cannot override this in legacy API!
       (with-open [rset (.executeQuery stmt)]
         (binding [*db* (assoc *db* :connection (.getConnection stmt))]
           (func (resultset-seq rset)))))))
