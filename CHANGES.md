@@ -4,6 +4,7 @@ Changes coming in 0.3.0-alpha6 (or beta1)
 * "h2" is recognized as a protocol shorthand for org.h2.Driver
 * Tests no longer use :1 literal [JDBC-71](http://dev.clojure.org/jira/browse/JDBC-71).
 * Conditional use of javax.naming.InitialContext so it can be compiled on Android [JDBC-69](http://dev.clojure.org/jira/browse/JDBC-69).
+* New db-query-with-resultset function replaces private db-with-query-results* and processes a raw ResultSet object [JDBC-63](http://dev.clojure.org/jira/browse/JDBC-63).
 
 Changes in 0.3.0-alpha5
 

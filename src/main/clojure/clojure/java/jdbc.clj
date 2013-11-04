@@ -591,16 +591,16 @@ made at some future date." }
       (with-open [^java.sql.Connection con (get-connection db)]
         (apply db-do-prepared (add-connection db con) transaction? sql param-groups)))))
 
-(defn- db-with-query-results*
-  "Executes a query, then evaluates func passing in a seq of the results as
-  an argument. The first argument is a vector containing either:
+(defn db-query-with-resultset
+  "Executes a query, then evaluates func passing in the raw ResultSet as an
+   argument. The first argument is a vector containing either:
     [sql & params] - a SQL query, followed by any parameters it needs
     [stmt & params] - a PreparedStatement, followed by any parameters it needs
                       (the PreparedStatement already contains the SQL query)
     [options sql & params] - options and a SQL query for creating a
                       PreparedStatement, followed by any parameters it needs
   See prepare-statement for supported options."
-  [db sql-params func identifiers as-arrays?]
+  [db sql-params func]
   (when-not (vector? sql-params)
     (let [^Class sql-params-class (class sql-params)
           ^String msg (format "\"%s\" expected %s %s, found %s %s"
@@ -622,9 +622,7 @@ made at some future date." }
         run-query-with-params (^{:once true} fn* [^PreparedStatement stmt]
                                (set-parameters stmt params)
                                (with-open [rset (.executeQuery stmt)]
-                                 (func (result-set-seq rset
-                                                       :identifiers identifiers
-                                                       :as-arrays? as-arrays?))))]
+                                 (func rset)))]
     (if (instance? PreparedStatement special)
       (let [^PreparedStatement stmt special]
         (run-query-with-params stmt))
@@ -650,15 +648,15 @@ made at some future date." }
   [db sql-params & {:keys [result-set-fn row-fn identifiers as-arrays?]
                     :or {row-fn identity
                          identifiers sql/lower-case}}]
-  (db-with-query-results* db (vec sql-params)
-    (^{:once true} fn* [rs]
-     (let [result-set-fn (or result-set-fn (if as-arrays? vec doall))]
-       (result-set-fn (if as-arrays?
-                        (cons (first rs)
-                              (map row-fn (rest rs)))
-                        (map row-fn rs)))))
-    identifiers
-    as-arrays?))
+  (let [result-set-fn (or result-set-fn (if as-arrays? vec doall))]
+    (db-query-with-resultset db (vec sql-params)
+      (^{:once true} fn* [rset]
+       ((^{:once true} fn* [rs]
+         (result-set-fn (if as-arrays?
+                          (cons (first rs)
+                                (map row-fn (rest rs)))
+                          (map row-fn rs))))
+        (result-set-seq rset :identifiers identifiers :as-arrays? as-arrays?))))))
 
 (defn execute!
   "Given a database connection and a vector containing SQL and optional parameters,
