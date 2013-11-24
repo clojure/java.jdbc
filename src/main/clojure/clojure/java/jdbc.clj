@@ -716,7 +716,7 @@ made at some future date." }
   column names in the map (default 'as-is') and whether to run the delete in
   a transaction (default true).
   Example:
-    (delete! db :person ["zip = ?" 94546])
+    (delete! db :person [\"zip = ?\" 94546])
   is equivalent to:
     (execute! db [\"DELETE FROM person WHERE zip = ?\" 94546])"
   [db table where-clause & {:keys [entities transaction?]
@@ -835,7 +835,7 @@ made at some future date." }
   "Given a table name and a map of columns to set, and optional map of columns to
   match (and an optional entities spec), return a vector of the SQL for that update
   followed by its parameters. Example:
-    (update :person {:zip 94540} ["zip = ?" 94546])
+    (update :person {:zip 94540} [\"zip = ?\" 94546])
   returns:
     [\"UPDATE person SET zip = ? WHERE zip = ?\" 94540 94546]"
   [table set-map & where-etc]
@@ -862,7 +862,7 @@ made at some future date." }
   specify how column names (in the set / match maps) should be transformed (default
   'as-is') and whether to run the update in a transaction (default true).
   Example:
-    (update! db :person {:zip 94540} ["zip = ?" 94546])
+    (update! db :person {:zip 94540} [\"zip = ?\" 94546])
   is equivalent to:
     (execute! db [\"UPDATE person SET zip = ? WHERE zip = ?\" 94540 94546])"
   [db table set-map where-clause & {:keys [entities transaction?]
