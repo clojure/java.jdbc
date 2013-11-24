@@ -54,48 +54,43 @@ compatibility but it will be removed before a 1.0.0 release." }
   (:refer-clojure :exclude [resultset-seq])
   (:require [clojure.string :as str]))
 
-;; technically deprecated but still used as defaults in a couple of
-;; places for backward compatibility...
-
-(def ^{:private true :dynamic true
-       :doc "The default entity naming strategy is to do nothing."}
-  *as-str* 
-  identity)
-
-(def ^{:private true :dynamic true
-       :doc "The default keyword naming strategy is to lowercase the entity."}
-  *as-key*
-  str/lower-case)
-
-;; end of deprecated API artifacts...
-
-(defn as-str
-  "Given a naming strategy and a keyword, return the keyword as a
-   string per that naming strategy. Given (a naming strategy and)
-   a string, return it as-is.
+(defn as-sql-name
+  "Given a naming strategy and a keyword or string, return the keyword
+   as a string per that naming strategy.
    A keyword of the form :x.y is treated as keywords :x and :y,
    both are turned into strings via the naming strategy and then
    joined back together so :x.y might become `x`.`y` if the naming
    strategy quotes identifiers with `."
   ([f]
      (fn [x]
-       (as-str f x)))
+       (as-sql-name f x)))
   ([f x]
-     (if (instance? clojure.lang.Named x)
-       (let [n (name x)
-             i (.indexOf n (int \.))]
-         (if (= -1 i)
-           (f n)
-           (str/join "." (map f (.split n "\\.")))))
-       (str x))))
+     (let [n (name x)
+           i (.indexOf n (int \.))]
+       (if (= -1 i)
+         (f n)
+         (str/join "." (map f (.split n "\\.")))))))
+
+(defn quoted
+  "Given a quoting pattern - either a single character or a vector pair of
+   characters - and a string, return the quoted string:
+     (quoted \\X \"foo\") will return \"XfooX\"
+     (quoted [\\A \\B] \"foo\") will return \"AfooB\""
+  ([q]
+     (fn [x]
+       (as-quoted-str q x)))
+  ([q x]
+     (if (vector? q)
+       (str (first q) x (last q))
+       (str q x q))))
 
 (defn- ^Properties as-properties
   "Convert any seq of pairs to a java.utils.Properties instance.
-   Uses as-str to convert both keys and values into strings."
+   Uses as-sql-name to convert both keys and values into strings."
   [m]
   (let [p (Properties.)]
     (doseq [[k v] m]
-      (.setProperty p (as-str identity k) (as-str identity v)))
+      (.setProperty p (as-sql-name identity k) (as-sql-name identity v)))
     p))
 
 (defprotocol Connectable
@@ -316,15 +311,6 @@ compatibility but it will be removed before a 1.0.0 release." }
     (if as-arrays?
       (cons (vec keys) (rows))
       (records))))
-
-(defn
-  ^{:doc "A deprecated version of result-set-seq that uses the
-          dynamic *as-key* variable."
-    :deprecated "0.3.0"}
-  resultset-seq
-  [^ResultSet rs & {:keys [identifiers]
-                    :or {identifiers *as-key*}}]
-  (result-set-seq rs :identifiers identifiers))
 
 (defn- execute-batch
   "Executes a batch of SQL commands and returns a sequence of update counts.
@@ -697,8 +683,8 @@ compatibility but it will be removed before a 1.0.0 release." }
   [table entities]
   (if (map? table)
     (let [[k v] (first table)]
-      (str (as-str entities k) " " (as-str entities v)))
-    (as-str entities table)))
+      (str (as-sql-name entities k) " " (as-sql-name entities v)))
+    (as-sql-name entities table)))
 
 (defn- delete-sql
   "Given a table name, a where class and its parameters and an optional entities spec,
@@ -759,8 +745,8 @@ compatibility but it will be removed before a 1.0.0 release." }
   [col entities]
   (if (map? col)
     (let [[k v] (first col)]
-      (str (as-str entities k) " AS " (as-str entities v)))
-    (as-str entities col)))
+      (str (as-sql-name entities k) " AS " (as-sql-name entities v)))
+    (as-sql-name entities col)))
 
 (defn- insert-multi-row-sql
   "Given a table and a list of columns, followed by a list of column value sequences,
@@ -847,7 +833,7 @@ compatibility but it will be removed before a 1.0.0 release." }
                " SET " (str/join
                         ","
                         (map (fn [k v]
-                               (str (as-str entities k)
+                               (str (as-sql-name entities k)
                                     " = "
                                     (if (nil? v) "NULL" "?")))
                              ks vs))
@@ -870,116 +856,6 @@ compatibility but it will be removed before a 1.0.0 release." }
             (update-sql table set-map where-clause :entities entities)
             :transaction? transaction?))
 
-;; original API mostly rewritten in terms of new API primarily without dynamic binding
-
-(defn ^{:doc "Returns the current database connection (or nil if there is none)"
-        :deprecated "0.3.0"}
-  find-connection
-  ^java.sql.Connection []
-  (db-find-connection *db*))
-
-(defn ^{:doc "Returns the current database connection (or throws if there is none)"
-        :deprecated "0.3.0"}
-  connection
-  ^java.sql.Connection []
-  (db-connection *db*))
-
-(defn ^{:doc "Evaluates func in the context of a new connection to a database then
-              closes the connection."
-        :deprecated "0.3.0"}
-  with-connection*
-  [db-spec func]
-  (with-open [^java.sql.Connection con (get-connection db-spec)]
-    (binding [*db* (assoc *db* :connection con :level 0 :rollback (atom false))]
-      (func))))
-
-(defmacro ^{:doc "Evaluates body in the context of a new connection to a database then
-                  closes the connection."
-            :deprecated "0.3.0"}
-  with-connection
-  [db-spec & body]
-  `(with-connection* ~db-spec (^{:once true} fn* [] ~@body)))
-
-(defn
-  ^{:doc "Evaluates func as a transaction on the open database connection. Any
-          nested transactions are absorbed into the outermost transaction. By
-          default, all database updates are committed together as a group after
-          evaluating the outermost body, or rolled back on any uncaught
-          exception. If rollback is set within scope of the outermost transaction,
-          the entire transaction will be rolled back rather than committed when
-          complete."
-    :deprecated "0.3.0"}
-  transaction*
-  [func]
-  (binding [*db* (update-in *db* [:level] inc)]
-    (if (= (:level *db*) 1)
-      (let [^java.sql.Connection con (get-connection *db*)
-            auto-commit (.getAutoCommit con)]
-        (io!
-         (.setAutoCommit con false)
-         (try
-           (let [result (func)]
-             (if (db-is-rollback-only *db*)
-               (.rollback con)
-               (.commit con))
-             result)
-           (catch Throwable t
-             (.rollback con)
-             (throw-non-rte t))
-           (finally
-            (db-unset-rollback-only! *db*)
-            (.setAutoCommit con auto-commit)))))
-      (try
-        (func)
-        (catch Exception e
-          (throw-non-rte e))))))
-
-(defmacro
-  ^{:doc "Evaluates body as a transaction on the open database connection. Any
-          nested transactions are absorbed into the outermost transaction. By
-          default, all database updates are committed together as a group after
-          evaluating the outermost body, or rolled back on any uncaught
-          exception. If set-rollback-only is called within scope of the outermost
-          transaction, the entire transaction will be rolled back rather than
-          committed when complete."
-    :deprecated "0.3.0"}
-  transaction
-  [& body]
-  `(transaction* (^{:once true} fn* [] ~@body)))
-
-(defn
-  ^{:doc "Marks the outermost transaction such that it will rollback rather than
-          commit when complete"
-    :deprecated "0.3.0"}
-  set-rollback-only
-  []
-  (db-set-rollback-only! *db*))
-
-(defn
-  ^{:doc "Returns true if the outermost transaction will rollback rather than
-          commit when complete"
-    :deprecated "0.3.0"}
-  is-rollback-only
-  []
-  (db-is-rollback-only *db*))
-
-(defn
-  ^{:doc "Executes SQL commands on the open database connection."
-    :deprecated "0.3.0"}
-  do-commands
-  [& commands]
-  (apply db-do-commands *db* commands))
-
-(defn
-  ^{:doc "Executes an (optionally parameterized) SQL prepared statement on the
-          open database connection. Each param-group is a seq of values for all of
-          the parameters.
-          Return a seq of update counts (one count for each param-group)."
-    :deprecated "0.3.0"}
-  do-prepared
-  [sql & param-groups]
-  (apply db-do-prepared *db* sql param-groups))
-
 (defn create-table-ddl
   "Given a table name and column specs with an optional table-spec
    return the DDL string for creating that table."
@@ -992,264 +868,16 @@ compatibility but it will be removed before a 1.0.0 release." }
         table-spec-str (or (and table-spec (str " " table-spec)) "")
         specs-to-string (fn [specs]
                           (apply str
-                                 (map (as-str entities)
+                                 (map (as-sql-name entities)
                                       (apply concat
                                              (interpose [", "]
                                                         (map (partial interpose " ") specs))))))]
     (format "CREATE TABLE %s (%s)%s"
-            (as-str entities name)
+            (as-sql-name entities name)
             (specs-to-string col-specs)
             table-spec-str)))
-
-(defn create-table
-  "Creates a table on the open database connection given a table name and
-   specs. Each spec is either a column spec: a vector containing a column
-   name and optionally a type and other constraints, or a table-level
-   constraint: a vector containing words that express the constraint. An
-   optional suffix to the CREATE TABLE DDL describing table attributes may
-   by provided as :table-spec {table-attributes-string}. All words used to
-   describe the table may be supplied as strings or keywords."
-  [name & specs]
-  (db-do-commands *db* (apply create-table-ddl name specs)))
 
 (defn drop-table-ddl
   "Given a table name, return the DDL string for dropping that table."
   [name & {:keys [entities] :or {entities identity}}]
-  (format "DROP TABLE %s" (as-str entities name)))
-
-(defn drop-table
-  "Drops a table on the open database connection given its name, a string
-   or keyword"
-  [name]
-  (db-do-commands *db* (drop-table-ddl name)))
-
-(defn
-  ^{:doc "Executes an (optionally parameterized) SQL prepared statement on the
-          open database connection. The param-group is a seq of values for all of
-          the parameters.
-          Return the generated keys for the (single) update/insert."
-    :deprecated "0.3.0"}
-  do-prepared-return-keys
-  [sql param-group]
-  (db-do-prepared-return-keys *db* sql param-group))
-
-(defn
-  ^{:doc "Inserts rows into a table with values for specified columns only.
-          column-names is a vector of strings or keywords identifying columns. Each
-          value-group is a vector containing a values for each column in
-          order. When inserting complete rows (all columns), consider using
-          insert-rows instead.
-          If a single set of values is inserted, returns a map of the generated keys."
-    :deprecated "0.3.0"}
-  insert-values
-  [table column-names & value-groups]
-  (apply insert! *db* table column-names (concat value-groups [:entities *as-str*])))
-
-(defn
-  ^{:doc "Inserts complete rows into a table. Each row is a vector of values for
-          each of the table's columns in order.
-          If a single row is inserted, returns a map of the generated keys."
-    :deprecated "0.3.0"}
-  insert-rows
-  [table & rows]
-  (apply insert! *db* table nil (concat rows [:entities *as-str*])))
-
-(defn
-  ^{:doc "Inserts records into a table. records are maps from strings or keywords
-          (identifying columns) to values. Inserts the records one at a time.
-          Returns a sequence of maps containing the generated keys for each record."
-    :deprecated "0.3.0"}
-  insert-records
-  [table & records]
-  (apply insert! *db* table (concat records [:entities *as-str*])))
-
-(defn
-  ^{:doc "Inserts a single record into a table. A record is a map from strings or
-          keywords (identifying columns) to values.
-          Returns a map of the generated keys."
-    :deprecated "0.3.0"}
-  insert-record
-  [table record]
-  (first (insert-records table record)))
-
-(defn
-  ^{:doc "Deletes rows from a table. where-params is a vector containing a string
-          providing the (optionally parameterized) selection criteria followed by
-          values for any parameters."
-    :deprecated "0.3.0"}
-  delete-rows
-  [table where-params]
-  (apply delete! *db* table where-params [:entities *as-str*]))
-
-(defn
-  ^{:doc "Updates values on selected rows in a table. where-params is a vector
-          containing a string providing the (optionally parameterized) selection
-          criteria followed by values for any parameters. record is a map from
-          strings or keywords (identifying columns) to updated values."
-    :deprecated "0.3.0"}
-  update-values
-  [table where-params record]
-  (apply update! *db* table record where-params [:entities *as-str*]))
-
-(defn update-or-insert-values
-  "Updates values on selected rows in a table, or inserts a new row when no
-  existing row matches the selection criteria. where-params is a vector
-  containing a string providing the (optionally parameterized) selection
-  criteria followed by values for any parameters. record is a map from
-  strings or keywords (identifying columns) to updated values."
-  [table where-params record]
-  (transaction
-   (let [result (update-values table where-params record)]
-     (if (zero? (first result))
-       (insert-values table (keys record) (vals record))
-       result))))
-
-(defn
-  ^{:doc "Executes a query, then evaluates func passing in a seq of the results as
-          an argument. The first argument is a vector containing either:
-            [sql & params] - a SQL query, followed by any parameters it needs
-            [stmt & params] - a PreparedStatement, followed by any parameters it needs
-                             (the PreparedStatement already contains the SQL query)
-            [options sql & params] - options and a SQL query for creating a
-                             PreparedStatement, followed by any parameters it needs
-          See prepare-statement for supported options."
-    :deprecated "0.3.0"}
-  with-query-results*
-  [sql-params func]
-  (when-not (vector? sql-params)
-    (let [^Class sql-params-class (class sql-params)
-          ^String msg (format "\"%s\" expected %s %s, found %s %s"
-                              "sql-params"
-                              "vector"
-                              "[sql param*]"
-                              (.getName sql-params-class)
-                              (pr-str sql-params))] 
-      (throw (IllegalArgumentException. msg))))
-  (let [special (first sql-params)
-        sql-is-first (string? special)
-        options-are-first (map? special)
-        sql (cond sql-is-first special 
-                  options-are-first (second sql-params))
-        params (vec (cond sql-is-first (rest sql-params)
-                          options-are-first (rest (rest sql-params))
-                          :else (rest sql-params)))
-        prepare-args (when (map? special) (flatten (seq special)))]
-    (with-open [^PreparedStatement stmt (if (instance? PreparedStatement special) special (apply prepare-statement (get-connection *db*) sql prepare-args))]
-      (set-parameters stmt params) ; cannot override this in legacy API!
-      (with-open [rset (.executeQuery stmt)]
-        (binding [*db* (assoc *db* :connection (.getConnection stmt))]
-          (func (resultset-seq rset)))))))
-
-(defmacro
-  ^{:doc "Executes a query, then evaluates body with results bound to a seq of the
-          results. sql-params is a vector containing either:
-            [sql & params] - a SQL query, followed by any parameters it needs
-            [stmt & params] - a PreparedStatement, followed by any parameters it needs
-                              (the PreparedStatement already contains the SQL query)
-            [options sql & params] - options and a SQL query for creating a
-                              PreparedStatement, followed by any parameters it needs
-          See prepare-statement for supported options."
-    :deprecated "0.3.0"}
-  with-query-results
-  [results sql-params & body]
-  `(with-query-results* ~sql-params (^{:once true} fn* [~results] ~@body)))
-
-(defn
-  ^{:doc "Given a naming strategy and a string, return the string as a
-          keyword per that naming strategy. Given (a naming strategy and)
-          a keyword, return it as-is."
-    :deprecated "0.3.0"}
-  as-key
-  [f x]
-  (if (instance? clojure.lang.Named x)
-    x
-    (keyword (f (str x)))))
-
-(defn
-  ^{:doc "Given an entity name (string), convert it to a keyword using the
-          current naming strategy.
-          Given a keyword, return it as-is."
-    :deprecated "0.3.0"}
-  as-keyword
-  ([x] (as-keyword x *as-key*))
-  ([x f-keyword] (as-key f-keyword x)))
-
-(defn
-  ^{:doc "Given a naming strategy and a string, return the string as a keyword using
-          the keyword naming strategy.
-          Given a naming strategy and a keyword, return the keyword as-is.
-          The naming strategy should either be a function (the entity naming strategy)
-          or a map containing :entity and/or :keyword keys which provide the entity
-          naming strategy and/or keyword naming strategy respectively.
-          Note that providing a single function will cause the default keyword naming
-          strategy to be used!"
-    :deprecated "0.3.0"}
-  as-named-keyword
-  [naming-strategy x]
-  (as-keyword x (if (and (map? naming-strategy) (:keyword naming-strategy)) (:keyword naming-strategy) str/lower-case)))
-
-(defn
-  ^{:doc "Given a keyword, convert it to a string using the current naming
-          strategy.
-          Given a string, return it as-is."
-    :deprecated "0.3.0"}
-  as-identifier
-  ([x] (as-identifier x *as-str*))
-  ([x f-entity] (as-str f-entity x)))
-
-(defn as-quoted-str
-  "Given a quoting pattern - either a single character or a vector pair of
-   characters - and a string, return the quoted string:
-     (as-quoted-str X foo) will return XfooX
-     (as-quoted-str [A B] foo) will return AfooB"
-  ([q]
-     (fn [x]
-       (as-quoted-str q x)))
-  ([q x]
-     (if (vector? q)
-       (str (first q) x (last q))
-       (str q x q))))
-
-(defn
-  ^{:doc "Given a naming strategy and a keyword, return the keyword as a string using
-          the entity naming strategy.
-          Given a naming strategy and a string, return the string as-is.
-          The naming strategy should either be a function (the entity naming strategy)
-          or a map containing :entity and/or :keyword keys which provide the entity
-          naming strategy and/or keyword naming strategy respectively."
-    :deprecated "0.3.0"}
-  as-named-identifier
-  [naming-strategy x]
-  (as-identifier x (if (map? naming-strategy) (or (:entity naming-strategy) identity) naming-strategy)))
-
-(defn
-  ^{:doc "Given a quote pattern - either a single character or a pair of characters in
-          a vector - and a keyword, return the keyword as a string using a simple
-          quoting naming strategy.
-          Given a quote pattern and a string, return the string as-is.
-            (as-quoted-identifier X :name) will return XnameX as a string.
-            (as-quoted-identifier [A B] :name) will return AnameB as a string."
-    :deprecated "0.3.0"}
-  as-quoted-identifier
-  [q x]
-  (as-identifier x (as-quoted-str q)))
-
-(defmacro
-  ^{:doc "Evaluates body in the context of a simple quoting naming strategy."
-    :deprecated "0.3.0"}
-  with-quoted-identifiers
-  [q & body ]
-  `(binding [*as-str* (as-quoted-str ~q)] ~@body))
-
-(defmacro
-  ^{:doc "Evaluates body in the context of a naming strategy.
-          The naming strategy is either a function - the entity naming strategy - or
-          a map containing :entity and/or :keyword keys which provide the entity naming
-          strategy and/or the keyword naming strategy respectively. The default entity
-          naming strategy is identity; the default keyword naming strategy is
-          lower-case."
-    :deprecated "0.3.0"}
-  with-naming-strategy
-  [naming-strategy & body ]
-  `(binding [*as-str* (if (map? ~naming-strategy) (or (:entity ~naming-strategy) identity) ~naming-strategy)
-             *as-key* (if (map? ~naming-strategy) (or (:keyword ~naming-strategy) str/lower-case))] ~@body))
+  (format "DROP TABLE %s" (as-sql-name entities name)))
