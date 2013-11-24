@@ -54,9 +54,7 @@ made at some future date." }
            [javax.naming InitialContext Name]
            [javax.sql DataSource])
   (:refer-clojure :exclude [resultset-seq])
-  (:require [clojure.string :as str]
-            [clojure.java.jdbc.ddl :as ddl]
-            [clojure.java.jdbc.sql :as sql]))
+  (:require [clojure.string :as str]))
 
 ;; technically deprecated but still used as defaults in a couple of
 ;; places for backward compatibility...
@@ -73,13 +71,33 @@ made at some future date." }
 
 ;; end of deprecated API artifacts...
 
+(defn as-str
+  "Given a naming strategy and a keyword, return the keyword as a
+   string per that naming strategy. Given (a naming strategy and)
+   a string, return it as-is.
+   A keyword of the form :x.y is treated as keywords :x and :y,
+   both are turned into strings via the naming strategy and then
+   joined back together so :x.y might become `x`.`y` if the naming
+   strategy quotes identifiers with `."
+  ([f]
+     (fn [x]
+       (as-str f x)))
+  ([f x]
+     (if (instance? clojure.lang.Named x)
+       (let [n (name x)
+             i (.indexOf n (int \.))]
+         (if (= -1 i)
+           (f n)
+           (str/join "." (map f (.split n "\\.")))))
+       (str x))))
+
 (defn- ^Properties as-properties
   "Convert any seq of pairs to a java.utils.Properties instance.
-   Uses sql/as-str to convert both keys and values into strings."
+   Uses as-str to convert both keys and values into strings."
   [m]
   (let [p (Properties.)]
     (doseq [[k v] m]
-      (.setProperty p (sql/as-str identity k) (sql/as-str identity v)))
+      (.setProperty p (as-str identity k) (as-str identity v)))
     p))
 
 (defprotocol Connectable
@@ -638,7 +656,7 @@ made at some future date." }
   [db sql-params & {:keys [result-set-fn row-fn identifiers as-arrays?]
                     :or {result-set-fn doall
                          row-fn identity
-                         identifiers sql/lower-case}}]
+                         identifiers str/lower-case}}]
   (db-with-query-results* db (vec sql-params)
     (^{:once true} fn* [rs]
      (result-set-fn (if as-arrays?
@@ -664,6 +682,24 @@ made at some future date." }
       (with-open [^java.sql.Connection con (get-connection db)]
         (execute-helper (add-connection db con))))))
 
+(defn- table-str
+  "Transform a table spec to an entity name for SQL. The table spec may be a
+  string, a keyword or a map with a single pair - table name and alias."
+  [table entities]
+  (if (map? table)
+    (let [[k v] (first table)]
+      (str (as-str entities k) " " (as-str entities v)))
+    (as-str entities table)))
+
+(defn- delete-sql
+  "Given a table name, a where class and its parameters and an optional entities spec,
+  return a vector of the SQL for that delete operation followed by its parameters. The
+  entities spec (default 'as-is') specifies how to transform column names."
+  [table [where & params] & {:keys [entities] :or {entities identity}}]
+  (into [(str "DELETE FROM " (table-str table entities)
+              (when where " WHERE ") where)]
+        params))
+
 (defn delete!
   "Given a database connection, a table name and a where clause of columns to match,
   perform a delete. The optional keyword arguments specify how to transform
@@ -674,9 +710,9 @@ made at some future date." }
   is equivalent to:
     (execute! db [\"DELETE FROM person WHERE zip = ?\" 94546])"
   [db table where-clause & {:keys [entities transaction?]
-                            :or {entities sql/as-is transaction? true}}]
+                            :or {entities identity transaction? true}}]
   (execute! db
-            (sql/delete table where-clause :entities entities)
+            (delete-sql table where-clause :entities entities)
             :transaction? transaction?))
 
 (defn- multi-insert-helper
@@ -708,6 +744,70 @@ made at some future date." }
       [(second after) (concat before (nnext after))]
       [true data])))
 
+(defn- col-str
+  "Transform a column spec to an entity name for SQL. The column spec may be a
+  string, a keyword or a map with a single pair - column name and alias."
+  [col entities]
+  (if (map? col)
+    (let [[k v] (first col)]
+      (str (as-str entities k) " AS " (as-str entities v)))
+    (as-str entities col)))
+
+(defn- insert-multi-row-sql
+  "Given a table and a list of columns, followed by a list of column value sequences,
+  return a vector of the SQL needed for the insert followed by the list of column
+  value sequences. The entities function specifies how column names are transformed."
+  [table columns values entities]
+  (let [nc (count columns)
+        vcs (map count values)]
+    (if (not (and (or (zero? nc) (= nc (first vcs))) (apply = vcs)))
+      (throw (IllegalArgumentException. "insert called with inconsistent number of columns / values"))
+      (into [(str "INSERT INTO " (table-str table entities)
+                  (when (seq columns)
+                    (str " ( "
+                         (str/join ", " (map (fn [col] (col-str col entities)) columns))
+                         " )"))
+                  " VALUES ( "
+                  (str/join ", " (repeat (first vcs) "?"))
+                  " )")]
+            values))))
+
+(defn- insert-single-row-sql
+  "Given a table and a map representing a row, return a vector of the SQL needed for
+  the insert followed by the list of column values. The entities function specifies
+  how column names are transformed."
+  [table row entities]
+  (let [ks (keys row)]
+    (into [(str "INSERT INTO " (table-str table entities) " ( "
+                (str/join ", " (map (fn [col] (col-str col entities)) ks))
+                " ) VALUES ( "
+                (str/join ", " (repeat (count ks) "?"))
+                " )")]
+          (vals row))))
+
+(defn insert-sql
+  "Given a table name and either column names and values or maps representing rows, retun
+  return a vector of the SQL for that insert operation followed by its parameters. An
+  optional entities spec (default 'as-is') specifies how to transform column names."
+  [table & clauses]
+  (let [rows (take-while map? clauses)
+        n-rows (count rows)
+        cols-and-vals-etc (drop n-rows clauses)
+        cols-and-vals (take-while (comp not keyword?) cols-and-vals-etc)
+        n-cols-and-vals (count cols-and-vals)
+        no-cols-and-vals (zero? n-cols-and-vals)
+        options (drop (+ (count rows) (count cols-and-vals)) clauses)
+        {:keys [entities] :or {entities identity}} (apply hash-map options)]
+    (if (zero? n-rows)
+      (if no-cols-and-vals
+        (throw (IllegalArgumentException. "insert called without data to insert"))
+        (if (< n-cols-and-vals 2)
+          (throw (IllegalArgumentException. "insert called with columns but no values"))
+          (insert-multi-row-sql table (first cols-and-vals) (rest cols-and-vals) entities)))
+      (if no-cols-and-vals
+        (map (fn [row] (insert-single-row-sql table row entities)) rows)
+        (throw (IllegalArgumentException. "insert may take records or columns and values, not both"))))))
+
 (defn insert!
   "Given a database connection, a table name and either maps representing rows or
    a list of column names followed by lists of column values, perform an insert.
@@ -715,11 +815,36 @@ made at some future date." }
    The default is true (use a transaction)."
   [db table & options]
   (let [[transaction? maps-or-cols-and-values-etc] (extract-transaction? options)
-        stmts (apply sql/insert table maps-or-cols-and-values-etc)]
+        stmts (apply insert-sql table maps-or-cols-and-values-etc)]
     (if-let [con (db-find-connection db)]
       (insert-helper db transaction? stmts)
       (with-open [^java.sql.Connection con (get-connection db)]
         (insert-helper (add-connection db con) transaction? stmts)))))
+
+(defn- update-sql
+  "Given a table name and a map of columns to set, and optional map of columns to
+  match (and an optional entities spec), return a vector of the SQL for that update
+  followed by its parameters. Example:
+    (update :person {:zip 94540} (where {:zip 94546}))
+  returns:
+    [\"UPDATE person SET zip = ? WHERE zip = ?\" 94540 94546]"
+  [table set-map & where-etc]
+  (let [[where-clause & options] (when-not (keyword? (first where-etc)) where-etc)
+        [where & params] where-clause
+        {:keys [entities] :or {entities identity}} (if (keyword? (first where-etc)) where-etc options)
+        ks (keys set-map)
+        vs (vals set-map)]
+    (cons (str "UPDATE " (table-str table entities)
+               " SET " (str/join
+                        ","
+                        (map (fn [k v]
+                               (str (as-str entities k)
+                                    " = "
+                                    (if (nil? v) "NULL" "?")))
+                             ks vs))
+               (when where " WHERE ")
+               where)
+          (concat (remove nil? vs) params))))
 
 (defn update!
   "Given a database connection, a table name, a map of column values to set and a
@@ -731,9 +856,9 @@ made at some future date." }
   is equivalent to:
     (execute! db [\"UPDATE person SET zip = ? WHERE zip = ?\" 94540 94546])"
   [db table set-map where-clause & {:keys [entities transaction?]
-                                    :or {entities sql/as-is transaction? true}}]
+                                    :or {entities identity transaction? true}}]
   (execute! db
-            (sql/update table set-map where-clause :entities entities)
+            (update-sql table set-map where-clause :entities entities)
             :transaction? transaction?))
 
 ;; original API mostly rewritten in terms of new API primarily without dynamic binding
@@ -846,33 +971,48 @@ made at some future date." }
   [sql & param-groups]
   (apply db-do-prepared *db* sql param-groups))
 
-(defn ^{:doc "See clojure.java.jdbc.ddl/create-table for details.
-              This version is deprecated in favor of the version in the DDL namespace."
-        :deprecated "0.3.0"}
-  create-table-ddl
+(defn create-table-ddl
+  "Given a table name and column specs with an optional table-spec
+   return the DDL string for creating that table."
   [name & specs]
-  (apply ddl/create-table name specs))
+  (let [col-specs (take-while (fn [s]
+                                (not (or (= :table-spec s)
+                                         (= :entities s)))) specs)
+        other-specs (drop (count col-specs) specs)
+        {:keys [table-spec entities] :or {entities identity}} other-specs
+        table-spec-str (or (and table-spec (str " " table-spec)) "")
+        specs-to-string (fn [specs]
+                          (apply str
+                                 (map (as-str entities)
+                                      (apply concat
+                                             (interpose [", "]
+                                                        (map (partial interpose " ") specs))))))]
+    (format "CREATE TABLE %s (%s)%s"
+            (as-str entities name)
+            (specs-to-string col-specs)
+            table-spec-str)))
 
-(defn
-  ^{:doc "Creates a table on the open database connection given a table name and
-          specs. Each spec is either a column spec: a vector containing a column
-          name and optionally a type and other constraints, or a table-level
-          constraint: a vector containing words that express the constraint. An
-          optional suffix to the CREATE TABLE DDL describing table attributes may
-          by provided as :table-spec {table-attributes-string}. All words used to
-          describe the table may be supplied as strings or keywords."
-    :deprecated "0.3.0"}
-  create-table
+(defn create-table
+  "Creates a table on the open database connection given a table name and
+   specs. Each spec is either a column spec: a vector containing a column
+   name and optionally a type and other constraints, or a table-level
+   constraint: a vector containing words that express the constraint. An
+   optional suffix to the CREATE TABLE DDL describing table attributes may
+   by provided as :table-spec {table-attributes-string}. All words used to
+   describe the table may be supplied as strings or keywords."
   [name & specs]
-  (db-do-commands *db* (apply ddl/create-table name specs)))
+  (db-do-commands *db* (apply create-table-ddl name specs)))
 
-(defn
-  ^{:doc "Drops a table on the open database connection given its name, a string
-          or keyword"
-    :deprecated "0.3.0"}
-  drop-table
+(defn drop-table-ddl
+  "Given a table name, return the DDL string for dropping that table."
+  [name & {:keys [entities] :or {entities identity}}]
+  (format "DROP TABLE %s" (as-str entities name)))
+
+(defn drop-table
+  "Drops a table on the open database connection given its name, a string
+   or keyword"
   [name]
-  (db-do-commands *db* (ddl/drop-table name)))
+  (db-do-commands *db* (drop-table-ddl name)))
 
 (defn
   ^{:doc "Executes an (optionally parameterized) SQL prepared statement on the
@@ -1040,19 +1180,6 @@ made at some future date." }
   (as-keyword x (if (and (map? naming-strategy) (:keyword naming-strategy)) (:keyword naming-strategy) str/lower-case)))
 
 (defn
-  ^{:doc "Given a naming strategy and a keyword, return the keyword as a
-          string per that naming strategy. Given (a naming strategy and)
-          a string, return it as-is.
-          A keyword of the form :x.y is treated as keywords :x and :y,
-          both are turned into strings via the naming strategy and then
-          joined back together so :x.y might become `x`.`y` if the naming
-          strategy quotes identifiers with `."
-    :deprecated "0.3.0"}
-  as-str
-  [f x]
-  (sql/as-str f x))
-
-(defn
   ^{:doc "Given a keyword, convert it to a string using the current naming
           strategy.
           Given a string, return it as-is."
@@ -1061,15 +1188,18 @@ made at some future date." }
   ([x] (as-identifier x *as-str*))
   ([x f-entity] (as-str f-entity x)))
 
-(defn
-  ^{:doc "Given a quoting pattern - either a single character or a vector pair of
-          characters - and a string, return the quoted string:
-            (as-quoted-str X foo) will return XfooX
-            (as-quoted-str [A B] foo) will return AfooB"
-    :deprecated "0.3.0"}
-  as-quoted-str
-  [q x]
-  (sql/as-quoted-str q x))
+(defn as-quoted-str
+  "Given a quoting pattern - either a single character or a vector pair of
+   characters - and a string, return the quoted string:
+     (as-quoted-str X foo) will return XfooX
+     (as-quoted-str [A B] foo) will return AfooB"
+  ([q]
+     (fn [x]
+       (as-quoted-str q x)))
+  ([q x]
+     (if (vector? q)
+       (str (first q) x (last q))
+       (str q x q))))
 
 (defn
   ^{:doc "Given a naming strategy and a keyword, return the keyword as a string using
@@ -1093,14 +1223,14 @@ made at some future date." }
     :deprecated "0.3.0"}
   as-quoted-identifier
   [q x]
-  (as-identifier x (sql/as-quoted-str q)))
+  (as-identifier x (as-quoted-str q)))
 
 (defmacro
   ^{:doc "Evaluates body in the context of a simple quoting naming strategy."
     :deprecated "0.3.0"}
   with-quoted-identifiers
   [q & body ]
-  `(binding [*as-str* (sql/as-quoted-str ~q)] ~@body))
+  `(binding [*as-str* (as-quoted-str ~q)] ~@body))
 
 (defmacro
   ^{:doc "Evaluates body in the context of a naming strategy.

@@ -22,8 +22,7 @@
 
 (ns clojure.java.test-jdbc
   (:use clojure.test)
-  (:require [clojure.java.jdbc :as sql]
-            [clojure.java.jdbc.sql :as dsl]))
+  (:require [clojure.java.jdbc :as sql]))
 
 ;; Set test-databases according to whether you have the local database available:
 ;; Possible values so far: [:mysql :postgres :derby :hsqldb :mysql-str :postgres-str]
@@ -439,7 +438,7 @@
   (doseq [db (test-specs)]
     (sql/with-connection db
       (create-test-table :fruit db))
-    (is (= [] (sql/query db (dsl/select * :fruit))))))
+    (is (= [] (sql/query db ["SELECT * FROM fruit"])))))
 
 (deftest insert-one-row
   (doseq [db (test-specs)]
@@ -456,7 +455,7 @@
     (let [new-keys (sql/insert! db :fruit {:name "Apple"})
           new-keys (if (postgres? db) (map :id new-keys) new-keys)]
       (is (= [(returned-key db 1)] new-keys))
-      (is (= [{:id (generated-key db 1) :name "Apple" :appearance nil :grade nil :cost nil}] (sql/query db (dsl/select * :fruit)))))))
+      (is (= [{:id (generated-key db 1) :name "Apple" :appearance nil :grade nil :cost nil}] (sql/query db ["SELECT * FROM fruit"]))))))
 
 (deftest insert-two-by-map-and-query
   (doseq [db (test-specs)]
@@ -464,7 +463,7 @@
       (create-test-table :fruit db))
     (let [new-keys (sql/insert! db :fruit {:name "Apple"} {:name "Pear"})
           new-keys (if (postgres? db) (map :id new-keys) new-keys)
-          rows (sql/query db (dsl/select * :fruit (dsl/order-by :name)))]
+          rows (sql/query db ["SELECT * FROM fruit ORDER BY name"])]
       (is (= [(returned-key db 1) (returned-key db 2)] new-keys))
       (is (= [{:id (generated-key db 1) :name "Apple" :appearance nil :grade nil :cost nil}
               {:id (generated-key db 2) :name "Pear" :appearance nil :grade nil :cost nil}] rows)))))
@@ -475,7 +474,7 @@
       (create-test-table :fruit db))
     (let [new-keys (sql/insert! db :fruit {:name "Apple"} {:name "Pear"})
           new-keys (if (postgres? db) (map :id new-keys) new-keys)
-          rows (sql/query db (dsl/select * :fruit (dsl/order-by :name))
+          rows (sql/query db ["SELECT * FROM fruit ORDER BY name"]
                           :as-arrays? true)]
       (is (= [(returned-key db 1) (returned-key db 2)] new-keys))
       (is (= [[:id :name :appearance :cost :grade]
@@ -487,7 +486,7 @@
     (sql/with-connection db
       (create-test-table :fruit db))
     (let [update-counts (sql/insert! db :fruit [:name] ["Apple"] ["Pear"])
-          rows (sql/query db (dsl/select * :fruit (dsl/order-by :name)))]
+          rows (sql/query db ["SELECT * FROM fruit ORDER BY name"])]
       (is (= [1 1] update-counts))
       (is (= [{:id (generated-key db 1) :name "Apple" :appearance nil :grade nil :cost nil}
               {:id (generated-key db 2) :name "Pear" :appearance nil :grade nil :cost nil}] rows)))))
@@ -499,8 +498,8 @@
     (let [new-keys (sql/insert! db :fruit {:name "Apple"})
           new-keys (if (postgres? db) (map :id new-keys) new-keys)
           update-result (sql/update! db :fruit {:cost 12 :grade 1.2 :appearance "Green"}
-                                     (dsl/where {:id (generated-key db 1)}))
-          rows (sql/query db (dsl/select * :fruit))]
+                                     ["id = ?" (generated-key db 1)])
+          rows (sql/query db ["SELECT * FROM fruit"])]
       (is (= [(returned-key db 1)] new-keys))
       (is (= [1] update-result))
       (is (= [{:id (generated-key db 1)
@@ -515,8 +514,8 @@
     (let [new-keys (sql/insert! db :fruit {:name "Apple"})
           new-keys (if (postgres? db) (map :id new-keys) new-keys)
           delete-result (sql/delete! db :fruit
-                                     (dsl/where {:id (generated-key db 1)}))
-          rows (sql/query db (dsl/select * :fruit))]
+                                     ["id = ?" (generated-key db 1)])
+          rows (sql/query db ["SELECT * FROM fruit"])]
       (is (= [(returned-key db 1)] new-keys))
       (is (= [1] delete-result))
       (is (= [] rows)))))
@@ -524,11 +523,11 @@
 (deftest illegal-insert-arguments
   (doseq [db (test-specs)]
     (is (thrown? IllegalArgumentException (sql/insert! db)))
-    (is (thrown? IllegalArgumentException (sql/insert! db :entities dsl/as-is)))
+    (is (thrown? IllegalArgumentException (sql/insert! db :entities identity)))
     (is (thrown? IllegalArgumentException (sql/insert! db {:name "Apple"} [:name])))
-    (is (thrown? IllegalArgumentException (sql/insert! db {:name "Apple"} [:name] :entities dsl/as-is)))
+    (is (thrown? IllegalArgumentException (sql/insert! db {:name "Apple"} [:name] :entities identity)))
     (is (thrown? IllegalArgumentException (sql/insert! db [:name])))
-    (is (thrown? IllegalArgumentException (sql/insert! db [:name] :entities dsl/as-is)))))
+    (is (thrown? IllegalArgumentException (sql/insert! db [:name] :entities identity)))))
 
 (deftest test-partial-exception-with-db
   (doseq [db (test-specs)]
@@ -622,7 +621,7 @@
                    ["Pear" "yellow"]
                    ["Orange" "round"]]
                   :multi? true)
-          rows (sql/query db (dsl/select * :fruit (dsl/order-by :name)))]
+          rows (sql/query db ["SELECT * FROM fruit ORDER BY name"])]
       (is (= [1 1 1] counts))
       (is (= [{:id (generated-key db 1) :name "Apple" :appearance "rosy" :cost nil :grade nil}
               {:id (generated-key db 3) :name "Orange" :appearance "round" :cost nil :grade nil}
