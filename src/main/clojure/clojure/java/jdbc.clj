@@ -42,10 +42,9 @@ For more documentation, see:
 http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html
 
 As of release 0.3.0, the API has undergone a major overhaul and most of the
-original API has been deprecated in favor of a more idiomatic API, and a
-minimal DSL for generating SQL has been added as an option. The original
-API is still supported but will be deprecated before a 1.0.0 release is
-made at some future date." }
+original API has been deprecated in favor of a more idiomatic API. The
+original API has been moved to java.jdbc.deprecated for backward
+compatibility but it will be removed before a 1.0.0 release." }
   clojure.java.jdbc
   (:import [java.net URI]
            [java.sql BatchUpdateException DriverManager
