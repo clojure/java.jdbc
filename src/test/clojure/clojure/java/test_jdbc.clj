@@ -268,7 +268,7 @@
           "hsqldb"         (is (= '(1 1) r))
           "sqlite"         (is (= (list {(keyword "last_insert_rowid()") 1}
                                         {(keyword "last_insert_rowid()") 2}) r))
-          "derby"          (is (= '({:1 nil} {:1 nil}) r))))
+          "derby"          (is (= (list {(keyword "1") nil} {(keyword "1") nil}) r))))
       (is (= 2 (sql/with-query-results res ["SELECT * FROM fruit"] (count res))))
       (is (= "Pomegranate" (sql/with-query-results res ["SELECT * FROM fruit WHERE cost = ?" 585] (:name (first res))))))))
 
@@ -406,7 +406,7 @@
 
 (defn- returned-key [db k]
   (condp = (:subprotocol db)
-    "derby"  {:1 nil}
+    "derby"  {(keyword "1") nil}
     "hsqldb" 1
     "mysql"  {:generated_key k}
     nil      (if (mysql? db) ; string-based tests

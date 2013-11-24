@@ -51,7 +51,6 @@ made at some future date." }
            [java.sql BatchUpdateException DriverManager
             PreparedStatement ResultSet SQLException Statement Types]
            [java.util Hashtable Map Properties]
-           [javax.naming InitialContext Name]
            [javax.sql DataSource])
   (:refer-clojure :exclude [resultset-seq])
   (:require [clojure.string :as str]))
@@ -135,6 +134,7 @@ made at some future date." }
    "jtds:sqlserver" "net.sourceforge.jtds.jdbc.Driver"
    "derby"          "org.apache.derby.jdbc.EmbeddedDriver"
    "hsqldb"         "org.hsqldb.jdbcDriver"
+   "h2"             "org.h2.Driver"
    "sqlite"         "org.sqlite.JDBC"})
 
 (def ^{:private true :doc "Map of schemes to subprotocols"} subprotocols
@@ -158,6 +158,14 @@ made at some future date." }
   (if (.startsWith spec "jdbc:")
     (.substring spec 5)
     spec))
+
+;; feature testing macro, based on suggestion from Chas Emerick:
+(defmacro when-available
+  [sym & body]
+  (try
+    (when (resolve sym)
+      (list* 'do body))
+    (catch ClassNotFoundException _#)))
 
 (defn get-connection
   "Creates a connection to a database. db-spec is a map containing connection
@@ -235,10 +243,12 @@ made at some future date." }
    (.getConnection ^DataSource datasource)
    
    name
-   (let [env (and environment (Hashtable. ^Map environment))
-         context (InitialContext. env)
-         ^DataSource datasource (.lookup context ^String name)]
-     (.getConnection datasource))
+   (when-available
+    javax.naming.InitialContext
+    (let [env (and environment (Hashtable. ^Map environment))
+          context (javax.naming.InitialContext. env)
+          ^DataSource datasource (.lookup context ^String name)]
+      (.getConnection datasource)))
    
    :else
    (let [^String msg (format "db-spec %s is missing a required parameter" db-spec)]
@@ -543,7 +553,7 @@ made at some future date." }
   ([db transaction? sql param-group]
      (if-let [^java.sql.Connection con (db-find-connection db)]
        (with-open [^PreparedStatement stmt (prepare-statement con sql :return-keys true)]
-         (set-parameters stmt param-group)
+         ((or (:set-parameters db) set-parameters) stmt param-group)
          (let [exec-and-return-keys
                (^{:once true} fn* []
                 (let [counts (.executeUpdate stmt)]
@@ -587,7 +597,7 @@ made at some future date." }
                 (throw-non-rte e))))
           (do
             (doseq [param-group param-groups]
-              (set-parameters stmt param-group)
+              ((or (:set-parameters db) set-parameters) stmt param-group)
               (.addBatch stmt))
             (if transaction?
               (db-transaction [t-db (add-connection db (.getConnection stmt))]
@@ -599,16 +609,16 @@ made at some future date." }
       (with-open [^java.sql.Connection con (get-connection db)]
         (apply db-do-prepared (add-connection db con) transaction? sql param-groups)))))
 
-(defn- db-with-query-results*
-  "Executes a query, then evaluates func passing in a seq of the results as
-  an argument. The first argument is a vector containing either:
+(defn db-query-with-resultset
+  "Executes a query, then evaluates func passing in the raw ResultSet as an
+   argument. The first argument is a vector containing either:
     [sql & params] - a SQL query, followed by any parameters it needs
     [stmt & params] - a PreparedStatement, followed by any parameters it needs
                       (the PreparedStatement already contains the SQL query)
     [options sql & params] - options and a SQL query for creating a
                       PreparedStatement, followed by any parameters it needs
   See prepare-statement for supported options."
-  [db sql-params func identifiers as-arrays?]
+  [db sql-params func]
   (when-not (vector? sql-params)
     (let [^Class sql-params-class (class sql-params)
           ^String msg (format "\"%s\" expected %s %s, found %s %s"
@@ -628,11 +638,9 @@ made at some future date." }
                           :else (rest sql-params)))
         prepare-args (when (map? special) (flatten (seq special)))
         run-query-with-params (^{:once true} fn* [^PreparedStatement stmt]
-                               (set-parameters stmt params)
+                               ((or (:set-parameters db) set-parameters) stmt params)
                                (with-open [rset (.executeQuery stmt)]
-                                 (func (result-set-seq rset
-                                                       :identifiers identifiers
-                                                       :as-arrays? as-arrays?))))]
+                                 (func rset)))]
     (if (instance? PreparedStatement special)
       (let [^PreparedStatement stmt special]
         (run-query-with-params stmt))
@@ -649,22 +657,24 @@ made at some future date." }
   "Given a database connection and a vector containing SQL and optional parameters,
   perform a simple database query. The optional keyword arguments specify how to
   construct the result set:
-    :result-set-fn - applied to the entire result set, default doall
+    :result-set-fn - applied to the entire result set, default doall / vec
+        if :as-arrays? true, :result-set-fn will default to vec
+        if :as-arrays? false, :result-set-fn will default to doall
     :row-fn - applied to each row as the result set is constructed, default identity
     :identifiers - applied to each column name in the result set, default lower-case
     :as-arrays? - return the results as a set of arrays, default false."
   [db sql-params & {:keys [result-set-fn row-fn identifiers as-arrays?]
-                    :or {result-set-fn doall
-                         row-fn identity
+                    :or {row-fn identity
                          identifiers str/lower-case}}]
-  (db-with-query-results* db (vec sql-params)
-    (^{:once true} fn* [rs]
-     (result-set-fn (if as-arrays?
-                      (cons (first rs)
-                            (vec (map row-fn (rest rs))))
-                      (map row-fn rs))))
-    identifiers
-    as-arrays?))
+  (let [result-set-fn (or result-set-fn (if as-arrays? vec doall))]
+    (db-query-with-resultset db (vec sql-params)
+      (^{:once true} fn* [rset]
+       ((^{:once true} fn* [rs]
+         (result-set-fn (if as-arrays?
+                          (cons (first rs)
+                                (map row-fn (rest rs)))
+                          (map row-fn rs))))
+        (result-set-seq rset :identifiers identifiers :as-arrays? as-arrays?))))))
 
 (defn execute!
   "Given a database connection and a vector containing SQL and optional parameters,
@@ -1126,7 +1136,7 @@ made at some future date." }
                           :else (rest sql-params)))
         prepare-args (when (map? special) (flatten (seq special)))]
     (with-open [^PreparedStatement stmt (if (instance? PreparedStatement special) special (apply prepare-statement (get-connection *db*) sql prepare-args))]
-      (set-parameters stmt params)
+      (set-parameters stmt params) ; cannot override this in legacy API!
       (with-open [rset (.executeQuery stmt)]
         (binding [*db* (assoc *db* :connection (.getConnection stmt))]
           (func (resultset-seq rset)))))))
