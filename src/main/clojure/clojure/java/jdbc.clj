@@ -51,7 +51,6 @@ compatibility but it will be removed before a 1.0.0 release." }
             PreparedStatement ResultSet SQLException Statement Types]
            [java.util Hashtable Map Properties]
            [javax.sql DataSource])
-  (:refer-clojure :exclude [resultset-seq])
   (:require [clojure.string :as str]))
 
 (defn as-sql-name
