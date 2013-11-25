@@ -78,7 +78,7 @@ compatibility but it will be removed before a 1.0.0 release." }
      (quoted [\\A \\B] \"foo\") will return \"AfooB\""
   ([q]
      (fn [x]
-       (as-quoted-str q x)))
+       (quoted q x)))
   ([q x]
      (if (vector? q)
        (str (first q) x (last q))
