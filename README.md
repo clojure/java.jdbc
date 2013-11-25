@@ -1,14 +1,21 @@
 clojure.java.jdbc
 ========================================
 
-A low-level Clojure wrapper for JDBC-based access to databases. A minimal DSL is provided to generate basic SQL (in clojure.java.jdbc.sql) and basic DDL (in clojure.java.jdbc.ddl). For a more sophisticated DSL that is compatible with this library, consider:
+A low-level Clojure wrapper for JDBC-based access to databases.
+
+For DSLs that are compatible with this library, consider:
 
 * [HoneySQL](https://github.com/jkk/honeysql)
+* [SQLingvo](https://github.com/r0man/sqlingvo)
 * [Korma](http://sqlkorma.com)
 
-Formerly known as clojure.contrib.sql.
+Formerly known as `clojure.contrib.sql`.
 
 Additional documentation can be found in the [java.jdbc section of clojure-doc.org](http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html).
+
+If you depend on the `clojure.java.jdbc.sql` or `clojure.java.jdbc.ddl` namespaces, which were introduced in 0.3.0-alpha1, you will need to switch to [java-jdbc/dsl](https://github.com/seancorfield/jsql) as those DSLs have been removed from this contrib library as of 0.3.0-beta2, to improve the focus.
+
+Similarly, if you depend on the older 0.2.3 API, you'll need to switch to `clojure.java.jdbc.deprecated` as the old API was deprecated as part of the 0.3.0 release (alpha1 thru beta1). In order to clean up the documentation and improve the focus of `clojure.java.jdbc`, the old API has been moved in 0.3.0-beta1.
 
 Releases and Dependency Information
 ========================================
