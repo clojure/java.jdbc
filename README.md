@@ -23,7 +23,7 @@ Similarly, if you depend on the older 0.2.3 API, you'll need to switch to `cloju
 Releases and Dependency Information
 ========================================
 
-Latest stable release: 0.3.0-beta1
+Latest stable release: 0.3.0-beta2
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22java.jdbc%22)
 
@@ -31,14 +31,14 @@ Latest stable release: 0.3.0-beta1
 
 [Leiningen](https://github.com/technomancy/leiningen) dependency information:
 ```clojure
-[org.clojure/java.jdbc "0.3.0-beta1"]
+[org.clojure/java.jdbc "0.3.0-beta2"]
 ```
 [Maven](http://maven.apache.org/) dependency information:
 ```xml
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>java.jdbc</artifactId>
-  <version>0.3.0-beta1</version>
+  <version>0.3.0-beta2</version>
 </dependency>
 ```
 You will also need to add dependencies for the JDBC driver you intend to use. Here are examples of the drivers currently used for testing,
@@ -118,6 +118,11 @@ Developer Information
 
 Change Log
 ====================
+
+* Release 0.3.0-beta1 on 2013-11-24
+  * BREAKING CHANGES!
+  * The DSL namespaces introduced in 0.3.0-alpha1 have been retired - see [java-jdbc/dsl](https://github.com/seancorfield/jsql) for a migration path if you wish to continue using the DSL (although it is recommended you switch to another, more expressive DSL).
+  * The older API (0.2.3) which was deprecated in earlier 0.3.0 builds has moved to `clojure.java.jdbc.deprecated` to help streamline the API for 0.3.0 and clean up the documentation.
 
 * Release 0.3.0-beta1 on 2013-11-03
   * query as-arrays? now allows you to leverage lazy result fetching [JDBC-72](http://dev.clojure.org/jira/browse/JDBC-72).
