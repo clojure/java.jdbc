@@ -355,3 +355,54 @@
                                   (.getMetaData)
                                   (.getTables nil nil nil (into-array ["TABLE" "VIEW"]))))))]
         (is (= [] metadata))))))
+
+;; basic tests for keyword / entity conversion
+
+(deftest test-as-identifier
+  (is (= "kw" (sql/as-identifier "kw")))
+  (is (= "kw" (sql/as-identifier :kw)))
+  (is (= "KW" (sql/as-identifier "KW")))
+  (is (= "KW" (sql/as-identifier :KW)))
+  (is (= "k.w" (sql/as-identifier :k.w))))
+
+(deftest test-as-keyword
+  (is (= :kw (sql/as-keyword "kw")))
+  (is (= :kw (sql/as-keyword :kw)))
+  (is (= :kw (sql/as-keyword "KW")))
+  (is (= :KW (sql/as-keyword :KW)))
+  (is (= :k.w (sql/as-keyword :k.w))))
+
+(deftest test-quoted
+  (is (= "kw" (sql/as-quoted-identifier [ \[ \] ] "kw")))
+  (is (= "[kw]" (sql/as-quoted-identifier [ \[ \] ] :kw)))
+  (is (= "KW" (sql/as-quoted-identifier \` "KW")))
+  (is (= "`KW`" (sql/as-quoted-identifier \` :KW)))
+  (is (= "`k`.`w`" (sql/as-quoted-identifier \` :k.w))))
+
+(def quote-dash { :entity (partial sql/as-quoted-str \`) :keyword #(.replace % "_" "-") })
+
+(deftest test-named
+  (is (= "kw" (sql/as-named-identifier quote-dash "kw")))
+  (is (= "`kw`" (sql/as-named-identifier quote-dash :kw)))
+  (is (= "`k`.`w`" (sql/as-named-identifier quote-dash :k.w)))
+  (is (= :K-W (sql/as-named-keyword quote-dash "K_W")))
+  (is (= :K_W (sql/as-named-keyword quote-dash :K_W)))
+  (is (= :k.w (sql/as-named-keyword quote-dash :k.w))))
+
+(deftest test-with-quote
+  (sql/with-quoted-identifiers [ \[ \] ]
+    (is (= "kw" (sql/as-identifier "kw")))
+    (is (= "[kw]" (sql/as-identifier :kw)))
+    (is (= "KW" (sql/as-identifier "KW")))
+    (is (= "[KW]" (sql/as-identifier :KW)))
+    (is (= "[k].[w]" (sql/as-identifier :k.w)))))
+
+(deftest test-with-naming
+  (sql/with-naming-strategy quote-dash
+    (is (= "kw" (sql/as-identifier "kw")))
+    (is (= "`kw`" (sql/as-identifier :kw)))
+    (is (= "`k`.`w`" (sql/as-identifier :k.w)))
+    (is (= :K-W (sql/as-keyword "K_W")))
+    (is (= :K_W) (sql/as-keyword :K_W))
+    (is (= :k.w) (sql/as-keyword :k.w))))
+
