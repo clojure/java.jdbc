@@ -90,7 +90,10 @@ compatibility but it will be removed before a 1.0.0 release." }
   [m]
   (let [p (Properties.)]
     (doseq [[k v] m]
-      (.setProperty p (as-sql-name identity k) (as-sql-name identity v)))
+      (.setProperty p (as-sql-name identity k)
+                    (if (instance? clojure.lang.Named v)
+                      (as-sql-name identity v)
+                      (str v))))
     p))
 
 (defprotocol Connectable
