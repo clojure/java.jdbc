@@ -185,6 +185,8 @@ compatibility but it will be removed before a 1.0.0 release." }
   DataSource:
     :datasource  (required) a javax.sql.DataSource
     :username    (optional) a String
+    :user        (optional) a String - an alternate alias for :username
+                            (added after 0.3.0-beta2 for consistency JDBC-74)
     :password    (optional) a String, required if :username is supplied
 
   JNDI:
@@ -206,7 +208,7 @@ compatibility but it will be removed before a 1.0.0 release." }
            factory
            connection-uri
            classname subprotocol subname
-           datasource username password
+           datasource username password user
            name environment]
     :as db-spec}]
   (cond
@@ -232,8 +234,9 @@ compatibility but it will be removed before a 1.0.0 release." }
      (clojure.lang.RT/loadClassForName classname)
      (DriverManager/getConnection url (as-properties etc)))
    
-   (and datasource username password)
-   (.getConnection ^DataSource datasource ^String username ^String password)
+   (or (and datasource username password)
+       (and datasource user     password))
+   (.getConnection ^DataSource datasource ^String (or username user) ^String password)
    
    datasource
    (.getConnection ^DataSource datasource)
