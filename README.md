@@ -67,8 +67,7 @@ has to be downloaded manually and placed in a Maven repository accessible to you
 Example Usage
 ========================================
 ```clojure
-(require '[clojure.java.jdbc :as j]
-         '[clojure.java.jdbc.sql :as s])
+(require '[clojure.java.jdbc :as j])
 
 (def mysql-db {:subprotocol "mysql"
                :subname "//127.0.0.1:3306/clojure_test"
@@ -81,7 +80,7 @@ Example Usage
 ;; ({:generated_key 1} {:generated_key 2})
 
 (j/query mysql-db
-  (s/select * :fruit (s/where {:appearance "rosy"}))
+  ["select * from fruit where appearance = ?" "rosy"]
   :row-fn :cost)
 ;; (24)
 ```
