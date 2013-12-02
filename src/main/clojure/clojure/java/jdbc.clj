@@ -51,7 +51,6 @@ compatibility but it will be removed before a 1.0.0 release." }
             PreparedStatement ResultSet SQLException Statement Types]
            [java.util Hashtable Map Properties]
            [javax.sql DataSource])
-  (:refer-clojure :exclude [resultset-seq])
   (:require [clojure.string :as str]))
 
 (defn as-sql-name
@@ -186,6 +185,8 @@ compatibility but it will be removed before a 1.0.0 release." }
   DataSource:
     :datasource  (required) a javax.sql.DataSource
     :username    (optional) a String
+    :user        (optional) a String - an alternate alias for :username
+                            (added after 0.3.0-beta2 for consistency JDBC-74)
     :password    (optional) a String, required if :username is supplied
 
   JNDI:
@@ -207,7 +208,7 @@ compatibility but it will be removed before a 1.0.0 release." }
            factory
            connection-uri
            classname subprotocol subname
-           datasource username password
+           datasource username password user
            name environment]
     :as db-spec}]
   (cond
@@ -233,8 +234,9 @@ compatibility but it will be removed before a 1.0.0 release." }
      (clojure.lang.RT/loadClassForName classname)
      (DriverManager/getConnection url (as-properties etc)))
    
-   (and datasource username password)
-   (.getConnection ^DataSource datasource ^String username ^String password)
+   (or (and datasource username password)
+       (and datasource user     password))
+   (.getConnection ^DataSource datasource ^String (or username user) ^String password)
    
    datasource
    (.getConnection ^DataSource datasource)
@@ -269,6 +271,20 @@ compatibility but it will be removed before a 1.0.0 release." }
     cols
     (reduce (fn [unique-cols col-name]
               (conj unique-cols (make-name-unique unique-cols col-name 1))) []  cols)))
+
+(defprotocol ISQLValue
+  "Protocol for creating SQL values from Clojure values. Default
+   implementations (for Object and nil) just return the argument,
+   but it can be extended to provide custom behavior to support
+   exotic types supported by different databases."
+  (sql-value [val] "Convert a Clojure value into a SQL value."))
+
+(extend-protocol ISQLValue
+  Object
+  (sql-value [v] v)
+
+  nil
+  (sql-value [_] nil))
 
 (defprotocol IResultSetReadColumn
   "Protocol for reading objects from the java.sql.ResultSet. Default
@@ -385,7 +401,7 @@ compatibility but it will be removed before a 1.0.0 release." }
   "Add the parameters to the given statement."
   [^PreparedStatement stmt params]
   (dorun (map-indexed (fn [ix value]
-                        (.setObject stmt (inc ix) value))
+                        (.setObject stmt (inc ix) (sql-value value)))
                       params)))
 
 (defn print-sql-exception

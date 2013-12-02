@@ -1,3 +1,8 @@
+Changes coming in 0.3.0-beta3 (or rc1)
+
+* Add ISQLValue protocol to make it easier to support custom SQL types for parameters in SQL statements [JDBC-77](http://dev.clojure.org/jira/browse/JDBC-77).
+* Add :user as an alias for :username for DataSource connections [JDBC-74](http://dev.clojure.org/jira/browse/JDBC-74).
+
 Changes in 0.3.0-beta2
 
 * The DSL namespaces introduced in 0.3.0-alpha1 have been retired - see [java-jdbc/dsl](https://github.com/seancorfield/jsql) for a migration path if you wish to continue using the DSL (although it is recommended you switch to another, more expressive DSL).

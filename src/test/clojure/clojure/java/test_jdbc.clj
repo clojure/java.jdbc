@@ -639,3 +639,23 @@
   (extend-protocol sql/IResultSetReadColumn
     String
     (result-set-read-column [s _ _] s)))
+
+(deftest test-sql-value
+  (extend-protocol sql/ISQLValue
+    clojure.lang.Keyword
+    (sql-value [_] "KW"))
+
+  (doseq [db (test-specs)]
+    (create-test-table :fruit db)
+    (sql/insert! db
+                 :fruit
+                 [:name :cost]
+                 [:test 12])
+    (is (= {:name "KW", :cost 12}
+           (sql/query db ["SELECT name, cost FROM fruit"]
+                      :result-set-fn first))))
+
+  ;; somewhat "undo" the first extension
+  (extend-protocol sql/ISQLValue
+    clojure.lang.Keyword
+    (sql-value [k] k)))
