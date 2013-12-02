@@ -269,6 +269,20 @@ compatibility but it will be removed before a 1.0.0 release." }
     (reduce (fn [unique-cols col-name]
               (conj unique-cols (make-name-unique unique-cols col-name 1))) []  cols)))
 
+(defprotocol ISQLValue
+  "Protocol for creating SQL values from Clojure values. Default
+   implementations (for Object and nil) just return the argument,
+   but it can be extended to provide custom behavior to support
+   exotic types supported by different databases."
+  (sql-value [val] "Convert a Clojure value into a SQL value."))
+
+(extend-protocol ISQLValue
+  Object
+  (sql-value [v] v)
+
+  nil
+  (sql-value [_] nil))
+
 (defprotocol IResultSetReadColumn
   "Protocol for reading objects from the java.sql.ResultSet. Default
    implementations (for Object and nil) return the argument, but it can
@@ -384,7 +398,7 @@ compatibility but it will be removed before a 1.0.0 release." }
   "Add the parameters to the given statement."
   [^PreparedStatement stmt params]
   (dorun (map-indexed (fn [ix value]
-                        (.setObject stmt (inc ix) value))
+                        (.setObject stmt (inc ix) (sql-value value)))
                       params)))
 
 (defn print-sql-exception
