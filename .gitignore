@@ -13,3 +13,4 @@ settings.xml
 /clojure_test_sqlite
 /.lein-failures
 /.nrepl-port
+/.lein-repl-history
