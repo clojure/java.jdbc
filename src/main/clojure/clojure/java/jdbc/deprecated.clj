@@ -419,7 +419,7 @@ generated keys are returned (as a map)." }
    Specifically, Oracle returns that and we must call getUpdateCount() to get
    the actual number of rows affected. In general, operations return an array
    of update counts, so this may not be a general solution for Oracle..."
-  [stmt]
+  [^Statement stmt]
   (let [result (.executeBatch stmt)]
     (if (and (= 1 (count result)) (= -2 (first result)))
       (list (.getUpdateCount stmt))
