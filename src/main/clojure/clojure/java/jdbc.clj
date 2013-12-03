@@ -800,7 +800,7 @@ compatibility but it will be removed before a 1.0.0 release." }
           (vals row))))
 
 (defn insert-sql
-  "Given a table name and either column names and values or maps representing rows, retun
+  "Given a table name and either column names and values or maps representing rows,
   return a vector of the SQL for that insert operation followed by its parameters. An
   optional entities spec (default 'as-is') specifies how to transform column names."
   [table & clauses]
