@@ -134,7 +134,7 @@
     (= "postgresql" (:subprotocol db))))
 
 (defmulti create-test-table
-  "Create a standard test table. Must be inside with-connection.
+  "Create a standard test table. Uses db-do-commands.
    For MySQL, ensure table uses an engine that supports transactions!"
   (fn [table db]
     (cond
