@@ -18,8 +18,7 @@
 ;;  Migrated from clojure.contrib.sql 17 April 2011
 
 (ns
-  ^{
-    :author "Stephen C. Gilardi, Sean Corfield",
+  ^{:author "Stephen C. Gilardi, Sean Corfield",
     :doc "A Clojure interface to SQL databases via JDBC
 
 clojure.java.jdbc provides a simple abstraction for CRUD (create, read,
