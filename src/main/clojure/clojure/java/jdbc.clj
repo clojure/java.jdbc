@@ -515,7 +515,7 @@ compatibility but it will be removed before a 1.0.0 release." }
       (catch Exception e
         (throw-non-rte e)))))
 
-(defmacro db-transaction
+(defmacro with-db-transaction
   "Evaluates body in the context of a transaction on the specified database connection.
   The binding provides the database connection for the transaction and the name to which
   that is bound for evaluation of the body.
@@ -563,8 +563,8 @@ compatibility but it will be removed before a 1.0.0 release." }
         (doseq [^String cmd commands]
           (.addBatch stmt cmd))
         (if transaction?
-          (db-transaction [t-db (add-connection db (.getConnection stmt))]
-                          (execute-batch stmt))
+          (with-db-transaction [t-db (add-connection db (.getConnection stmt))]
+            (execute-batch stmt))
           (try
             (execute-batch stmt)
             (catch Exception e
@@ -597,8 +597,8 @@ compatibility but it will be removed before a 1.0.0 release." }
                       ;; assume generated keys is unsupported and return counts instead: 
                       counts))))]
            (if transaction?
-             (db-transaction [t-db (add-connection db (.getConnection stmt))]
-                             (exec-and-return-keys))
+             (with-db-transaction [t-db (add-connection db (.getConnection stmt))]
+               (exec-and-return-keys))
              (try
                (exec-and-return-keys)
                (catch Exception e
@@ -618,8 +618,8 @@ compatibility but it will be removed before a 1.0.0 release." }
       (with-open [^PreparedStatement stmt (prepare-statement con sql)]
         (if (empty? param-groups)
           (if transaction?
-            (db-transaction [t-db (add-connection db (.getConnection stmt))]
-                            (vector (.executeUpdate stmt)))
+            (with-db-transaction [t-db (add-connection db (.getConnection stmt))]
+              (vector (.executeUpdate stmt)))
             (try
               (vector (.executeUpdate stmt))
               (catch Exception e
@@ -629,8 +629,8 @@ compatibility but it will be removed before a 1.0.0 release." }
               ((or (:set-parameters db) set-parameters) stmt param-group)
               (.addBatch stmt))
             (if transaction?
-              (db-transaction [t-db (add-connection db (.getConnection stmt))]
-                              (execute-batch stmt))
+              (with-db-transaction [t-db (add-connection db (.getConnection stmt))]
+                (execute-batch stmt))
               (try
                 (execute-batch stmt)
                 (catch Exception e
@@ -770,7 +770,7 @@ compatibility but it will be removed before a 1.0.0 release." }
   (if (string? (first stmts))
     (apply db-do-prepared db transaction? (first stmts) (rest stmts))
     (if transaction?
-      (db-transaction [t-db db] (multi-insert-helper t-db stmts))
+      (with-db-transaction [t-db db] (multi-insert-helper t-db stmts))
       (multi-insert-helper db stmts))))
 
 (defn- extract-transaction?
@@ -925,3 +925,13 @@ compatibility but it will be removed before a 1.0.0 release." }
   "Given a table name, return the DDL string for dropping that table."
   [name & {:keys [entities] :or {entities identity}}]
   (format "DROP TABLE %s" (as-sql-name entities name)))
+
+(defmacro
+  ^{:doc "Original name for with-db-transaction. Use that instead."
+    :deprecated "0.3.0"}
+  db-transaction
+  [binding & body]
+  (println "DEPRECATED: Use with-db-transaction instead of db-transaction.")
+  `(db-transaction* ~(second binding)
+                    (^{:once true} fn* [~(first binding)] ~@body)))
+
