@@ -118,7 +118,15 @@ Developer Information
 Change Log
 ====================
 
-* Release 0.3.0-beta1 on 2013-11-24
+* Release 0.3.0-rc1 on 2013-12-12
+  * Deprecate db-transaction (new in 0.3.0) in favor of with-db-transaction [JDBC-81](http://dev.clojure.org/jira/browse/JDBC-81).
+  * Add with-db-metadata macro and metadata-result function to make it easier to work with SQL metadata [JDBC-80](http://dev.clojure.org/jira/browse/JDBC-80).
+  * Add with-db-connection macro to make it easier to run groups of operations against a single open connection [JDBC-79](http://dev.clojure.org/jira/browse/JDBC-79).
+  * Add ISQLValue protocol to make it easier to support custom SQL types for parameters in SQL statements [JDBC-77](http://dev.clojure.org/jira/browse/JDBC-77).
+  * Add support for :isolation in with-db-transaction [JDBC-75](http://dev.clojure.org/jira/browse/JDBC-75).
+  * Add :user as an alias for :username for DataSource connections [JDBC-74](http://dev.clojure.org/jira/browse/JDBC-74).
+
+* Release 0.3.0-beta2 on 2013-11-24
   * BREAKING CHANGES!
   * The DSL namespaces introduced in 0.3.0-alpha1 have been retired - see [java-jdbc/dsl](https://github.com/seancorfield/jsql) for a migration path if you wish to continue using the DSL (although it is recommended you switch to another, more expressive DSL).
   * The older API (0.2.3) which was deprecated in earlier 0.3.0 builds has moved to `clojure.java.jdbc.deprecated` to help streamline the API for 0.3.0 and clean up the documentation.
