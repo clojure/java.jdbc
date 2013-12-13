@@ -397,16 +397,34 @@
        (is (= 1 (sql/query t-conn ["SELECT * FROM fruit"] :result-set-fn count)))))
     (is (= 0 (sql/query db ["SELECT * FROM fruit"] :result-set-fn count)))))
 
-(deftest test-metadata
-  (doseq [db (test-specs)]
-    (when-not (and (map? db) (.endsWith ^String (:subprotocol db) "sqlserver"))
-      (let [metadata (with-open [conn (sql/get-connection db)]
+(deftest test-raw-metadata
+  (doseq [db (test-specs)]    
+    (create-test-table :fruit db)
+    (let [table-info (with-open [conn (sql/get-connection db)]
                        (into []
                              (sql/result-set-seq
                               (-> conn
                                   (.getMetaData)
-                                  (.getTables nil nil nil (into-array ["TABLE" "VIEW"]))))))]
-        (is (= [] metadata))))))
+                                  (.getTables nil nil nil
+                                              (into-array ["TABLE" "VIEW"]))))))]
+      (is (not= [] table-info))
+      (is (= "fruit" (-> table-info
+                         first
+                         :table_name
+                         clojure.string/lower-case))))))
+
+(deftest test-metadata
+  (doseq [db (test-specs)]    
+    (create-test-table :fruit db)
+    (sql/with-db-metadata [metadata db]
+      (let [table-info (sql/metadata-result (.getTables metadata
+                                                        nil nil nil
+                                                        (into-array ["TABLE" "VIEW"])))]
+        (is (not= [] table-info))
+        (is (= "fruit" (-> table-info
+                           first
+                           :table_name
+                           clojure.string/lower-case)))))))
 
 (defn- returned-key [db k]
   (condp = (:subprotocol db)

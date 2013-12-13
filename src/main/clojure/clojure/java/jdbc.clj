@@ -525,12 +525,31 @@ compatibility but it will be removed before a 1.0.0 release." }
                     (^{:once true} fn* [~(first binding)] ~@body)))
 
 (defmacro with-db-connection
-  "Evaluates body in the context of an active connection to the database."
+  "Evaluates body in the context of an active connection to the database.
+  (with-db-connection [con-db db-spec] ... con-db ...)"
   [binding & body]
   `(let [db-spec# ~(second binding)]
-     (with-open [con# (get-connection db-spec#)]
+     (with-open [^java.sql.Connection con# (get-connection db-spec#)]
        (let [~(first binding) (add-connection db-spec# con#)]
          ~@body))))
+
+(defmacro with-db-metadata
+  "Evaluates body in the context of an active connection with metadata bound
+   to the specified name. See also metadata-result below.
+   (with-db-metadata [md db-spec] ... md ..."
+  [binding & body]
+  `(with-open [^java.sql.Connection con# (get-connection ~(second binding))]
+     (let [~(first binding) (.getMetaData con#)]
+       ~@body)))
+
+(defn metadata-result
+  "If the argument is a java.sql.ResultSet, turn it into a result-set-seq,
+   else return it as-is. This makes working with metadata easier."
+  [rs-or-value & {:keys [identifiers as-arrays?]
+                  :or {identifiers str/lower-case}}]
+  (if (instance? java.sql.ResultSet rs-or-value)
+    (result-set-seq rs-or-value :identifiers identifiers :as-arrays? as-arrays?)
+    rs-or-value))
 
 (defn db-do-commands
   "Executes SQL commands on the specified database connection. Wraps the commands
