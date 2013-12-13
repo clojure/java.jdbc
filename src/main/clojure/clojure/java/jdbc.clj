@@ -480,6 +480,14 @@ compatibility but it will be removed before a 1.0.0 release." }
   [db]
   (deref (:rollback db)))
 
+(def ^{:private true :doc "Transaction isolation levels."}
+  isolation-levels
+  {:none             java.sql.Connection/TRANSACTION_NONE
+   :read-committed   java.sql.Connection/TRANSACTION_READ_COMMITTED
+   :read-uncommitted java.sql.Connection/TRANSACTION_READ_UNCOMMITTED
+   :repeatable-read  java.sql.Connection/TRANSACTION_REPEATABLE_READ
+   :serializable     java.sql.Connection/TRANSACTION_SERIALIZABLE})
+
 (defn db-transaction*
   "Evaluates func as a transaction on the open database connection. Any
   nested transactions are absorbed into the outermost transaction. By
@@ -488,12 +496,15 @@ compatibility but it will be removed before a 1.0.0 release." }
   exception. If rollback is set within scope of the outermost transaction,
   the entire transaction will be rolled back rather than committed when
   complete."
-  [db func]
+  [db func & {:keys [isolation]}]
   (if (zero? (get-level db))
     (if-let [^java.sql.Connection con (db-find-connection db)]
       (let [nested-db (inc-level db)
-            auto-commit (.getAutoCommit con)]
+            auto-commit (.getAutoCommit con)
+            old-isolation (.getTransactionIsolation con)]
         (io!
+         (when isolation
+           (.setTransactionIsolation con (isolation isolation-levels)))
          (.setAutoCommit con false)
          (try
            (let [result (func nested-db)]
@@ -506,9 +517,11 @@ compatibility but it will be removed before a 1.0.0 release." }
              (throw-non-rte t))
            (finally
              (db-unset-rollback-only! nested-db)
-             (.setAutoCommit con auto-commit)))))
+             (.setAutoCommit con auto-commit)
+             (when isolation
+               (.setTransactionIsolation con old-isolation))))))
       (with-open [^java.sql.Connection con (get-connection db)]
-        (db-transaction* (add-connection db con) func)))
+        (db-transaction* (add-connection db con) func :isolation isolation)))
     (try
       (func (inc-level db))
       (catch Exception e
@@ -521,7 +534,8 @@ compatibility but it will be removed before a 1.0.0 release." }
   See db-transaction* for more details."
   [binding & body]
   `(db-transaction* ~(second binding)
-                    (^{:once true} fn* [~(first binding)] ~@body)))
+                    (^{:once true} fn* [~(first binding)] ~@body)
+                    ~@(rest (rest binding))))
 
 (defmacro with-db-connection
   "Evaluates body in the context of an active connection to the database.

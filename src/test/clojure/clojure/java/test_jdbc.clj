@@ -107,8 +107,7 @@
   "Attempt to drop any test tables before we start a test."
   [t]
   (doseq [db (test-specs)]
-    (sql/with-db-transaction
-      [t-conn db]
+    (sql/with-db-transaction [t-conn db]
       (doseq [table [:fruit :fruit2 :veggies :veggies2]]
         (try
           (sql/db-do-commands t-conn (sql/drop-table-ddl table))
@@ -296,8 +295,15 @@
 
 (defn update-or-insert-values
   [db table row where]
-  (sql/with-db-transaction
-    [t-conn db]
+  (sql/with-db-transaction [t-conn db]
+    (let [result (sql/update! t-conn table row where)]
+      (if (zero? (first result))
+        (sql/insert! t-conn table row)
+        result))))
+
+(defn update-or-insert-values-with-isolation
+  [db table row where]
+  (sql/with-db-transaction [t-conn db :isolation :read-uncommitted]
     (let [result (sql/update! t-conn table row where)]
       (if (zero? (first result))
         (sql/insert! t-conn table row)
@@ -307,6 +313,27 @@
   (doseq [db (test-specs)]
     (create-test-table :fruit db)
     (update-or-insert-values db
+     :fruit
+     {:name "Pomegranate" :appearance "fresh" :cost 585}
+     ["name=?" "Pomegranate"])
+    (is (= 1 (sql/query db ["SELECT * FROM fruit"] :result-set-fn count)))
+    (is (= 585 (sql/query db ["SELECT * FROM fruit WHERE appearance = ?" "fresh"] :result-set-fn (comp :cost first))))
+    (update-or-insert-values db
+     :fruit
+     {:name "Pomegranate" :appearance "ripe" :cost 565}
+     ["name=?" "Pomegranate"])
+    (is (= 1 (sql/query db ["SELECT * FROM fruit"] :result-set-fn count)))
+    (is (= 565 (sql/query db ["SELECT * FROM fruit WHERE appearance = ?" "ripe"] :result-set-fn (comp :cost first))))
+    (update-or-insert-values db
+     :fruit
+     {:name "Apple" :appearance "green" :cost 74}
+     ["name=?" "Apple"])
+    (is (= 2 (sql/query db ["SELECT * FROM fruit"] :result-set-fn count)))))
+
+(deftest test-update-or-insert-values
+  (doseq [db (test-specs)]
+    (create-test-table :fruit db)
+    (update-or-insert-values-with-isolation db
      :fruit
      {:name "Pomegranate" :appearance "fresh" :cost 585}
      ["name=?" "Pomegranate"])
@@ -339,6 +366,21 @@
       (catch Exception _
         (is (= 0 (sql/query db ["SELECT * FROM fruit"] :result-set-fn count)))))))
 
+(deftest test-partial-exception-with-isolation
+  (doseq [db (test-specs)]
+    (create-test-table :fruit db)
+    (try
+      (sql/with-db-transaction [t-conn db :isolation :serializable]
+        (sql/insert! t-conn
+                     :fruit
+                     [:name :appearance]
+                     ["Grape" "yummy"]
+                     ["Pear" "bruised"])
+        (is (= 2 (sql/query t-conn ["SELECT * FROM fruit"] :result-set-fn count)))
+        (throw (Exception. "deliberate exception")))
+      (catch Exception _
+        (is (= 0 (sql/query db ["SELECT * FROM fruit"] :result-set-fn count)))))))
+
 (deftest test-sql-exception
   (doseq [db (test-specs)]
     (create-test-table :fruit db)
@@ -352,11 +394,37 @@
         (is (= 0 (sql/query db ["SELECT * FROM fruit"] :result-set-fn count)))))
     (is (= 0 (sql/query db ["SELECT * FROM fruit"] :result-set-fn count)))))
 
+(deftest test-sql-exception-with-isolation
+  (doseq [db (test-specs)]
+    (create-test-table :fruit db)
+    (try
+      (sql/with-db-transaction [t-conn db :isolation :read-uncommitted]
+        (sql/insert! t-conn
+                     :fruit
+                     [:name :appearance]
+                     ["Apple" "strange" "whoops"]))
+      (catch IllegalArgumentException _
+        (is (= 0 (sql/query db ["SELECT * FROM fruit"] :result-set-fn count)))))
+    (is (= 0 (sql/query db ["SELECT * FROM fruit"] :result-set-fn count)))))
+
 (deftest test-insert-values-exception
   (doseq [db (test-specs)]
     (create-test-table :fruit db)
     (is (thrown? IllegalArgumentException
                  (sql/with-db-transaction [t-conn db]
+                   (sql/insert! t-conn
+                                :fruit
+                                [:name :appearance]
+                                ["Grape" "yummy"]
+                                ["Pear" "bruised"]
+                                ["Apple" "strange" "whoops"]))))
+    (is (= 0 (sql/query db ["SELECT * FROM fruit"] :result-set-fn count)))))
+
+(deftest test-insert-values-exception-with-isolation
+  (doseq [db (test-specs)]
+    (create-test-table :fruit db)
+    (is (thrown? IllegalArgumentException
+                 (sql/with-db-transaction [t-conn db :isolation :read-uncommitted]
                    (sql/insert! t-conn
                                 :fruit
                                 [:name :appearance]
@@ -384,10 +452,41 @@
         (is (= 0 (sql/query db ["SELECT * FROM fruit"] :result-set-fn count)))))
     (is (= 0 (sql/query db ["SELECT * FROM fruit"] :result-set-fn count)))))
 
+(deftest test-rollback-with-isolation
+  (doseq [db (test-specs)]
+    (create-test-table :fruit db)
+    (try
+      (sql/with-db-transaction [t-conn db :isolation :read-uncommitted]
+        (is (not (sql/db-is-rollback-only t-conn)))
+        (sql/db-set-rollback-only! t-conn)
+        (is (sql/db-is-rollback-only t-conn))
+        (sql/insert! t-conn
+                     :fruit
+                     [:name :appearance]
+                     ["Grape" "yummy"]
+                     ["Pear" "bruised"]
+                     ["Apple" "strange"])
+        (is (= 3 (sql/query t-conn ["SELECT * FROM fruit"] :result-set-fn count))))
+      (catch java.sql.SQLException _
+        (is (= 0 (sql/query db ["SELECT * FROM fruit"] :result-set-fn count)))))
+    (is (= 0 (sql/query db ["SELECT * FROM fruit"] :result-set-fn count)))))
+
 (deftest test-transactions-with-possible-generated-keys-result-set
   (doseq [db (test-specs)]
     (create-test-table :fruit db)
     (sql/with-db-transaction [t-conn db]
+      (sql/db-set-rollback-only! t-conn)
+      (sql/insert! t-conn
+                   :fruit
+                   [:name :appearance]
+                   ["Grape" "yummy"])
+      (is (= 1 (sql/query t-conn ["SELECT * FROM fruit"] :result-set-fn count))))
+    (is (= 0 (sql/query db ["SELECT * FROM fruit"] :result-set-fn count)))))
+
+(deftest test-transactions-with-possible-generated-keys-result-set-and-isolation
+  (doseq [db (test-specs)]
+    (create-test-table :fruit db)
+    (sql/with-db-transaction [t-conn db :isolation :read-uncommitted]
       (sql/db-set-rollback-only! t-conn)
       (sql/insert! t-conn
                    :fruit

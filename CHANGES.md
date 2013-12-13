@@ -4,6 +4,7 @@ Changes coming in 0.3.0-rc1
 * Add with-db-metadata macro and metadata-result function to make it easier to work with SQL metadata [JDBC-80](http://dev.clojure.org/jira/browse/JDBC-80).
 * Add with-db-connection macro to make it easier to run groups of operations against a single open connection [JDBC-79](http://dev.clojure.org/jira/browse/JDBC-79).
 * Add ISQLValue protocol to make it easier to support custom SQL types for parameters in SQL statements [JDBC-77](http://dev.clojure.org/jira/browse/JDBC-77).
+* Add support for :isolation in with-db-transaction [JDBC-75](http://dev.clojure.org/jira/browse/JDBC-75).
 * Add :user as an alias for :username for DataSource connections [JDBC-74](http://dev.clojure.org/jira/browse/JDBC-74).
 
 Changes in 0.3.0-beta2
