@@ -121,8 +121,6 @@ compatibility but it will be removed before a 1.0.0 release." }
   (add-connection [_ connection] {:connection connection :level 0 :legacy true})
   (get-level [_] 0))
 
-(def ^{:private true :dynamic true} *db* (add-connection nil nil))
-
 (def ^{:private true :doc "Map of classnames to subprotocols"} classnames
   {"postgresql"     "org.postgresql.Driver"
    "mysql"          "com.mysql.jdbc.Driver"
