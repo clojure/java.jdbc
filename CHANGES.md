@@ -1,3 +1,7 @@
+Changes coming in 0.3.0-rc2 (or gold)
+
+* Rename unused arguments in protocol implementation to support Android [JDBC-82](http://dev.clojure.org/jira/browse/JDBC-82).
+
 Changes in 0.3.0-rc1
 
 * Deprecate db-transaction (new in 0.3.0) in favor of with-db-transaction [JDBC-81](http://dev.clojure.org/jira/browse/JDBC-81).

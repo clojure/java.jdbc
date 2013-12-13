@@ -292,10 +292,10 @@ compatibility but it will be removed before a 1.0.0 release." }
 
 (extend-protocol IResultSetReadColumn
   Object
-  (result-set-read-column [x _ _] x)
+  (result-set-read-column [x _2 _3] x)
 
   nil
-  (result-set-read-column [_ _ _] nil))
+  (result-set-read-column [_1 _2 _3] nil))
 
 (defn result-set-seq
   "Creates and returns a lazy sequence of maps corresponding to the rows in the
