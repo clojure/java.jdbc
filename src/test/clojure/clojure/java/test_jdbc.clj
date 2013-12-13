@@ -387,14 +387,13 @@
 (deftest test-transactions-with-possible-generated-keys-result-set
   (doseq [db (test-specs)]
     (create-test-table :fruit db)
-    (try
-      (sql/with-db-transaction [t-conn db]
-        (sql/db-set-rollback-only! t-conn)
-        (sql/insert! t-conn
-                     :fruit
-                     [:name :appearance]
-                     ["Grape" "yummy"])
-        (is (= 1 (sql/query t-conn ["SELECT * FROM fruit"] :result-set-fn count)))))
+    (sql/with-db-transaction [t-conn db]
+      (sql/db-set-rollback-only! t-conn)
+      (sql/insert! t-conn
+                   :fruit
+                   [:name :appearance]
+                   ["Grape" "yummy"])
+      (is (= 1 (sql/query t-conn ["SELECT * FROM fruit"] :result-set-fn count))))
     (is (= 0 (sql/query db ["SELECT * FROM fruit"] :result-set-fn count)))))
 
 (deftest test-raw-metadata
@@ -555,69 +554,6 @@
     (is (thrown? IllegalArgumentException (sql/insert! db {:name "Apple"} [:name] :entities identity)))
     (is (thrown? IllegalArgumentException (sql/insert! db [:name])))
     (is (thrown? IllegalArgumentException (sql/insert! db [:name] :entities identity)))))
-
-(deftest test-partial-exception-with-db
-  (doseq [db (test-specs)]
-    (create-test-table :fruit db)
-    (try
-      (sql/with-db-transaction [t-db db]
-        (sql/insert! t-db
-                     :fruit
-                     [:name :appearance]
-                     ["Grape" "yummy"]
-                     ["Pear" "bruised"])
-        (is (= 2 (sql/query t-db ["SELECT * FROM fruit"] :result-set-fn count)))
-        (throw (Exception. "deliberate exception")))
-      (catch Exception _
-        (is (= 0 (sql/query db ["SELECT * FROM fruit"] :result-set-fn count)))))))
-
-(deftest test-sql-exception-with-db
-  (doseq [db (test-specs)]
-    (create-test-table :fruit db)
-    (try
-      (sql/with-db-transaction [t-db db]
-        (sql/insert! t-db
-                     :fruit
-                     [:name :appearance]
-                     ["Grape" "yummy"]
-                     ["Pear" "bruised"]
-                     ["Apple" "strange" "whoops"])
-        ;; sqlite does not throw exception for too many items
-        (throw (java.sql.SQLException.)))
-      (catch Exception _ ;; insert! throws the exception, not JDBC
-        (is (= 0 (sql/query db ["SELECT * FROM fruit"] :result-set-fn count)))))
-    (is (= 0 (sql/query db ["SELECT * FROM fruit"] :result-set-fn count)))))
-
-(deftest test-rollback-with-db
-  (doseq [db (test-specs)]
-    (create-test-table :fruit db)
-    (try
-      (sql/with-db-transaction [t-db db]
-        (is (not (sql/db-is-rollback-only t-db)))
-        (sql/db-set-rollback-only! t-db)
-        (is (sql/db-is-rollback-only t-db))
-        (sql/insert! t-db
-                     :fruit
-                     [:name :appearance]
-                     ["Grape" "yummy"]
-                     ["Pear" "bruised"]
-                     ["Apple" "strange" "whoops"])
-        (is (= 3 (sql/query t-db ["SELECT * FROM fruit"] :result-set-fn count))))
-      (catch Exception _ ;; insert! throws the exception, not JDBC
-        (is (= 0 (sql/query db ["SELECT * FROM fruit"] :result-set-fn count)))))
-    (is (= 0 (sql/query db ["SELECT * FROM fruit"] :result-set-fn count)))))
-
-(deftest test-transactions-with-possible-generated-keys-result-set-with-db
-  (doseq [db (test-specs)]
-    (create-test-table :fruit db)
-    (sql/with-db-transaction [t-db db]
-      (sql/db-set-rollback-only! t-db)
-      (sql/insert! t-db
-                   :fruit
-                   [:name :appearance]
-                   ["Grape" "yummy"])
-      (is (= 1 (sql/query t-db ["SELECT * FROM fruit"] :result-set-fn count))))
-    (is (= 0 (sql/query db ["SELECT * FROM fruit"] :result-set-fn count)))))
 
 (deftest test-execute!-fails-with-multi-param-groups
   (doseq [db (test-specs)]
