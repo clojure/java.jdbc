@@ -516,6 +516,19 @@
       (is (= [1] delete-result))
       (is (= [] rows)))))
 
+(deftest insert-delete-and-query-in-connection
+  (doseq [db (test-specs)]
+    (sql/with-db-connection [con-db db]
+      (create-test-table :fruit con-db)
+      (let [new-keys (sql/insert! con-db :fruit {:name "Apple"})
+            new-keys (if (postgres? con-db) (map :id new-keys) new-keys)
+            delete-result (sql/delete! con-db :fruit
+                                       ["id = ?" (generated-key con-db 1)])
+            rows (sql/query con-db ["SELECT * FROM fruit"])]
+        (is (= [(returned-key con-db 1)] new-keys))
+        (is (= [1] delete-result))
+        (is (= [] rows))))))
+
 (deftest illegal-insert-arguments
   (doseq [db (test-specs)]
     (is (thrown? IllegalArgumentException (sql/insert! db)))

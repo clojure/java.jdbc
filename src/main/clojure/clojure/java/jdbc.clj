@@ -526,6 +526,14 @@ compatibility but it will be removed before a 1.0.0 release." }
   `(db-transaction* ~(second binding)
                     (^{:once true} fn* [~(first binding)] ~@body)))
 
+(defmacro with-db-connection
+  "Evaluates body in the context of an active connection to the database."
+  [binding & body]
+  `(let [db-spec# ~(second binding)]
+     (with-open [con# (get-connection db-spec#)]
+       (let [~(first binding) (add-connection db-spec# con#)]
+         ~@body))))
+
 (defn db-do-commands
   "Executes SQL commands on the specified database connection. Wraps the commands
   in a transaction if transaction? is true. transaction? can be ommitted and it
