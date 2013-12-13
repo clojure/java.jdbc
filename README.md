@@ -23,7 +23,7 @@ Similarly, if you depend on the older 0.2.3 API, you'll need to switch to `cloju
 Releases and Dependency Information
 ========================================
 
-Latest stable release: 0.3.0-beta2
+Latest stable release: 0.3.0-rc1
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22java.jdbc%22)
 
@@ -31,14 +31,14 @@ Latest stable release: 0.3.0-beta2
 
 [Leiningen](https://github.com/technomancy/leiningen) dependency information:
 ```clojure
-[org.clojure/java.jdbc "0.3.0-beta2"]
+[org.clojure/java.jdbc "0.3.0-rc1"]
 ```
 [Maven](http://maven.apache.org/) dependency information:
 ```xml
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>java.jdbc</artifactId>
-  <version>0.3.0-beta2</version>
+  <version>0.3.0-rc1</version>
 </dependency>
 ```
 You will also need to add dependencies for the JDBC driver you intend to use. Here are examples of the drivers currently used for testing,
