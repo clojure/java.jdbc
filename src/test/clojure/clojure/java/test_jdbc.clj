@@ -330,7 +330,7 @@
      ["name=?" "Apple"])
     (is (= 2 (sql/query db ["SELECT * FROM fruit"] :result-set-fn count)))))
 
-(deftest test-update-or-insert-values
+(deftest test-update-or-insert-values-with-isolation
   (doseq [db (test-specs)]
     (create-test-table :fruit db)
     (update-or-insert-values-with-isolation db
