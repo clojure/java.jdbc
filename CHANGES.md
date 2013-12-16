@@ -1,5 +1,6 @@
 Changes coming in 0.3.0-rc2 (or gold)
 
+* Ensure canonical Boolean to workaround strange behavior in some JDBC drivers [JDBC-84](http://dev.clojure.org/jira/browse/JDBC-84).
 * Rename unused arguments in protocol implementation to support Android [JDBC-82](http://dev.clojure.org/jira/browse/JDBC-82).
 
 Changes in 0.3.0-rc1

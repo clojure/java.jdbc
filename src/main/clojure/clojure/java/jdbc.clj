@@ -285,8 +285,9 @@ compatibility but it will be removed before a 1.0.0 release." }
 
 (defprotocol IResultSetReadColumn
   "Protocol for reading objects from the java.sql.ResultSet. Default
-   implementations (for Object and nil) return the argument, but it can
-   be extended to provide custom behavior for special types."
+   implementations (for Object and nil) return the argument, and the
+   Boolean implementation ensures a canonicalized true/false value,
+   but it can be extended to provide custom behavior for special types."
   (result-set-read-column [val rsmeta idx] "Function for transforming values after reading them
                               from the database"))
 
@@ -294,6 +295,9 @@ compatibility but it will be removed before a 1.0.0 release." }
   Object
   (result-set-read-column [x _2 _3] x)
 
+  Boolean
+  (result-set-read-column [x _2 _3] (if (= true x) true false))
+  
   nil
   (result-set-read-column [_1 _2 _3] nil))
 
