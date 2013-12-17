@@ -728,11 +728,14 @@ compatibility but it will be removed before a 1.0.0 release." }
   whether to run the operation in a transaction or not (default true)."
   [db sql-params & {:keys [transaction? multi?]
                     :or {transaction? true multi? false}}]
-  (let [execute-helper
+  (let [param-groups (rest sql-params)
+        execute-helper
         (^{:once true} fn* [db]
          (if multi?
-           (apply db-do-prepared db transaction? (first sql-params) (rest sql-params))
-           (db-do-prepared db transaction? (first sql-params) (rest sql-params))))]
+           (apply db-do-prepared db transaction? (first sql-params) param-groups)
+           (if (seq param-groups)
+             (db-do-prepared db transaction? (first sql-params) param-groups)
+             (db-do-prepared db transaction? (first sql-params)))))]
     (if-let [con (db-find-connection db)]
       (execute-helper db)
       (with-open [^java.sql.Connection con (get-connection db)]
