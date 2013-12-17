@@ -1,8 +1,9 @@
-Changes coming in 0.3.0-rc2 (or gold)
+Changes in 0.3.0
 
 * Ensure canonical Boolean to workaround strange behavior in some JDBC drivers [JDBC-84](http://dev.clojure.org/jira/browse/JDBC-84).
 * Rename recently introduced test to ensure unique names [JDBC-83](http://dev.clojure.org/jira/browse/JDBC-83).
 * Rename unused arguments in protocol implementation to support Android [JDBC-82](http://dev.clojure.org/jira/browse/JDBC-82).
+* Correctly handle empty param group sequence in execute! (which only seemed to affect SQLite) [JDBC-65](http://dev.clojure.org/jira/browse/JDBC-65).
 
 Changes in 0.3.0-rc1
 

@@ -18,12 +18,12 @@ Important Changes from Earlier Versions
 
 If you depend on the `clojure.java.jdbc.sql` or `clojure.java.jdbc.ddl` namespaces, which were introduced in 0.3.0-alpha1, you will need to switch to [java-jdbc/dsl](https://github.com/seancorfield/jsql) as those DSLs have been removed from this contrib library as of 0.3.0-beta2, to improve the focus.
 
-Similarly, if you depend on the older 0.2.3 API, you'll need to switch to `clojure.java.jdbc.deprecated` as the old API was deprecated as part of the 0.3.0 release (alpha1 thru beta1). In order to clean up the documentation and improve the focus of `clojure.java.jdbc`, the old API has been moved in 0.3.0-beta2.
+Similarly, if you depend on the older 0.2.3 API, you'll need to switch to `clojure.java.jdbc.deprecated` as the old API was deprecated as part of the 0.3.0 release (alpha1 thru beta1). In order to clean up the documentation and improve the focus of `clojure.java.jdbc`, the old API was moved in 0.3.0-beta2.
 
 Releases and Dependency Information
 ========================================
 
-Latest stable release: 0.3.0-rc1
+Latest stable release: 0.3.0
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22java.jdbc%22)
 
@@ -31,14 +31,14 @@ Latest stable release: 0.3.0-rc1
 
 [Leiningen](https://github.com/technomancy/leiningen) dependency information:
 ```clojure
-[org.clojure/java.jdbc "0.3.0-rc1"]
+[org.clojure/java.jdbc "0.3.0"]
 ```
 [Maven](http://maven.apache.org/) dependency information:
 ```xml
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>java.jdbc</artifactId>
-  <version>0.3.0-rc1</version>
+  <version>0.3.0</version>
 </dependency>
 ```
 You will also need to add dependencies for the JDBC driver you intend to use. Here are examples of the drivers currently used for testing,
@@ -117,6 +117,12 @@ Developer Information
 
 Change Log
 ====================
+
+* Release 0.3.0 on 2013-12-16
+  * Ensure canonical Boolean to workaround strange behavior in some JDBC drivers [JDBC-84](http://dev.clojure.org/jira/browse/JDBC-84).
+  * Rename recently introduced test to ensure unique names [JDBC-83](http://dev.clojure.org/jira/browse/JDBC-83).
+  * Rename unused arguments in protocol implementation to support Android [JDBC-82](http://dev.clojure.org/jira/browse/JDBC-82).
+  * Correctly handle empty param group sequence in execute! (which only seemed to affect SQLite) [JDBC-65](http://dev.clojure.org/jira/browse/JDBC-65).
 
 * Release 0.3.0-rc1 on 2013-12-12
   * Deprecate db-transaction (new in 0.3.0) in favor of with-db-transaction [JDBC-81](http://dev.clojure.org/jira/browse/JDBC-81).
