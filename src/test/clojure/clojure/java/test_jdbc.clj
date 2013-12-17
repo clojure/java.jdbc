@@ -272,6 +272,18 @@
     (is (= 2 (sql/query db ["SELECT * FROM fruit"] :result-set-fn count)))
     (is (= "Pomegranate" (sql/query db ["SELECT * FROM fruit WHERE cost = ?" 585] :result-set-fn (comp :name first))))))
 
+(deftest test-insert-via-execute
+  (doseq [db (test-specs)]
+    (create-test-table :fruit db)
+    (sql/execute! db [(str "INSERT INTO fruit ( name, appearance, cost ) "
+                           "VALUES ( ?, ?, ? )")
+                      "Apple" "Green" 75])
+    (sql/execute! db [(str "INSERT INTO fruit ( name, appearance, cost ) "
+                           "VALUES ( 'Pear', 'Yellow', 99 )")])
+    (is (= 2 (sql/query db ["SELECT * FROM fruit"] :result-set-fn count)))
+    (is (= "Pear" (sql/query db ["SELECT * FROM fruit WHERE cost = ?" 99]
+                             :result-set-fn (comp :name first))))))
+
 (deftest test-update-values
   (doseq [db (test-specs)]
     (create-test-table :fruit db)
