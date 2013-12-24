@@ -403,6 +403,6 @@
     (is (= "`kw`" (sql/as-identifier :kw)))
     (is (= "`k`.`w`" (sql/as-identifier :k.w)))
     (is (= :K-W (sql/as-keyword "K_W")))
-    (is (= :K_W) (sql/as-keyword :K_W))
-    (is (= :k.w) (sql/as-keyword :k.w))))
+    (is (= :K_W (sql/as-keyword :K_W)))
+    (is (= :k.w (sql/as-keyword :k.w)))))
 
