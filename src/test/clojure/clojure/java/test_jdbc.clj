@@ -108,7 +108,7 @@
   [t]
   (doseq [db (test-specs)]
     (sql/with-db-transaction [t-conn db]
-      (doseq [table [:fruit :fruit2 :veggies :veggies2]]
+      (doseq [table [:fruit :fruit2 :veggies :veggies2 :longdates]]
         (try
           (sql/db-do-commands t-conn (sql/drop-table-ddl table))
           (catch Exception _
@@ -737,3 +737,22 @@
   (extend-protocol sql/ISQLValue
     clojure.lang.Keyword
     (sql-value [k] k)))
+
+(deftest test-prepared-statement-set-parameter
+  (extend-protocol sql/IPreparedStatementSetParameter
+    java.util.Date
+    (prepared-statement-set-parameter [date stmt idx]
+      (.setLong stmt idx (.getTime date))))
+
+  (doseq [db (test-specs)]
+    (sql/db-do-commands db (sql/create-table-ddl :longdates [:millis :bigint]))
+
+    (let [date (java.util.Date.)]
+      (sql/insert! db :longdates {:millis date})
+      (is (= {:millis (.getTime date)} (sql/query db ["SELECT millis FROM longdates"] :result-set-fn first)))))
+
+  ;; somewhat "undo" the first extension
+  (extend-protocol sql/IPreparedStatementSetParameter
+    java.util.Date
+    (prepared-statement-set-parameter [date stmt idx]
+      (.setObject stmt idx (sql/sql-value date)))))

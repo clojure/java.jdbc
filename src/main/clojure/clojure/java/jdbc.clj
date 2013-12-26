@@ -301,6 +301,20 @@ compatibility but it will be removed before a 1.0.0 release." }
   nil
   (result-set-read-column [_1 _2 _3] nil))
 
+(defprotocol IPreparedStatementSetParameter
+  "Protocol for setting parameter values in a java.sql.PreparedStatement. The
+  default implementation for Object calls PreparedStatement#setObject(),
+  delegating parameter value conversion to the ISQLValue protocol."
+  (prepared-statement-set-parameter
+    [val stmt idx]
+    "Sets the `stmt` prepared statement parameter at `idx` to `val`"))
+
+(extend-protocol IPreparedStatementSetParameter
+  Object
+  (prepared-statement-set-parameter [val stmt idx]
+    (let [sqlval (sql-value val)]
+      (.setObject stmt idx sqlval))))
+
 (defn result-set-seq
   "Creates and returns a lazy sequence of maps corresponding to the rows in the
    java.sql.ResultSet rs. Loosely based on clojure.core/resultset-seq but it
@@ -402,7 +416,7 @@ compatibility but it will be removed before a 1.0.0 release." }
   "Add the parameters to the given statement."
   [^PreparedStatement stmt params]
   (dorun (map-indexed (fn [ix value]
-                        (.setObject stmt (inc ix) (sql-value value)))
+                        (prepared-statement-set-parameter value stmt (inc ix)))
                       params)))
 
 (defn print-sql-exception
