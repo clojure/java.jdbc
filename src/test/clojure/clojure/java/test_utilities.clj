@@ -57,7 +57,10 @@
 ;; DDL tests
 
 (deftest test-create-table-ddl
-  (is (= "CREATE TABLE table (col1 int, col2 int)"
-         (sql/create-table-ddl :table ["col1 int"] [:col2 :int])))
-  (is (= "CREATE TABLE table (col1 int, col2 int) ENGINE=MyISAM"
-         (sql/create-table-ddl :table [:col1 "int"] ["col2" :int] :table-spec "ENGINE=MyISAM"))))
+  (is (= "CREATE TABLE THING (COL1 INT, COL2 int)"
+         (sql/create-table-ddl :thing ["col1 int"] [:col2 :int]
+                               :entities clojure.string/upper-case)))
+  (is (= "CREATE TABLE THING (COL1 int, COL2 int) ENGINE=MyISAM"
+         (sql/create-table-ddl :thing [:col1 "int"] ["col2" :int]
+                               :table-spec "ENGINE=MyISAM"
+                               :entities clojure.string/upper-case))))

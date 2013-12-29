@@ -1,6 +1,8 @@
 Changes coming in 0.3.1
 
 * Fix parens in two deprecated tests [JDBC-85](http://dev.clojure.org/jira/browse/JDBC-85).
+* Made create-table-ddl less aggressive about applying as-sql-name so only first name in a column spec is affected.
+
 Changes in 0.3.0
 
 * Ensure canonical Boolean to workaround strange behavior in some JDBC drivers [JDBC-84](http://dev.clojure.org/jira/browse/JDBC-84).

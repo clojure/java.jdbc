@@ -923,22 +923,19 @@ compatibility but it will be removed before a 1.0.0 release." }
 (defn create-table-ddl
   "Given a table name and column specs with an optional table-spec
    return the DDL string for creating that table."
-  [name & specs]
+  [table & specs]
   (let [col-specs (take-while (fn [s]
                                 (not (or (= :table-spec s)
                                          (= :entities s)))) specs)
         other-specs (drop (count col-specs) specs)
         {:keys [table-spec entities] :or {entities identity}} other-specs
         table-spec-str (or (and table-spec (str " " table-spec)) "")
-        specs-to-string (fn [specs]
-                          (apply str
-                                 (map (as-sql-name entities)
-                                      (apply concat
-                                             (interpose [", "]
-                                                        (map (partial interpose " ") specs))))))]
+        spec-to-string (fn [spec]
+                         (str/join " " (cons (as-sql-name entities (first spec))
+                                             (map name (rest spec)))))]
     (format "CREATE TABLE %s (%s)%s"
-            (as-sql-name entities name)
-            (specs-to-string col-specs)
+            (as-sql-name entities table)
+            (str/join ", " (map spec-to-string col-specs))
             table-spec-str)))
 
 (defn drop-table-ddl
