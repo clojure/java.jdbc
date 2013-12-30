@@ -300,7 +300,11 @@ compatibility but it will be removed before a 1.0.0 release." }
 (extend-protocol ISQLParameter
   Object
   (set-parameter [v ^PreparedStatement s ^long i]
-    (.setObject s i (sql-value v))))
+    (.setObject s i (sql-value v)))
+
+  nil
+  (set-parameter [_ ^PreparedStatement s ^long i]
+    (.setObject s i (sql-value nil))))
 
 (defprotocol IResultSetReadColumn
   "Protocol for reading objects from the java.sql.ResultSet. Default

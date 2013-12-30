@@ -704,12 +704,12 @@
     (create-test-table :fruit db)
     (sql/insert! db
                  :fruit
-                 [:name :cost]
-                 ["Crepes" 12]
-                 ["Vegetables" -88]
-                 ["Teenage Mutant Ninja Turtles" 0])
-    (is (= {:name ::FOO, :cost -88}
-           (sql/query db ["SELECT name, cost FROM fruit WHERE name = ?"
+                 [:name :cost :grade]
+                 ["Crepes" 12 87.7]
+                 ["Vegetables" -88 nil]
+                 ["Teenage Mutant Ninja Turtles" 0 100.0])
+    (is (= {:name ::FOO, :cost -88, :grade nil}
+           (sql/query db ["SELECT name, cost, grade FROM fruit WHERE name = ?"
                                         "Vegetables"]
                       :result-set-fn first))))
 
@@ -727,10 +727,10 @@
     (create-test-table :fruit db)
     (sql/insert! db
                  :fruit
-                 [:name :cost]
-                 [:test 12])
-    (is (= {:name "KW", :cost 12}
-           (sql/query db ["SELECT name, cost FROM fruit"]
+                 [:name :cost :grade]
+                 [:test 12 nil])
+    (is (= {:name "KW", :cost 12, :grade nil}
+           (sql/query db ["SELECT name, cost, grade FROM fruit"]
                       :result-set-fn first))))
 
   ;; somewhat "undo" the first extension
@@ -750,10 +750,10 @@
     (create-test-table :fruit db)
     (sql/insert! db
                  :fruit
-                 [:name :cost]
-                 [:test :twelve])
-    (is (= {:name "test1", :cost 12}
-           (sql/query db ["SELECT name, cost FROM fruit"]
+                 [:name :cost :grade]
+                 [:test :twelve nil])
+    (is (= {:name "test1", :cost 12, :grade nil}
+           (sql/query db ["SELECT name, cost, grade FROM fruit"]
                       :result-set-fn first))))
 
   ;; somewhat "undo" the first extension
