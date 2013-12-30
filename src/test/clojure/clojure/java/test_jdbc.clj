@@ -737,3 +737,27 @@
   (extend-protocol sql/ISQLValue
     clojure.lang.Keyword
     (sql-value [k] k)))
+
+(deftest test-sql-parameter
+  (extend-protocol sql/ISQLParameter
+    clojure.lang.Keyword
+    (set-parameter [v ^java.sql.PreparedStatement s ^long i]
+      (if (= :twelve v)
+        (.setLong   s i 12)
+        (.setString s i (str (name v) i)))))
+
+  (doseq [db (test-specs)]
+    (create-test-table :fruit db)
+    (sql/insert! db
+                 :fruit
+                 [:name :cost]
+                 [:test :twelve])
+    (is (= {:name "test1", :cost 12}
+           (sql/query db ["SELECT name, cost FROM fruit"]
+                      :result-set-fn first))))
+
+  ;; somewhat "undo" the first extension
+  (extend-protocol sql/ISQLParameter
+    clojure.lang.Keyword
+    (set-parameter [v ^java.sql.PreparedStatement s ^long i]
+      (.setObject s i (sql/sql-value v)))))

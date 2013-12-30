@@ -283,13 +283,27 @@ compatibility but it will be removed before a 1.0.0 release." }
   nil
   (sql-value [_] nil))
 
+(defprotocol ISQLParameter
+  "Protocol for setting SQL parameters in statement objects, which
+   can convert from Clojure values. The default implementation just
+   delegates the conversion to ISQLValue's sql-value conversion and
+   uses .setObject on the parameter."
+  (set-parameter [val stmt ix]
+    "Convert a Clojure value into a SQL value and store it as the ix'th
+     parameter in the given SQL statement object."))
+
+(extend-protocol ISQLParameter
+  Object
+  (set-parameter [v ^PreparedStatement s ^long i]
+    (.setObject s i (sql-value v))))
+
 (defprotocol IResultSetReadColumn
   "Protocol for reading objects from the java.sql.ResultSet. Default
    implementations (for Object and nil) return the argument, and the
    Boolean implementation ensures a canonicalized true/false value,
    but it can be extended to provide custom behavior for special types."
-  (result-set-read-column [val rsmeta idx] "Function for transforming values after reading them
-                              from the database"))
+  (result-set-read-column [val rsmeta idx]
+    "Function for transforming values after reading them from the database"))
 
 (extend-protocol IResultSetReadColumn
   Object
@@ -400,9 +414,9 @@ compatibility but it will be removed before a 1.0.0 release." }
 
 (defn- set-parameters
   "Add the parameters to the given statement."
-  [^PreparedStatement stmt params]
+  [stmt params]
   (dorun (map-indexed (fn [ix value]
-                        (.setObject stmt (inc ix) (sql-value value)))
+                        (set-parameter value stmt (inc ix)))
                       params)))
 
 (defn print-sql-exception

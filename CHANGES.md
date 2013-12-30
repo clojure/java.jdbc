@@ -1,5 +1,6 @@
 Changes coming in 0.3.1
 
+* Provide better protocol for setting parameters in prepared statements [JDBC-86](http://dev.clojure.org/jira/browse/JDBC-86).
 * Fix parens in two deprecated tests [JDBC-85](http://dev.clojure.org/jira/browse/JDBC-85).
 * Made create-table-ddl less aggressive about applying as-sql-name so only first name in a column spec is affected.
 
