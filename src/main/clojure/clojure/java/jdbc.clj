@@ -53,11 +53,11 @@ compatibility but it will be removed before a 1.0.0 release." }
   (:require [clojure.string :as str]))
 
 (defn as-sql-name
-  "Given a naming strategy and a keyword or string, return the keyword
-   as a string per that naming strategy.
-   A keyword of the form :x.y is treated as keywords :x and :y,
-   both are turned into strings via the naming strategy and then
-   joined back together so :x.y might become `x`.`y` if the naming
+  "Given a naming strategy function and a keyword or string, return
+   a string per that naming strategy.
+   A name of the form x.y is treated as multiple names, x, y, etc,
+   and each are turned into strings via the naming strategy and then
+   joined back together so x.y might become `x`.`y` if the naming
    strategy quotes identifiers with `."
   ([f]
      (fn [x]
@@ -70,10 +70,13 @@ compatibility but it will be removed before a 1.0.0 release." }
          (str/join "." (map f (.split n "\\.")))))))
 
 (defn quoted
-  "Given a quoting pattern - either a single character or a vector pair of
-   characters - and a string, return the quoted string:
-     (quoted \\X \"foo\") will return \"XfooX\"
-     (quoted [\\A \\B] \"foo\") will return \"AfooB\""
+  "With a single argument, returns a naming strategy function that quotes
+   names. The single argument can either be a single character or a vector
+   pair of characters.
+   Can also be called with two arguments - a quoting argument and a name -
+   and returns the fully quoted string:
+     (quoted \\` \"foo\") will return \"`foo`\"
+     (quoted [\\[ \\]] \"foo\") will return \"[foo]\""
   ([q]
      (fn [x]
        (quoted q x)))
@@ -94,6 +97,7 @@ compatibility but it will be removed before a 1.0.0 release." }
                       (str v))))
     p))
 
+;; convenience for working with different forms of connections
 (defprotocol Connectable
   (add-connection [db connection])
   (get-level [db]))
@@ -161,9 +165,9 @@ compatibility but it will be removed before a 1.0.0 release." }
     (catch ClassNotFoundException _#)))
 
 (defn get-connection
-  "Creates a connection to a database. db-spec is a map containing connection
-  parameters. db-spec is a map containing values for one of the following
-  parameter sets:
+  "Creates a connection to a database. db-spec is usually a map containing connection
+  parameters but can also be a URI or a String. The various possibilities are described
+  below:
 
   Existing Connection:
     :connection  (required) an existing open connection that can be used
@@ -287,7 +291,8 @@ compatibility but it will be removed before a 1.0.0 release." }
   "Protocol for setting SQL parameters in statement objects, which
    can convert from Clojure values. The default implementation just
    delegates the conversion to ISQLValue's sql-value conversion and
-   uses .setObject on the parameter."
+   uses .setObject on the parameter. It can be extended to use other
+   methods of PreparedStatement to convert and set parameter values."
   (set-parameter [val stmt ix]
     "Convert a Clojure value into a SQL value and store it as the ix'th
      parameter in the given SQL statement object."))
@@ -513,7 +518,11 @@ compatibility but it will be removed before a 1.0.0 release." }
   evaluating the outermost body, or rolled back on any uncaught
   exception. If rollback is set within scope of the outermost transaction,
   the entire transaction will be rolled back rather than committed when
-  complete."
+  complete.
+  The isolation option may be :none, :read-committed, :read-uncommitted,
+  :repeatable-read, or :serializable. Note that not all databases support
+  all of those isolation levels, and may either throw an exception or
+  substitute another isolation level."
   [db func & {:keys [isolation]}]
   (if (zero? (get-level db))
     (if-let [^java.sql.Connection con (db-find-connection db)]
@@ -548,7 +557,10 @@ compatibility but it will be removed before a 1.0.0 release." }
 (defmacro with-db-transaction
   "Evaluates body in the context of a transaction on the specified database connection.
   The binding provides the database connection for the transaction and the name to which
-  that is bound for evaluation of the body.
+  that is bound for evaluation of the body. The binding may also specify the isolation
+  level for the transaction, via the :isolation option.
+  (with-db-transaction [t-con db-spec :isolation level]
+    ... t-con ...)
   See db-transaction* for more details."
   [binding & body]
   `(db-transaction* ~(second binding)
@@ -557,7 +569,8 @@ compatibility but it will be removed before a 1.0.0 release." }
 
 (defmacro with-db-connection
   "Evaluates body in the context of an active connection to the database.
-  (with-db-connection [con-db db-spec] ... con-db ...)"
+  (with-db-connection [con-db db-spec]
+    ... con-db ...)"
   [binding & body]
   `(let [db-spec# ~(second binding)]
      (with-open [^java.sql.Connection con# (get-connection db-spec#)]
@@ -566,8 +579,10 @@ compatibility but it will be removed before a 1.0.0 release." }
 
 (defmacro with-db-metadata
   "Evaluates body in the context of an active connection with metadata bound
-   to the specified name. See also metadata-result below.
-   (with-db-metadata [md db-spec] ... md ..."
+   to the specified name. See also metadata-result for dealing with the results
+   of operations that retrieve information from the metadata.
+   (with-db-metadata [md db-spec]
+     ... md ...)"
   [binding & body]
   `(with-open [^java.sql.Connection con# (get-connection ~(second binding))]
      (let [~(first binding) (.getMetaData con#)]
@@ -575,7 +590,9 @@ compatibility but it will be removed before a 1.0.0 release." }
 
 (defn metadata-result
   "If the argument is a java.sql.ResultSet, turn it into a result-set-seq,
-   else return it as-is. This makes working with metadata easier."
+   else return it as-is. This makes working with metadata easier.
+   Also accepts :identifiers and :as-arrays? to control how the ResultSet
+   is transformed and returned. See query for more details."
   [rs-or-value & {:keys [identifiers as-arrays?]
                   :or {identifiers str/lower-case}}]
   (if (instance? java.sql.ResultSet rs-or-value)
@@ -586,6 +603,8 @@ compatibility but it will be removed before a 1.0.0 release." }
   "Executes SQL commands on the specified database connection. Wraps the commands
   in a transaction if transaction? is true. transaction? can be ommitted and it
   defaults to true."
+  {:arglists '([db-spec sql-command & sql-commands]
+                 [db-spec transaction? sql-command & sql-commands])}
   [db transaction? & commands]
   (if (string? transaction?)
     (apply db-do-commands db true transaction? commands)
@@ -642,6 +661,8 @@ compatibility but it will be removed before a 1.0.0 release." }
   open database connection. Each param-group is a seq of values for all of
   the parameters. transaction? can be omitted and defaults to true.
   Return a seq of update counts (one count for each param-group)."
+  {:arglists '([db-spec sql & param-groups]
+                 [db-spec transaction? sql & param-groups])}
   [db transaction? & [sql & param-groups :as opts]]
   (if (string? transaction?)
     (apply db-do-prepared db true transaction? opts)
@@ -671,13 +692,16 @@ compatibility but it will be removed before a 1.0.0 release." }
 
 (defn db-query-with-resultset
   "Executes a query, then evaluates func passing in the raw ResultSet as an
-   argument. The first argument is a vector containing either:
+   argument. The second argument is a vector containing either:
     [sql & params] - a SQL query, followed by any parameters it needs
     [stmt & params] - a PreparedStatement, followed by any parameters it needs
                       (the PreparedStatement already contains the SQL query)
     [options sql & params] - options and a SQL query for creating a
                       PreparedStatement, followed by any parameters it needs
   See prepare-statement for supported options."
+  {:arglists '([db-spec [sql-string & params] func]
+                 [db-spec [stmt & params] func]
+                   [db-spec [options-map sql-string & params] func])}
   [db sql-params func]
   (when-not (vector? sql-params)
     (let [^Class sql-params-class (class sql-params)
@@ -722,7 +746,18 @@ compatibility but it will be removed before a 1.0.0 release." }
         if :as-arrays? false, :result-set-fn will default to doall
     :row-fn - applied to each row as the result set is constructed, default identity
     :identifiers - applied to each column name in the result set, default lower-case
-    :as-arrays? - return the results as a set of arrays, default false."
+    :as-arrays? - return the results as a set of arrays, default false.
+  The second argument is a vector containing a SQL string or PreparedStatement, followed
+  by any parameters it needs. See db-query-with-resultset for details."
+  {:arglists '([db-spec sql-and-params
+                :as-arrays? false :identifiers clojure.string/lower-case
+                :result-set-fn doall :row-fn identity]
+                 [db-spec sql-and-params
+                  :as-arrays? true :identifiers clojure.string/lower-case
+                  :result-set-fn vec :row-fn identity]
+                   [db-spec [sql-string & params]]
+                     [db-spec [stmt & params]]
+                       [db-spec [option-map sql-string & params]])}
   [db sql-params & {:keys [result-set-fn row-fn identifiers as-arrays?]
                     :or {row-fn identity
                          identifiers str/lower-case}}]
@@ -740,6 +775,8 @@ compatibility but it will be removed before a 1.0.0 release." }
   "Given a database connection and a vector containing SQL and optional parameters,
   perform a general (non-select) SQL operation. The optional keyword argument specifies
   whether to run the operation in a transaction or not (default true)."
+  {:arglists '([db-spec [sql & params] :multi? false :transaction? true]
+                 [db-spec [sql & param-groups] :multi? true :transaction? true])}
   [db sql-params & {:keys [transaction? multi?]
                     :or {transaction? true multi? false}}]
   (let [param-groups (rest sql-params)
@@ -885,7 +922,11 @@ compatibility but it will be removed before a 1.0.0 release." }
   "Given a database connection, a table name and either maps representing rows or
    a list of column names followed by lists of column values, perform an insert.
    Use :transaction? argument to specify whether to run in a transaction or not.
-   The default is true (use a transaction)."
+   The default is true (use a transaction). Use :entities to specify how to convert
+   the table name and column names to SQL entities."
+  {:arglists '([db-spec table row-map :transaction? true :entities identity]
+                 [db-spec table row-map & row-maps :transaction? true :entities identity]
+                   [db-spec table col-name-vec col-val-vec & col-val-vecs :transaction? true :entities identity])}
   [db table & options]
   (let [[transaction? maps-or-cols-and-values-etc] (extract-transaction? options)
         stmts (apply insert-sql table maps-or-cols-and-values-etc)]
