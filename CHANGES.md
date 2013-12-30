@@ -1,4 +1,8 @@
-Changes in 0.3.1
+Changes in 0.3.2
+
+* Add nil protocol implementation to ISQLParameter.
+
+Changes in 0.3.1 (broken)
 
 * Improve docstrings and add :arglists for better auto-generated documentation.
 * Make insert-sql private - technically a breaking change but it should never have been public: sorry folks!

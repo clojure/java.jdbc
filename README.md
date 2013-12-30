@@ -23,7 +23,7 @@ Similarly, if you depend on the older 0.2.3 API, you'll need to switch to `cloju
 Releases and Dependency Information
 ========================================
 
-Latest stable release: 0.3.1
+Latest stable release: 0.3.2
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22java.jdbc%22)
 
@@ -31,14 +31,14 @@ Latest stable release: 0.3.1
 
 [Leiningen](https://github.com/technomancy/leiningen) dependency information:
 ```clojure
-[org.clojure/java.jdbc "0.3.1"]
+[org.clojure/java.jdbc "0.3.2"]
 ```
 [Maven](http://maven.apache.org/) dependency information:
 ```xml
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>java.jdbc</artifactId>
-  <version>0.3.1</version>
+  <version>0.3.2</version>
 </dependency>
 ```
 You will also need to add dependencies for the JDBC driver you intend to use. Here are examples of the drivers currently used for testing,
@@ -118,7 +118,10 @@ Developer Information
 Change Log
 ====================
 
-* Release 0.3.1 on 2013-12-29
+* Release 0.3.2 on 2013-12-30
+  * Add nil protocol implementation to ISQLParameter
+
+* Release 0.3.1 on 2013-12-29 (broken; use 0.3.2 instead)
   * Improve docstrings and add :arglists for better auto-generated documentation.
   * Make insert-sql private - technically a breaking change but it should never have been public: sorry folks!
   * Provide better protocol for setting parameters in prepared statements [JDBC-86](http://dev.clojure.org/jira/browse/JDBC-86).
