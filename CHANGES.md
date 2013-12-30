@@ -1,4 +1,4 @@
-Changes coming in 0.3.1
+Changes in 0.3.1
 
 * Improve docstrings and add :arglists for better auto-generated documentation.
 * Make insert-sql private - technically a breaking change but it should never have been public: sorry folks!

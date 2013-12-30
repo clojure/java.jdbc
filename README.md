@@ -23,7 +23,7 @@ Similarly, if you depend on the older 0.2.3 API, you'll need to switch to `cloju
 Releases and Dependency Information
 ========================================
 
-Latest stable release: 0.3.0
+Latest stable release: 0.3.1
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22java.jdbc%22)
 
@@ -31,14 +31,14 @@ Latest stable release: 0.3.0
 
 [Leiningen](https://github.com/technomancy/leiningen) dependency information:
 ```clojure
-[org.clojure/java.jdbc "0.3.0"]
+[org.clojure/java.jdbc "0.3.1"]
 ```
 [Maven](http://maven.apache.org/) dependency information:
 ```xml
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>java.jdbc</artifactId>
-  <version>0.3.0</version>
+  <version>0.3.1</version>
 </dependency>
 ```
 You will also need to add dependencies for the JDBC driver you intend to use. Here are examples of the drivers currently used for testing,
@@ -117,6 +117,13 @@ Developer Information
 
 Change Log
 ====================
+
+* Release 0.3.1 on 2013-12-29
+  * Improve docstrings and add :arglists for better auto-generated documentation.
+  * Make insert-sql private - technically a breaking change but it should never have been public: sorry folks!
+  * Provide better protocol for setting parameters in prepared statements [JDBC-86](http://dev.clojure.org/jira/browse/JDBC-86).
+  * Fix parens in two deprecated tests [JDBC-85](http://dev.clojure.org/jira/browse/JDBC-85).
+  * Made create-table-ddl less aggressive about applying as-sql-name so only first name in a column spec is affected.
 
 * Release 0.3.0 on 2013-12-16
   * Ensure canonical Boolean to workaround strange behavior in some JDBC drivers [JDBC-84](http://dev.clojure.org/jira/browse/JDBC-84).
