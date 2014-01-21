@@ -50,7 +50,8 @@ compatibility but it will be removed before a 1.0.0 release." }
             PreparedStatement ResultSet SQLException Statement Types]
            [java.util Hashtable Map Properties]
            [javax.sql DataSource])
-  (:require [clojure.string :as str]))
+  (:require [clojure.string :as str]
+            [clojure.walk :as walk]))
 
 (defn as-sql-name
   "Given a naming strategy function and a keyword or string, return
@@ -141,7 +142,10 @@ compatibility but it will be removed before a 1.0.0 release." }
   (let [host (.getHost uri)
         port (if (pos? (.getPort uri)) (.getPort uri))
         path (.getPath uri)
-        scheme (.getScheme uri)]
+        scheme (.getScheme uri)
+        query (.getQuery uri)
+        query-parts (and query (for [kvs (.split query "&")]
+                                 (vec (.split kvs "="))))]
     (merge
      {:subname (if port
                  (str "//" host ":" port path)
@@ -149,7 +153,8 @@ compatibility but it will be removed before a 1.0.0 release." }
       :subprotocol (subprotocols scheme scheme)}
      (if-let [user-info (.getUserInfo uri)]
              {:user (first (str/split user-info #":"))
-              :password (second (str/split user-info #":"))}))))
+              :password (second (str/split user-info #":"))})
+     (walk/keywordize-keys (into {} query-parts)))))
 
 (defn- strip-jdbc [^String spec]
   (if (.startsWith spec "jdbc:")
