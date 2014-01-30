@@ -770,8 +770,11 @@ compatibility but it will be removed before a 1.0.0 release." }
   [db sql-params & {:keys [result-set-fn row-fn identifiers as-arrays?]
                     :or {row-fn identity
                          identifiers str/lower-case}}]
-  (let [result-set-fn (or result-set-fn (if as-arrays? vec doall))]
-    (db-query-with-resultset db (vec sql-params)
+  (let [result-set-fn (or result-set-fn (if as-arrays? vec doall))
+        sql-params-vector (if (string? sql-params)
+                            (vector sql-params)
+                            (vec sql-params))]
+    (db-query-with-resultset db sql-params-vector
       (^{:once true} fn* [rset]
        ((^{:once true} fn* [rs]
          (result-set-fn (if as-arrays?

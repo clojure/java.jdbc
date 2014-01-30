@@ -585,6 +585,11 @@
     (create-test-table :fruit db)
     (is (= [] (sql/query db ["SELECT * FROM fruit"])))))
 
+(deftest query-with-string
+  (doseq [db (test-specs)]
+    (create-test-table :fruit db)
+    (is (= [] (sql/query db "SELECT * FROM fruit")))))
+
 (deftest insert-one-row
   (doseq [db (test-specs)]
     (create-test-table :fruit db)
