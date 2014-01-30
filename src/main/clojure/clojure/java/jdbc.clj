@@ -600,13 +600,20 @@ compatibility but it will be removed before a 1.0.0 release." }
 (defn metadata-result
   "If the argument is a java.sql.ResultSet, turn it into a result-set-seq,
    else return it as-is. This makes working with metadata easier.
-   Also accepts :identifiers and :as-arrays? to control how the ResultSet
-   is transformed and returned. See query for more details."
-  [rs-or-value & {:keys [identifiers as-arrays?]
-                  :or {identifiers str/lower-case}}]
-  (if (instance? java.sql.ResultSet rs-or-value)
-    (result-set-seq rs-or-value :identifiers identifiers :as-arrays? as-arrays?)
-    rs-or-value))
+   Also accepts :identifiers, :as-arrays?, :row-fn, and :result-set-fn
+   to control how the ResultSet is transformed and returned.
+   See query for more details."
+  [rs-or-value & {:keys [identifiers as-arrays? row-fn result-set-fn]
+                  :or {identifiers str/lower-case row-fn identity}}]
+  (let [result-set-fn (or result-set-fn (if as-arrays? vec doall))]
+    (if (instance? java.sql.ResultSet rs-or-value)
+      ((^{:once true} fn* [rs]
+        (result-set-fn (if as-arrays?
+                         (cons (first rs)
+                               (map row-fn (rest rs)))
+                         (map row-fn rs))))
+       (result-set-seq rs-or-value :identifiers identifiers :as-arrays? as-arrays?))
+      rs-or-value)))
 
 (defn db-do-commands
   "Executes SQL commands on the specified database connection. Wraps the commands
