@@ -1,3 +1,7 @@
+Changes coming in 0.3.4
+
+* Support oracle:oci and oracle:thin subprotocols [JDBC-90](http://dev.clojure.org/jira/browse/JDBC-90).
+
 Changes in 0.3.3
 
 * Prevent exception/crash when query called with bare SQL string [JDBC-89](http://dev.clojure.org/jira/browse/JDBC-89).
