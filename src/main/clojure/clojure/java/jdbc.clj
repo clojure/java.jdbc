@@ -130,6 +130,8 @@ compatibility but it will be removed before a 1.0.0 release." }
    "mysql"          "com.mysql.jdbc.Driver"
    "sqlserver"      "com.microsoft.sqlserver.jdbc.SQLServerDriver"
    "jtds:sqlserver" "net.sourceforge.jtds.jdbc.Driver"
+   "oracle:oci"     "oracle.jdbc.OracleDriver"
+   "oracle:thin"    "oracle.jdbc.OracleDriver"
    "derby"          "org.apache.derby.jdbc.EmbeddedDriver"
    "hsqldb"         "org.hsqldb.jdbcDriver"
    "h2"             "org.h2.Driver"
