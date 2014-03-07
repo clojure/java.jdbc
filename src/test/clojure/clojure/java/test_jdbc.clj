@@ -177,6 +177,20 @@
        [:grade :real]
        :table-spec "")))
 
+(deftest test-uri-spec-parsing
+  (is (= {:advanced "false" :ssl "required" :password "clojure_test"
+          :user "clojure_test" :subname "//localhost/clojure_test"
+          :subprotocol "postgresql"}
+         (@#'sql/parse-properties-uri
+          (java.net.URI.
+           (str "postgres://clojure_test:clojure_test@localhost/clojure_test?"
+                "ssl=required&advanced=false")))))
+  (is (= {:password "clojure_test" :user "clojure_test"
+          :subname "//localhost:3306/clojure_test", :subprotocol "mysql"}
+         (@#'sql/parse-properties-uri
+          (java.net.URI.
+           "mysql://clojure_test:clojure_test@localhost:3306/clojure_test")))))
+
 (deftest test-create-table
   (doseq [db (test-specs)]
     (create-test-table :fruit db)
@@ -570,6 +584,11 @@
   (doseq [db (test-specs)]
     (create-test-table :fruit db)
     (is (= [] (sql/query db ["SELECT * FROM fruit"])))))
+
+(deftest query-with-string
+  (doseq [db (test-specs)]
+    (create-test-table :fruit db)
+    (is (= [] (sql/query db "SELECT * FROM fruit")))))
 
 (deftest insert-one-row
   (doseq [db (test-specs)]

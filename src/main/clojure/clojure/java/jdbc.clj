@@ -50,7 +50,8 @@ compatibility but it will be removed before a 1.0.0 release." }
             PreparedStatement ResultSet SQLException Statement Types]
            [java.util Hashtable Map Properties]
            [javax.sql DataSource])
-  (:require [clojure.string :as str]))
+  (:require [clojure.string :as str]
+            [clojure.walk :as walk]))
 
 (defn as-sql-name
   "Given a naming strategy function and a keyword or string, return
@@ -129,6 +130,8 @@ compatibility but it will be removed before a 1.0.0 release." }
    "mysql"          "com.mysql.jdbc.Driver"
    "sqlserver"      "com.microsoft.sqlserver.jdbc.SQLServerDriver"
    "jtds:sqlserver" "net.sourceforge.jtds.jdbc.Driver"
+   "oracle:oci"     "oracle.jdbc.OracleDriver"
+   "oracle:thin"    "oracle.jdbc.OracleDriver"
    "derby"          "org.apache.derby.jdbc.EmbeddedDriver"
    "hsqldb"         "org.hsqldb.jdbcDriver"
    "h2"             "org.h2.Driver"
@@ -141,7 +144,10 @@ compatibility but it will be removed before a 1.0.0 release." }
   (let [host (.getHost uri)
         port (if (pos? (.getPort uri)) (.getPort uri))
         path (.getPath uri)
-        scheme (.getScheme uri)]
+        scheme (.getScheme uri)
+        query (.getQuery uri)
+        query-parts (and query (for [kvs (.split query "&")]
+                                 (vec (.split kvs "="))))]
     (merge
      {:subname (if port
                  (str "//" host ":" port path)
@@ -149,7 +155,8 @@ compatibility but it will be removed before a 1.0.0 release." }
       :subprotocol (subprotocols scheme scheme)}
      (if-let [user-info (.getUserInfo uri)]
              {:user (first (str/split user-info #":"))
-              :password (second (str/split user-info #":"))}))))
+              :password (second (str/split user-info #":"))})
+     (walk/keywordize-keys (into {} query-parts)))))
 
 (defn- strip-jdbc [^String spec]
   (if (.startsWith spec "jdbc:")
@@ -621,13 +628,20 @@ compatibility but it will be removed before a 1.0.0 release." }
 (defn metadata-result
   "If the argument is a java.sql.ResultSet, turn it into a result-set-seq,
    else return it as-is. This makes working with metadata easier.
-   Also accepts :identifiers and :as-arrays? to control how the ResultSet
-   is transformed and returned. See query for more details."
-  [rs-or-value & {:keys [identifiers as-arrays?]
-                  :or {identifiers str/lower-case}}]
-  (if (instance? java.sql.ResultSet rs-or-value)
-    (result-set-seq rs-or-value :identifiers identifiers :as-arrays? as-arrays?)
-    rs-or-value))
+   Also accepts :identifiers, :as-arrays?, :row-fn, and :result-set-fn
+   to control how the ResultSet is transformed and returned.
+   See query for more details."
+  [rs-or-value & {:keys [identifiers as-arrays? row-fn result-set-fn]
+                  :or {identifiers str/lower-case row-fn identity}}]
+  (let [result-set-fn (or result-set-fn (if as-arrays? vec doall))]
+    (if (instance? java.sql.ResultSet rs-or-value)
+      ((^{:once true} fn* [rs]
+        (result-set-fn (if as-arrays?
+                         (cons (first rs)
+                               (map row-fn (rest rs)))
+                         (map row-fn rs))))
+       (result-set-seq rs-or-value :identifiers identifiers :as-arrays? as-arrays?))
+      rs-or-value)))
 
 (defn db-do-commands
   "Executes SQL commands on the specified database connection. Wraps the commands
@@ -791,8 +805,11 @@ compatibility but it will be removed before a 1.0.0 release." }
   [db sql-params & {:keys [result-set-fn row-fn identifiers as-arrays?]
                     :or {row-fn identity
                          identifiers str/lower-case}}]
-  (let [result-set-fn (or result-set-fn (if as-arrays? vec doall))]
-    (db-query-with-resultset db (vec sql-params)
+  (let [result-set-fn (or result-set-fn (if as-arrays? vec doall))
+        sql-params-vector (if (string? sql-params)
+                            (vector sql-params)
+                            (vec sql-params))]
+    (db-query-with-resultset db sql-params-vector
       (^{:once true} fn* [rset]
        ((^{:once true} fn* [rs]
          (result-set-fn (if as-arrays?

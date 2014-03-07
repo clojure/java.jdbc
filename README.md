@@ -23,7 +23,7 @@ Similarly, if you depend on the older 0.2.3 API, you'll need to switch to `cloju
 Releases and Dependency Information
 ========================================
 
-Latest stable release: 0.3.2
+Latest stable release: 0.3.3
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22java.jdbc%22)
 
@@ -31,14 +31,14 @@ Latest stable release: 0.3.2
 
 [Leiningen](https://github.com/technomancy/leiningen) dependency information:
 ```clojure
-[org.clojure/java.jdbc "0.3.2"]
+[org.clojure/java.jdbc "0.3.3"]
 ```
 [Maven](http://maven.apache.org/) dependency information:
 ```xml
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>java.jdbc</artifactId>
-  <version>0.3.2</version>
+  <version>0.3.3</version>
 </dependency>
 ```
 You will also need to add dependencies for the JDBC driver you intend to use. Here are examples of the drivers currently used for testing,
@@ -117,6 +117,11 @@ Developer Information
 
 Change Log
 ====================
+
+* Release 0.3.3 on 2014-01-30
+  * Prevent exception/crash when query called with bare SQL string [JDBC-89](http://dev.clojure.org/jira/browse/JDBC-89).
+  * Add :row-fn and :result-set-fn to metadata-result function [JDBC-87](http://dev.clojure.org/jira/browse/JDBC-87).
+  * Support key/value configuration from URI (Phil Hagelberg).
 
 * Release 0.3.2 on 2013-12-30
   * Add nil protocol implementation to ISQLParameter

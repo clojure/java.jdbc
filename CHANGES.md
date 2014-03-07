@@ -1,3 +1,13 @@
+Changes coming in 0.3.4
+
+* Support oracle:oci and oracle:thin subprotocols [JDBC-90](http://dev.clojure.org/jira/browse/JDBC-90).
+
+Changes in 0.3.3
+
+* Prevent exception/crash when query called with bare SQL string [JDBC-89](http://dev.clojure.org/jira/browse/JDBC-89).
+* Add :row-fn and :result-set-fn to metadata-result function [JDBC-87](http://dev.clojure.org/jira/browse/JDBC-87).
+* Support key/value configuration from URI (Phil Hagelberg).
+
 Changes in 0.3.2
 
 * Add nil protocol implementation to ISQLParameter.
