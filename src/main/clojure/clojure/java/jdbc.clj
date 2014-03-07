@@ -183,6 +183,15 @@ compatibility but it will be removed before a 1.0.0 release." }
     :classname   (optional) a String, the jdbc driver class name
     (others)     (optional) passed to the driver as properties.
 
+  DriverManager (alternative):
+    :dbtype      (required) a String, the type of the database (the jdbc subprotocol)
+    :dbname      (required) a String, the name of the database
+    :host        (optional) a String, the host name/IP of the database
+                            (defaults to 127.0.0.1)
+    :port        (optional) a Long, the port of the database
+                            (defaults to 3306 for mysql, 1433 for mssql/jtds, else nil)
+    (others)     (optional) passed to the driver as properties.
+
   DataSource:
     :datasource  (required) a javax.sql.DataSource
     :username    (optional) a String
@@ -209,6 +218,7 @@ compatibility but it will be removed before a 1.0.0 release." }
            factory
            connection-uri
            classname subprotocol subname
+           dbtype dbname host port
            datasource username password user
            name environment]
     :as db-spec}]
@@ -233,6 +243,22 @@ compatibility but it will be removed before a 1.0.0 release." }
          etc (dissoc db-spec :classname :subprotocol :subname)
          classname (or classname (classnames subprotocol))]
      (clojure.lang.RT/loadClassForName classname)
+     (DriverManager/getConnection url (as-properties etc)))
+
+   (and dbtype dbname)
+   (let [subprotocol dbtype
+         host (or host "127.0.0.1")
+         port (or port (condp = subprotocol
+                         "mysql" 3306
+                         "mssql" 1433
+                         "jtds"  1433
+                         nil))
+         db-sep (if (= "mssql" subprotocol) ";DATABASENAME=" "/")
+         url (str "jdbc:" subprotocol "://" host
+                  (when port (str ":" port))
+                  db-sep dbname)
+         etc (dissoc db-spec :dbtype :dbname)]
+     (clojure.lang.RT/loadClassForName (classnames subprotocol))
      (DriverManager/getConnection url (as-properties etc)))
    
    (or (and datasource username password)
