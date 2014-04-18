@@ -61,7 +61,7 @@ For the latest versions, consult the vendor or project websites. clojure.java.jd
 has to be downloaded manually and placed in a Maven repository accessible to your system. For testing, it was installed locally as:
 ```clojure
 ;; Microsoft SQL Server JDBC4 Driver 3.0
-[sqljdbc4/sqljdbc4 "3.0"]
+[com.microsoft/sqljdbc4 "3.0"]
 ```
 
 Example Usage
