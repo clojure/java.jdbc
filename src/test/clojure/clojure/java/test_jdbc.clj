@@ -298,6 +298,20 @@
     (is (= "Pear" (sql/query db ["SELECT * FROM fruit WHERE cost = ?" 99]
                              :result-set-fn (comp :name first))))))
 
+(deftest execute-with-prepared-statement
+  (doseq [db (test-specs)]
+    (create-test-table :fruit db)
+    (sql/with-db-connection [conn db]
+      (let [connection (:connection conn)
+            prepared-statement (sql/prepare-statement connection (str "INSERT INTO fruit ( name, appearance, cost ) "
+                                                                      "VALUES ( ?, ?, ? )"))]
+
+        (sql/execute! db [prepared-statement "Apple" "Green" 75])
+        (sql/execute! db [prepared-statement "Pear" "Yellow" 99])))
+    (is (= 2 (sql/query db ["SELECT * FROM fruit"] :result-set-fn count)))
+    (is (= "Pear" (sql/query db ["SELECT * FROM fruit WHERE cost = ?" 99]
+                             :result-set-fn (comp :name first))))))
+
 (deftest test-update-values
   (doseq [db (test-specs)]
     (create-test-table :fruit db)
@@ -522,7 +536,7 @@
     (is (= 0 (sql/query db ["SELECT * FROM fruit"] :result-set-fn count)))))
 
 (deftest test-raw-metadata
-  (doseq [db (test-specs)]    
+  (doseq [db (test-specs)]
     (create-test-table :fruit db)
     (let [table-info (with-open [conn (sql/get-connection db)]
                        (into []
@@ -538,7 +552,7 @@
                          clojure.string/lower-case))))))
 
 (deftest test-metadata
-  (doseq [db (test-specs)]    
+  (doseq [db (test-specs)]
     (create-test-table :fruit db)
     (sql/with-db-metadata [metadata db]
       (let [table-info (sql/metadata-result (.getTables metadata

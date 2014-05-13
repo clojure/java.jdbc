@@ -700,6 +700,27 @@ compatibility but it will be removed before a 1.0.0 release." }
        (with-open [^java.sql.Connection con (get-connection db)]
          (db-do-prepared-return-keys (add-connection db con) transaction? sql param-group)))))
 
+(defn- db-do-execute-prepared-statement [db stmt param-groups transaction?]
+  (if (empty? param-groups)
+    (if transaction?
+      (with-db-transaction [t-db (add-connection db (.getConnection stmt))]
+        (vector (.executeUpdate stmt)))
+      (try
+        (vector (.executeUpdate stmt))
+        (catch Exception e
+          (throw-non-rte e))))
+    (do
+      (doseq [param-group param-groups]
+              ((or (:set-parameters db) set-parameters) stmt param-group)
+              (.addBatch stmt))
+      (if transaction?
+        (with-db-transaction [t-db (add-connection db (.getConnection stmt))]
+          (execute-batch stmt))
+        (try
+          (execute-batch stmt)
+          (catch Exception e
+            (throw-non-rte e)))))))
+
 (defn db-do-prepared
   "Executes an (optionally parameterized) SQL prepared statement on the
   open database connection. Each param-group is a seq of values for all of
@@ -711,26 +732,10 @@ compatibility but it will be removed before a 1.0.0 release." }
   (if (string? transaction?)
     (apply db-do-prepared db true transaction? opts)
     (if-let [^java.sql.Connection con (db-find-connection db)]
-      (with-open [^PreparedStatement stmt (prepare-statement con sql)]
-        (if (empty? param-groups)
-          (if transaction?
-            (with-db-transaction [t-db (add-connection db (.getConnection stmt))]
-              (vector (.executeUpdate stmt)))
-            (try
-              (vector (.executeUpdate stmt))
-              (catch Exception e
-                (throw-non-rte e))))
-          (do
-            (doseq [param-group param-groups]
-              ((or (:set-parameters db) set-parameters) stmt param-group)
-              (.addBatch stmt))
-            (if transaction?
-              (with-db-transaction [t-db (add-connection db (.getConnection stmt))]
-                (execute-batch stmt))
-              (try
-                (execute-batch stmt)
-                (catch Exception e
-                  (throw-non-rte e)))))))
+      (if (instance? PreparedStatement sql)
+        (db-do-execute-prepared-statement db sql param-groups transaction?)
+        (with-open [^PreparedStatement stmt (prepare-statement con sql)]
+          (db-do-execute-prepared-statement db stmt param-groups transaction?)))
       (with-open [^java.sql.Connection con (get-connection db)]
         (apply db-do-prepared (add-connection db con) transaction? sql param-groups)))))
 
