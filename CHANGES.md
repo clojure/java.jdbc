@@ -1,4 +1,4 @@
-Changes coming in 0.3.4
+Changes in 0.3.4
 
 * execute! can now accept a PreparedStatement [JDBC-96](https://dev.clojure.org/jira/browse/JDBC-96).
 * Support simpler db-spec with :dbtype and :dbname (and optional :host and :port etc) [JDBC-92](http://dev.clojure.org/jire/browse/JDBC-92).
