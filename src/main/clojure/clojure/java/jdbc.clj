@@ -561,16 +561,20 @@ compatibility but it will be removed before a 1.0.0 release." }
   The isolation option may be :none, :read-committed, :read-uncommitted,
   :repeatable-read, or :serializable. Note that not all databases support
   all of those isolation levels, and may either throw an exception or
-  substitute another isolation level."
-  [db func & {:keys [isolation]}]
+  substitute another isolation level.
+  The read-only? option puts the transaction in readonly mode (if supported)."
+  [db func & {:keys [isolation read-only?]}]
   (if (zero? (get-level db))
     (if-let [^java.sql.Connection con (db-find-connection db)]
       (let [nested-db (inc-level db)
             auto-commit (.getAutoCommit con)
-            old-isolation (.getTransactionIsolation con)]
+            old-isolation (.getTransactionIsolation con)
+            old-readonly  (.isReadOnly con)]
         (io!
          (when isolation
            (.setTransactionIsolation con (isolation isolation-levels)))
+         (when read-only?
+           (.setReadOnly con true))
          (.setAutoCommit con false)
          (try
            (let [result (func nested-db)]
@@ -585,9 +589,12 @@ compatibility but it will be removed before a 1.0.0 release." }
              (db-unset-rollback-only! nested-db)
              (.setAutoCommit con auto-commit)
              (when isolation
-               (.setTransactionIsolation con old-isolation))))))
+               (.setTransactionIsolation con old-isolation))
+             (when read-only?
+               (.setReadOnly con old-readonly))))))
       (with-open [^java.sql.Connection con (get-connection db)]
-        (db-transaction* (add-connection db con) func :isolation isolation)))
+        (db-transaction* (add-connection db con) func
+                         :isolation isolation :read-only? read-only?)))
     (try
       (func (inc-level db))
       (catch Exception e
@@ -597,8 +604,9 @@ compatibility but it will be removed before a 1.0.0 release." }
   "Evaluates body in the context of a transaction on the specified database connection.
   The binding provides the database connection for the transaction and the name to which
   that is bound for evaluation of the body. The binding may also specify the isolation
-  level for the transaction, via the :isolation option.
-  (with-db-transaction [t-con db-spec :isolation level]
+  level for the transaction, via the :isolation option and/or set the transaction to
+  readonly via the :read-only? option.
+  (with-db-transaction [t-con db-spec :isolation level :read-only? true]
     ... t-con ...)
   See db-transaction* for more details."
   [binding & body]
