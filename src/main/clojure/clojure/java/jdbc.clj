@@ -149,9 +149,11 @@ compatibility but it will be removed before a 1.0.0 release." }
         query-parts (and query (for [kvs (.split query "&")]
                                  (vec (.split kvs "="))))]
     (merge
-     {:subname (if port
-                 (str "//" host ":" port path)
-                 (str "//" host path))
+     {:subname (if host
+                 (if port
+                   (str "//" host ":" port path)
+                   (str "//" host path))
+                 (.getSchemeSpecificPart uri))
       :subprotocol (subprotocols scheme scheme)}
      (if-let [user-info (.getUserInfo uri)]
              {:user (first (str/split user-info #":"))

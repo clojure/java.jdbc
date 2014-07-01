@@ -1,3 +1,7 @@
+Changes coming in 0.3.5
+
+* HSQLDB and SQLite in-memory strings are now accepted [JDBC-94](https://dev.clojure.org/jira/browse/JDBC-94).
+
 Changes in 0.3.4
 
 * execute! can now accept a PreparedStatement [JDBC-96](https://dev.clojure.org/jira/browse/JDBC-96).
