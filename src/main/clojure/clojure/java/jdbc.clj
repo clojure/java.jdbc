@@ -145,8 +145,8 @@ compatibility but it will be removed before a 1.0.0 release." }
         port (if (pos? (.getPort uri)) (.getPort uri))
         path (.getPath uri)
         scheme (.getScheme uri)
-        query (.getQuery uri)
-        query-parts (and query (for [kvs (.split query "&")]
+        ^String query (.getQuery uri)
+        query-parts (and query (for [^String kvs (.split query "&")]
                                  (vec (.split kvs "="))))]
     (merge
      {:subname (if host
@@ -710,7 +710,8 @@ compatibility but it will be removed before a 1.0.0 release." }
        (with-open [^java.sql.Connection con (get-connection db)]
          (db-do-prepared-return-keys (add-connection db con) transaction? sql param-group)))))
 
-(defn- db-do-execute-prepared-statement [db stmt param-groups transaction?]
+(defn- db-do-execute-prepared-statement
+  [db ^PreparedStatement stmt param-groups transaction?]
   (if (empty? param-groups)
     (if transaction?
       (with-db-transaction [t-db (add-connection db (.getConnection stmt))]
