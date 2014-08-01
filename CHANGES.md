@@ -1,5 +1,6 @@
-Changes coming in 0.3.5
+Changes in 0.3.5
 
+* Reflection warnings on executeUpdate addressed.
 * HSQLDB and SQLite in-memory strings are now accepted [JDBC-94](https://dev.clojure.org/jira/browse/JDBC-94).
 * Add support for readonly transactions via :read-only? [JDBC-93](https://dev.clojure.org/jira/browse/JDBC-93).
 

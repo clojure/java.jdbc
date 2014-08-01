@@ -23,7 +23,7 @@ Similarly, if you depend on the older 0.2.3 API, you'll need to switch to `cloju
 Releases and Dependency Information
 ========================================
 
-Latest stable release: 0.3.4
+Latest stable release: 0.3.5
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22java.jdbc%22)
 
@@ -31,14 +31,14 @@ Latest stable release: 0.3.4
 
 [Leiningen](https://github.com/technomancy/leiningen) dependency information:
 ```clojure
-[org.clojure/java.jdbc "0.3.4"]
+[org.clojure/java.jdbc "0.3.5"]
 ```
 [Maven](http://maven.apache.org/) dependency information:
 ```xml
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>java.jdbc</artifactId>
-  <version>0.3.4</version>
+  <version>0.3.5</version>
 </dependency>
 ```
 You will also need to add dependencies for the JDBC driver you intend to use. Here are examples of the drivers currently used for testing,
@@ -117,6 +117,11 @@ Developer Information
 
 Change Log
 ====================
+
+* Release 0.3.5 on 2014-08-01
+  * Reflection warnings on executeUpdate addressed.
+  * HSQLDB and SQLite in-memory strings are now accepted [JDBC-94](https://dev.clojure.org/jira/browse/JDBC-94).
+  * Add support for readonly transactions via :read-only? [JDBC-93](https://dev.clojure.org/jira/browse/JDBC-93).
 
 * Release 0.3.4 on 2014-06-30
   * execute! can now accept a PreparedStatement [JDBC-96](https://dev.clojure.org/jira/browse/JDBC-96).
