@@ -565,7 +565,7 @@ generated keys are returned (as a map)." }
 (defn insert-values
   "Inserts rows into a table with values for specified columns only.
   column-names is a vector of strings or keywords identifying columns. Each
-  value-group is a vector containing a values for each column in
+  value-group is a vector containing a value for each column in
   order. When inserting complete rows (all columns), consider using
   insert-rows instead.
   If a single set of values is inserted, returns a map of the generated keys."
