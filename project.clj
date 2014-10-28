@@ -15,7 +15,7 @@
                  [org.xerial/sqlite-jdbc "3.7.2"]
                  [net.sourceforge.jtds/jtds "1.2.4"]
                  ;; if you have the MS driver in your local repo
-                 ;; [sqljdbc4 "3.0"]
+                 ;; [sqljdbc4 "4.0"]
                  ]
   :profiles {:1.2 {:dependencies [[org.clojure/clojure "1.2.1"]]}
              :1.3 {:dependencies [[org.clojure/clojure "1.3.0"]]}
