@@ -635,7 +635,7 @@
     (let [new-keys (sql/insert! db :fruit {:name "Apple"} {:name "Pear"})
           new-keys (if (postgres? db) (map :id new-keys) new-keys)
           rows (sql/query db ["SELECT * FROM fruit ORDER BY name"]
-                          :as-arrays? true)]
+                          :as-arrays? :cols-as-is)]
       (is (= [(returned-key db 1) (returned-key db 2)] new-keys))
       (is (= [[:id :name :appearance :cost :grade]
               [(generated-key db 1) "Apple" nil nil nil]

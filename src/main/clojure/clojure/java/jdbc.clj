@@ -368,9 +368,10 @@ compatibility but it will be removed before a 1.0.0 release." }
                     :or {identifiers str/lower-case}}]
   (let [rsmeta (.getMetaData rs)
         idxs (range 1 (inc (.getColumnCount rsmeta)))
+        col-name-fn (if (= :cols-as-is as-arrays?) identity make-cols-unique)
         keys (->> idxs
                   (map (fn [^Integer i] (.getColumnLabel rsmeta i)))
-                  make-cols-unique
+                  col-name-fn
                   (map (comp keyword identifiers)))
         row-values (fn [] (map (fn [^Integer i] (result-set-read-column (.getObject rs i) rsmeta i)) idxs))
         ;; This used to use create-struct (on keys) and then struct to populate each row.
