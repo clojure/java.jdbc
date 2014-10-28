@@ -1,3 +1,7 @@
+Changes coming in 0.3.6
+
+* Arbitrary values allowed for cursors, concurrency, result-type [JDBC-102](https://dev.clojure.org/jira/browse/JDBC-102).
+
 Changes in 0.3.5
 
 * Reflection warnings on executeUpdate addressed.
