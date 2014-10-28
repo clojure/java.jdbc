@@ -429,9 +429,11 @@ compatibility but it will be removed before a 1.0.0 release." }
      :concurrency :read-only | :updatable
      :cursors
      :fetch-size n
-     :max-rows n"
+     :max-rows n
+     :timeout n"
   [^java.sql.Connection con ^String sql &
-   {:keys [return-keys result-type concurrency cursors fetch-size max-rows]}]
+   {:keys [return-keys result-type concurrency cursors
+           fetch-size max-rows timeout]}]
   (let [^PreparedStatement
         stmt (cond return-keys
                    (try
@@ -454,6 +456,7 @@ compatibility but it will be removed before a 1.0.0 release." }
                    (.prepareStatement con sql))]
     (when fetch-size (.setFetchSize stmt fetch-size))
     (when max-rows (.setMaxRows stmt max-rows))
+    (when timeout (.setQueryTimeout stmt timeout))
     stmt))
 
 (defn- set-parameters
