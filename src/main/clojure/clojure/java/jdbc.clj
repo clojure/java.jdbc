@@ -443,12 +443,12 @@ compatibility but it will be removed before a 1.0.0 release." }
                    (and result-type concurrency)
                    (if cursors
                      (.prepareStatement con sql 
-                                        (result-type result-set-type)
-                                        (concurrency result-set-concurrency)
-                                        (cursors result-set-holdability))
+                                        (get result-set-type result-type result-type)
+                                        (get result-set-concurrency concurrency concurrency)
+                                        (get result-set-holdability cursors cursors))
                      (.prepareStatement con sql 
-                                        (result-type result-set-type)
-                                        (concurrency result-set-concurrency)))
+                                        (get result-set-type result-type result-type)
+                                        (get result-set-concurrency concurrency concurrency)))
                    
                    :else
                    (.prepareStatement con sql))]
