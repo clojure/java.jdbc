@@ -57,11 +57,11 @@ shown as Leiningen dependencies:
 ;; SQLite
 [org.xerial/sqlite-jdbc "3.7.2"]
 ```
-For the latest versions, consult the vendor or project websites. clojure.java.jdbc is also tested against Microsoft's own JDBC4 Driver 3.0 but that
+For the latest versions, consult the vendor or project websites. clojure.java.jdbc is also tested against Microsoft's own JDBC4 Driver 4.0 but that
 has to be downloaded manually and placed in a Maven repository accessible to your system. For testing, it was installed locally as:
 ```clojure
-;; Microsoft SQL Server JDBC4 Driver 3.0
-[sqljdbc4/sqljdbc4 "3.0"]
+;; Microsoft SQL Server JDBC4 Driver 4.0
+[sqljdbc4/sqljdbc4 "4.0"]
 ```
 
 Example Usage
