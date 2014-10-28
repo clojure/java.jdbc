@@ -23,7 +23,7 @@ Similarly, if you depend on the older 0.2.3 API, you'll need to switch to `cloju
 Releases and Dependency Information
 ========================================
 
-Latest stable release: 0.3.5
+Latest stable release: 0.3.6
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22java.jdbc%22)
 
@@ -31,14 +31,14 @@ Latest stable release: 0.3.5
 
 [Leiningen](https://github.com/technomancy/leiningen) dependency information:
 ```clojure
-[org.clojure/java.jdbc "0.3.5"]
+[org.clojure/java.jdbc "0.3.6"]
 ```
 [Maven](http://maven.apache.org/) dependency information:
 ```xml
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>java.jdbc</artifactId>
-  <version>0.3.5</version>
+  <version>0.3.6</version>
 </dependency>
 ```
 You will also need to add dependencies for the JDBC driver you intend to use. Here are examples of the drivers currently used for testing,
@@ -117,6 +117,11 @@ Developer Information
 
 Change Log
 ====================
+
+* Release 0.3.6 on 2014-10-28
+  * Arbitrary values allowed for `:cursors`, `:concurrency`, `:result-type` arguments to `prepare-statement` [JDBC-102](https://dev.clojure.org/jira/browse/JDBC-102).
+  * Allow `:as-arrays? :cols-as-is` to omit column name uniqueness when returning result sets as arrrays [JDBC-101](https://dev.clojure.org/jira/browse/JDBC-101).
+  * Add `:timeout` argument to `prepare-statement` [JDBC-100](https://dev.clojure.org/jira/browse/JDBC-100).
 
 * Release 0.3.5 on 2014-08-01
   * Reflection warnings on executeUpdate addressed.
@@ -282,7 +287,7 @@ Change Log
 Copyright and License
 ========================================
 
-Copyright (c) Sean Corfield, Stephen Gilardi, 2011-2013. All rights reserved.  The use and
+Copyright (c) Sean Corfield, Stephen Gilardi, 2011-2014. All rights reserved.  The use and
 distribution terms for this software are covered by the Eclipse Public
 License 1.0 (http://opensource.org/licenses/eclipse-1.0.php) which can
 be found in the file epl-v10.html at the root of this distribution.

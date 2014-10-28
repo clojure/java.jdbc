@@ -1,4 +1,4 @@
-Changes coming in 0.3.6
+Changes in 0.3.6
 
 * Arbitrary values allowed for `:cursors`, `:concurrency`, `:result-type` arguments to `prepare-statement` [JDBC-102](https://dev.clojure.org/jira/browse/JDBC-102).
 * Allow `:as-arrays? :cols-as-is` to omit column name uniqueness when returning result sets as arrrays [JDBC-101](https://dev.clojure.org/jira/browse/JDBC-101).
