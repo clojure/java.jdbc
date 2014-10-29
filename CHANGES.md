@@ -1,18 +1,22 @@
+Changes coming in 0.3.7
+
+* Fix links in CHANGES and README [JDBC-103](http://dev.clojure.org/jira/browse/JDBC-103) - John Walker.
+
 Changes in 0.3.6
 
-* Arbitrary values allowed for `:cursors`, `:concurrency`, `:result-type` arguments to `prepare-statement` [JDBC-102](https://dev.clojure.org/jira/browse/JDBC-102).
-* Allow `:as-arrays? :cols-as-is` to omit column name uniqueness when returning result sets as arrrays [JDBC-101](https://dev.clojure.org/jira/browse/JDBC-101).
-* Add `:timeout` argument to `prepare-statement` [JDBC-100](https://dev.clojure.org/jira/browse/JDBC-100).
+* Arbitrary values allowed for `:cursors`, `:concurrency`, `:result-type` arguments to `prepare-statement` [JDBC-102](http://dev.clojure.org/jira/browse/JDBC-102).
+* Allow `:as-arrays? :cols-as-is` to omit column name uniqueness when returning result sets as arrrays [JDBC-101](http://dev.clojure.org/jira/browse/JDBC-101).
+* Add `:timeout` argument to `prepare-statement` [JDBC-100](http://dev.clojure.org/jira/browse/JDBC-100).
 
 Changes in 0.3.5
 
 * Reflection warnings on executeUpdate addressed.
-* HSQLDB and SQLite in-memory strings are now accepted [JDBC-94](https://dev.clojure.org/jira/browse/JDBC-94).
-* Add support for readonly transactions via :read-only? [JDBC-93](https://dev.clojure.org/jira/browse/JDBC-93).
+* HSQLDB and SQLite in-memory strings are now accepted [JDBC-94](http://dev.clojure.org/jira/browse/JDBC-94).
+* Add support for readonly transactions via :read-only? [JDBC-93](http://dev.clojure.org/jira/browse/JDBC-93).
 
 Changes in 0.3.4
 
-* execute! can now accept a PreparedStatement [JDBC-96](https://dev.clojure.org/jira/browse/JDBC-96).
+* execute! can now accept a PreparedStatement [JDBC-96](http://dev.clojure.org/jira/browse/JDBC-96).
 * Support simpler db-spec with :dbtype and :dbname (and optional :host and :port etc) [JDBC-92](http://dev.clojure.org/jire/browse/JDBC-92).
 * Support oracle:oci and oracle:thin subprotocols [JDBC-90](http://dev.clojure.org/jira/browse/JDBC-90).
 
