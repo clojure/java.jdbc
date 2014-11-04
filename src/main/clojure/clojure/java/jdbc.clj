@@ -600,6 +600,12 @@ compatibility but it will be removed before a 1.0.0 release." }
         (db-transaction* (add-connection db con) func
                          :isolation isolation :read-only? read-only?)))
     (try
+      (when (and isolation
+                 (let [^java.sql.Connection con (db-find-connection db)]
+                   (not= (isolation isolation-levels)
+                         (.getTransactionIsolation con))))
+        (let [msg "Nested transactions may not have different isolation levels"]
+          (throw (IllegalStateException. msg))))
       (func (inc-level db))
       (catch Exception e
         (throw-non-rte e)))))

@@ -535,6 +535,18 @@
       (is (= 1 (sql/query t-conn ["SELECT * FROM fruit"] :result-set-fn count))))
     (is (= 0 (sql/query db ["SELECT * FROM fruit"] :result-set-fn count)))))
 
+(deftest test-nested-transactions-check-transaction-isolation-level
+  (doseq [db (test-specs)]
+    (create-test-table :fruit db)
+    (sql/with-db-transaction [t-conn db :isolation :read-uncommitted]
+      (is (thrown? IllegalStateException
+                   (sql/with-db-transaction [t-conn' t-conn :isolation :serializable]
+                     (sql/insert! t-conn'
+                                  :fruit
+                                  [:name :appearance]
+                                  ["Grape" "yummy"])))))
+    (is (= 0 (sql/query db ["SELECT * FROM fruit"] :result-set-fn count)))))
+
 (deftest test-raw-metadata
   (doseq [db (test-specs)]
     (create-test-table :fruit db)
