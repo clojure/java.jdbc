@@ -55,7 +55,7 @@ shown as Leiningen dependencies:
 ;; PostgreSQL
 [postgresql/postgresql "8.4-702.jdbc4"]
 ;; SQLite
-[org.xerial/sqlite-jdbc "3.7.2"]
+[org.xerial/sqlite-jdbc "3.8.7"]
 ```
 For the latest versions, consult the vendor or project websites. clojure.java.jdbc is also tested against Microsoft's own JDBC4 Driver 4.0 but that
 has to be downloaded manually and placed in a Maven repository accessible to your system. For testing, it was installed locally as:
