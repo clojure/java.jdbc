@@ -12,7 +12,7 @@
                  [org.apache.derby/derby "10.8.1.2"]
                  [hsqldb "1.8.0.10"]
                  [postgresql "8.4-702.jdbc4"]
-                 [org.xerial/sqlite-jdbc "3.7.2"]
+                 [org.xerial/sqlite-jdbc "3.8.7"]
                  [net.sourceforge.jtds/jtds "1.2.4"]
                  ;; if you have the MS driver in your local repo
                  ;; [sqljdbc4 "4.0"]

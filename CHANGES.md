@@ -1,5 +1,6 @@
 Changes coming in 0.3.7
 
+* Update SQLite driver version to 3.8.7 and re-test.
 * Fix links in CHANGES and README [JDBC-103](http://dev.clojure.org/jira/browse/JDBC-103) - John Walker.
 
 Changes in 0.3.6
