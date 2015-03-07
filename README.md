@@ -53,7 +53,7 @@ shown as Leiningen dependencies:
 ;; MySQL
 [mysql/mysql-connector-java "5.1.25"]
 ;; PostgreSQL
-[postgresql/postgresql "8.4-702.jdbc4"]
+[postgresql/postgresql "9.1-901-1.jdbc4"]
 ;; SQLite
 [org.xerial/sqlite-jdbc "3.8.7"]
 ```
