@@ -801,6 +801,19 @@ compatibility but it will be removed before a 1.0.0 release." }
 
 ;; top-level API for actual SQL operations
 
+(def
+  ^{:dynamic true
+    :doc
+    "Function applied to SQL identifiers before returning map to user.
+ Default is to simply lowercase the identifier.
+
+ A nice library, CAMEL-SNAKE-KEBAB, exists which provides many useful,
+ suitable functions for this; the most useful of which is camel-snake-kebab/->kebab-case-keyword
+ which will turn SQL identifiers such as \"Foo_Bar\" into :foo-bar"}
+  *default-identifers-fn*
+  clojure.string/lower-case)
+
+
 (defn query
   "Given a database connection and a vector containing SQL and optional parameters,
   perform a simple database query. The optional keyword arguments specify how to
@@ -814,17 +827,17 @@ compatibility but it will be removed before a 1.0.0 release." }
   The second argument is a vector containing a SQL string or PreparedStatement, followed
   by any parameters it needs. See db-query-with-resultset for details."
   {:arglists '([db-spec sql-and-params
-                :as-arrays? false :identifiers clojure.string/lower-case
+                :as-arrays? false :identifiers *default-identifers-fn*
                 :result-set-fn doall :row-fn identity]
                  [db-spec sql-and-params
-                  :as-arrays? true :identifiers clojure.string/lower-case
+                  :as-arrays? true :identifiers *default-identifers-fn*
                   :result-set-fn vec :row-fn identity]
                    [db-spec [sql-string & params]]
                      [db-spec [stmt & params]]
                        [db-spec [option-map sql-string & params]])}
   [db sql-params & {:keys [result-set-fn row-fn identifiers as-arrays?]
                     :or {row-fn identity
-                         identifiers str/lower-case}}]
+                         identifiers *default-identifers-fn*}}]
   (let [result-set-fn (or result-set-fn (if as-arrays? vec doall))
         sql-params-vector (if (string? sql-params)
                             (vector sql-params)
