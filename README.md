@@ -11,7 +11,7 @@ For DSLs that are compatible with this library, consider:
 
 Formerly known as `clojure.contrib.sql`.
 
-Additional documentation can be found in the [java.jdbc section of clojure-doc.org](http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html).
+Additional documentation can be found in the [java.jdbc section of clojure-doc.org](http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html) and there is a dedicated [java.jdbc mailing list](https://groups.google.com/forum/#!forum/clojure-java-jdbc)
 
 Important Changes from Earlier Versions
 ========================================
@@ -96,8 +96,6 @@ Developer Information
 * [Continuous Integration](http://build.clojure.org/job/java.jdbc/)
 
 * [Compatibility Test Matrix](http://build.clojure.org/job/java.jdbc-test-matrix/)
-
-* [Mailing List](https://groups.google.com/forum/#!forum/clojure-java-jdbc)
 
 * Testing:
   * Currently by default tests run only against Derby and HSQLDB, the in-process databases.
