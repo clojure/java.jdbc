@@ -97,6 +97,8 @@ Developer Information
 
 * [Compatibility Test Matrix](http://build.clojure.org/job/java.jdbc-test-matrix/)
 
+* [Mailing List](https://groups.google.com/forum/#!forum/clojure-java-jdbc)
+
 * Testing:
   * Currently by default tests run only against Derby and HSQLDB, the in-process databases.
 
