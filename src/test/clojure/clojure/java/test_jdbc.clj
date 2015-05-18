@@ -555,14 +555,16 @@
   (doseq [db (test-specs)]
     (create-test-table :fruit db)
     (sql/with-db-metadata [metadata db]
-      (let [table-info (sql/metadata-result (.getTables metadata
-                                                        nil nil nil
-                                                        (into-array ["TABLE" "VIEW"])))]
-        (is (not= [] table-info))
-        (is (= "fruit" (-> table-info
-                           first
-                           :table_name
-                           clojure.string/lower-case)))))))
+      ;; make sure to close the ResultSet
+      (with-open [table-info-result (.getTables metadata
+                                                nil nil nil
+                                                (into-array ["TABLE" "VIEW"]))]
+        (let [table-info (sql/metadata-result table-info-result)]
+          (is (not= [] table-info))
+          (is (= "fruit" (-> table-info
+                             first
+                             :table_name
+                             clojure.string/lower-case))))))))
 
 (defn- returned-key [db k]
   (condp = (:subprotocol db)
