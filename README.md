@@ -105,7 +105,7 @@ Change Log
 ====================
 
 * Release 0.3.7 on 2015-05-18
-  * Update SQLite driver version to 3.8.7 and re-test.
+  * Bump all driver versions in `project.clj` and re-test.
   * Remove duplicate `count` calls in `insert-sql` [JDBC-108](http://dev.clojure.org/jira/browse/JDBC-108) - Earl St Sauver.
   * Remove driver versions from README and link to Maven Central [JDBC-106](http://dev.clojure.org/jira/browse/JDBC-106).
   * Fix links in CHANGES and README [JDBC-103](http://dev.clojure.org/jira/browse/JDBC-103) - John Walker.
