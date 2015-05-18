@@ -34,24 +34,17 @@ Latest stable release: 0.3.6
   <version>0.3.6</version>
 </dependency>
 ```
-You will also need to add dependencies for the JDBC driver you intend to use. Here are examples of the drivers currently used for testing,
-shown as Leiningen dependencies:
-```clojure
-;; Apache Derby
-[org.apache.derby/derby "10.8.1.2"]
-;; HSQLDB
-[hsqldb/hsqldb "1.8.0.10"]
-;; Microsoft SQL Server using the jTDS driver
-[net.sourceforge.jtds/jtds "1.2.4"]
-;; MySQL
-[mysql/mysql-connector-java "5.1.25"]
-;; PostgreSQL
-[postgresql/postgresql "8.4-702.jdbc4"]
-;; SQLite
-[org.xerial/sqlite-jdbc "3.8.7"]
-```
-For the latest versions, consult the vendor or project websites. clojure.java.jdbc is also tested against Microsoft's own JDBC4 Driver 4.0 but that
-has to be downloaded manually and placed in a Maven repository accessible to your system. For testing, it was installed locally as:
+You will also need to add dependencies for the JDBC driver you intend to use. Here are links (to Maven Central) for each of the common database drivers that clojure.java.jdbc is known to be used with:
+
+* [Apache Derby](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.apache.derby%22%20AND%20a%3A%22derby%22)
+* [HSQLDB](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22hsqldb%22%20AND%20a%3A%22hsqldb%22)
+* [Microsoft SQL Server jTDS](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22net.sourceforge.jtds%22%20AND%20a%3A%22jtds%22)
+* [MySQL](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22mysql%22%20AND%20a%3A%22mysql-connector-java%22)
+* [PostgreSQL](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.postgresql%22%20AND%20a%3A%22postgresql%22)
+* [SQLite](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.xerial%22%20AND%20a%3A%22sqlite-jdbc%22)
+
+clojure.java.jdbc is also tested against Microsoft's own JDBC4 Driver 4.0 but that
+has to be [downloaded manually](https://www.microsoft.com/en-us/download/details.aspx?id=11774) and placed in a Maven repository accessible to your system. For testing, it was installed locally as:
 ```clojure
 ;; Microsoft SQL Server JDBC4 Driver 4.0
 [sqljdbc4/sqljdbc4 "4.0"]
