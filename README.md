@@ -16,7 +16,7 @@ Additional documentation can be found in the [java.jdbc section of clojure-doc.o
 Releases and Dependency Information
 ========================================
 
-Latest stable release: 0.3.6
+Latest stable release: 0.3.7
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22java.jdbc%22)
 
@@ -24,14 +24,14 @@ Latest stable release: 0.3.6
 
 [Leiningen](https://github.com/technomancy/leiningen) dependency information:
 ```clojure
-[org.clojure/java.jdbc "0.3.6"]
+[org.clojure/java.jdbc "0.3.7"]
 ```
 [Maven](http://maven.apache.org/) dependency information:
 ```xml
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>java.jdbc</artifactId>
-  <version>0.3.6</version>
+  <version>0.3.7</version>
 </dependency>
 ```
 You will also need to add dependencies for the JDBC driver you intend to use. Here are links (to Maven Central) for each of the common database drivers that clojure.java.jdbc is known to be used with:
@@ -103,6 +103,12 @@ Developer Information
 
 Change Log
 ====================
+
+* Release 0.3.7 on 2015-05-18
+  * Update SQLite driver version to 3.8.7 and re-test.
+  * Remove duplicate `count` calls in `insert-sql` [JDBC-108](http://dev.clojure.org/jira/browse/JDBC-108) - Earl St Sauver.
+  * Remove driver versions from README and link to Maven Central [JDBC-106](http://dev.clojure.org/jira/browse/JDBC-106).
+  * Fix links in CHANGES and README [JDBC-103](http://dev.clojure.org/jira/browse/JDBC-103) - John Walker.
 
 * Release 0.3.6 on 2014-10-28
   * Arbitrary values allowed for `:cursors`, `:concurrency`, `:result-type` arguments to `prepare-statement` [JDBC-102](http://dev.clojure.org/jira/browse/JDBC-102).
