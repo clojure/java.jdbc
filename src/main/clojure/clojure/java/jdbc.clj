@@ -973,7 +973,7 @@ compatibility but it will be removed before a 1.0.0 release." }
         cols-and-vals (take-while (comp not keyword?) cols-and-vals-etc)
         n-cols-and-vals (count cols-and-vals)
         no-cols-and-vals (zero? n-cols-and-vals)
-        options (drop (+ (count rows) (count cols-and-vals)) clauses)
+        options (drop (+ n-rows n-cols-and-vals) clauses)
         {:keys [entities] :or {entities identity}} (apply hash-map options)]
     (if (zero? n-rows)
       (if no-cols-and-vals
