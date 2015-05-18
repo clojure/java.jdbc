@@ -1,4 +1,4 @@
-;;  Copyright (c) 2008-2014 Sean Corfield, Stephen C. Gilardi. All rights reserved.
+;;  Copyright (c) 2008-2015 Sean Corfield, Stephen C. Gilardi. All rights reserved.
 ;;  The use and distribution terms for this software are covered by
 ;;  the Eclipse Public License 1.0
 ;;  (http://opensource.org/licenses/eclipse-1.0.php) which can be
@@ -218,7 +218,7 @@ compatibility but it will be removed before a 1.0.0 release." }
 
   URI:
     Parsed JDBC connection string - see below
-  
+
   String:
     subprotocol://user:password@host:post/subname
                  An optional prefix of jdbc: is allowed."
@@ -234,19 +234,19 @@ compatibility but it will be removed before a 1.0.0 release." }
   (cond
    connection
    connection
-   
+
    (instance? URI db-spec)
    (get-connection (parse-properties-uri db-spec))
-   
+
    (string? db-spec)
    (get-connection (URI. (strip-jdbc db-spec)))
-   
+
    factory
    (factory (dissoc db-spec :factory))
-   
+
    connection-uri
    (DriverManager/getConnection connection-uri)
-   
+
    (and subprotocol subname)
    (let [url (format "jdbc:%s:%s" subprotocol subname)
          etc (dissoc db-spec :classname :subprotocol :subname)
@@ -269,14 +269,14 @@ compatibility but it will be removed before a 1.0.0 release." }
          etc (dissoc db-spec :dbtype :dbname)]
      (clojure.lang.RT/loadClassForName (classnames subprotocol))
      (DriverManager/getConnection url (as-properties etc)))
-   
+
    (or (and datasource username password)
        (and datasource user     password))
    (.getConnection ^DataSource datasource ^String (or username user) ^String password)
-   
+
    datasource
    (.getConnection ^DataSource datasource)
-   
+
    name
    (when-available
     javax.naming.InitialContext
@@ -284,7 +284,7 @@ compatibility but it will be removed before a 1.0.0 release." }
           context (javax.naming.InitialContext. env)
           ^DataSource datasource (.lookup context ^String name)]
       (.getConnection datasource)))
-   
+
    :else
    (let [^String msg (format "db-spec %s is missing a required parameter" db-spec)]
      (throw (IllegalArgumentException. msg)))))
@@ -355,7 +355,7 @@ compatibility but it will be removed before a 1.0.0 release." }
 
   Boolean
   (result-set-read-column [x _2 _3] (if (= true x) true false))
-  
+
   nil
   (result-set-read-column [_1 _2 _3] nil))
 
@@ -404,19 +404,19 @@ compatibility but it will be removed before a 1.0.0 release." }
       (seq result))))
 
 (def ^{:private true
-       :doc "Map friendly :concurrency values to ResultSet constants."} 
+       :doc "Map friendly :concurrency values to ResultSet constants."}
   result-set-concurrency
   {:read-only ResultSet/CONCUR_READ_ONLY
    :updatable ResultSet/CONCUR_UPDATABLE})
 
 (def ^{:private true
-       :doc "Map friendly :cursors values to ResultSet constants."} 
+       :doc "Map friendly :cursors values to ResultSet constants."}
   result-set-holdability
   {:hold ResultSet/HOLD_CURSORS_OVER_COMMIT
    :close ResultSet/CLOSE_CURSORS_AT_COMMIT})
 
 (def ^{:private true
-       :doc "Map friendly :type values to ResultSet constants."} 
+       :doc "Map friendly :type values to ResultSet constants."}
   result-set-type
   {:forward-only ResultSet/TYPE_FORWARD_ONLY
    :scroll-insensitive ResultSet/TYPE_SCROLL_INSENSITIVE
@@ -442,17 +442,17 @@ compatibility but it will be removed before a 1.0.0 release." }
                      (catch Exception _
                        ;; assume it is unsupported and try basic PreparedStatement:
                        (.prepareStatement con sql)))
-                   
+
                    (and result-type concurrency)
                    (if cursors
-                     (.prepareStatement con sql 
+                     (.prepareStatement con sql
                                         (get result-set-type result-type result-type)
                                         (get result-set-concurrency concurrency concurrency)
                                         (get result-set-holdability cursors cursors))
-                     (.prepareStatement con sql 
+                     (.prepareStatement con sql
                                         (get result-set-type result-type result-type)
                                         (get result-set-concurrency concurrency concurrency)))
-                   
+
                    :else
                    (.prepareStatement con sql))]
     (when fetch-size (.setFetchSize stmt fetch-size))
@@ -497,12 +497,12 @@ compatibility but it will be removed before a 1.0.0 release." }
   "Prints the update counts from a BatchUpdateException to *out*"
   [^BatchUpdateException exception]
   (println "Update counts:")
-  (dorun 
-    (map-indexed 
-      (fn [index count] 
+  (dorun
+    (map-indexed
+      (fn [index count]
         (println (format " Statement %d: %s"
                          index
-                         (get special-counts count count)))) 
+                         (get special-counts count count))))
       (.getUpdateCounts exception))))
 
 ;; java.jdbc pieces rewritten to not use dynamic bindings
@@ -702,7 +702,7 @@ compatibility but it will be removed before a 1.0.0 release." }
                       (.close rs)
                       result)
                     (catch Exception _
-                      ;; assume generated keys is unsupported and return counts instead: 
+                      ;; assume generated keys is unsupported and return counts instead:
                       counts))))]
            (if transaction?
              (with-db-transaction [t-db (add-connection db (.getConnection stmt))]
@@ -774,12 +774,12 @@ compatibility but it will be removed before a 1.0.0 release." }
                               "vector"
                               "[sql param*]"
                               (.getName sql-params-class)
-                              (pr-str sql-params))] 
+                              (pr-str sql-params))]
       (throw (IllegalArgumentException. msg))))
   (let [special (first sql-params)
         sql-is-first (string? special)
         options-are-first (map? special)
-        sql (cond sql-is-first special 
+        sql (cond sql-is-first special
                   options-are-first (second sql-params))
         params (vec (cond sql-is-first (rest sql-params)
                           options-are-first (rest (rest sql-params))
@@ -1073,4 +1073,3 @@ compatibility but it will be removed before a 1.0.0 release." }
   (println "DEPRECATED: Use with-db-transaction instead of db-transaction.")
   `(db-transaction* ~(second binding)
                     (^{:once true} fn* [~(first binding)] ~@body)))
-
