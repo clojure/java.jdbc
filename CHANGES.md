@@ -1,6 +1,7 @@
 Changes coming in 0.3.7
 
 * Update SQLite driver version to 3.8.7 and re-test.
+* Remove duplicate `count` calls in `insert-sql` [JDBC-108](http://dev.clojure.org/jira/browse/JDBC-108) - Earl St Sauver.
 * Fix links in CHANGES and README [JDBC-103](http://dev.clojure.org/jira/browse/JDBC-103) - John Walker.
 
 Changes in 0.3.6
