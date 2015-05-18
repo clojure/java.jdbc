@@ -13,13 +13,6 @@ Formerly known as `clojure.contrib.sql`.
 
 Additional documentation can be found in the [java.jdbc section of clojure-doc.org](http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html) and there is a dedicated [java.jdbc mailing list](https://groups.google.com/forum/#!forum/clojure-java-jdbc)
 
-Important Changes from Earlier Versions
-========================================
-
-If you depend on the `clojure.java.jdbc.sql` or `clojure.java.jdbc.ddl` namespaces, which were introduced in 0.3.0-alpha1, you will need to switch to [java-jdbc/dsl](https://github.com/seancorfield/jsql) as those DSLs have been removed from this contrib library as of 0.3.0-beta2, to improve the focus.
-
-Similarly, if you depend on the older 0.2.3 API, you'll need to switch to `clojure.java.jdbc.deprecated` as the old API was deprecated as part of the 0.3.0 release (alpha1 thru beta1). In order to clean up the documentation and improve the focus of `clojure.java.jdbc`, the old API was moved in 0.3.0-beta2.
-
 Releases and Dependency Information
 ========================================
 
@@ -163,7 +156,7 @@ Change Log
   * Add :user as an alias for :username for DataSource connections [JDBC-74](http://dev.clojure.org/jira/browse/JDBC-74).
 
 * Release 0.3.0-beta2 on 2013-11-24
-  * BREAKING CHANGES!
+  * **BREAKING CHANGES!**
   * The DSL namespaces introduced in 0.3.0-alpha1 have been retired - see [java-jdbc/dsl](https://github.com/seancorfield/jsql) for a migration path if you wish to continue using the DSL (although it is recommended you switch to another, more expressive DSL).
   * The older API (0.2.3) which was deprecated in earlier 0.3.0 builds has moved to `clojure.java.jdbc.deprecated` to help streamline the API for 0.3.0 and clean up the documentation.
 
