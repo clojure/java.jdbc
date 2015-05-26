@@ -135,7 +135,9 @@ compatibility but it will be removed before a 1.0.0 release." }
    "derby"          "org.apache.derby.jdbc.EmbeddedDriver"
    "hsqldb"         "org.hsqldb.jdbcDriver"
    "h2"             "org.h2.Driver"
-   "sqlite"         "org.sqlite.JDBC"})
+   "sqlite"         "org.sqlite.JDBC"
+   ;added ucanaccess driver
+   "ucanaccess"     "net.ucanaccess.jdbc.UcanaccessDriver"})
 
 (def ^{:private true :doc "Map of schemes to subprotocols"} subprotocols
   {"postgres" "postgresql"})
