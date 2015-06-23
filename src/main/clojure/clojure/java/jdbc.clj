@@ -687,7 +687,9 @@ compatibility but it will be removed before a 1.0.0 release." }
   Return the generated keys for the (single) update/insert."
   ([db sql param-group]
      (db-do-prepared-return-keys db true sql param-group))
-  ([db transaction? sql param-group]
+  ([db transaction? sql {:as   param-group
+                         :keys [identifiers]
+                         :or   {identifiers str/lower-case}}]
      (if-let [^java.sql.Connection con (db-find-connection db)]
        (with-open [^PreparedStatement stmt (prepare-statement con sql :return-keys true)]
          ((or (:set-parameters db) set-parameters) stmt param-group)
@@ -696,7 +698,7 @@ compatibility but it will be removed before a 1.0.0 release." }
                 (let [counts (.executeUpdate stmt)]
                   (try
                     (let [rs (.getGeneratedKeys stmt)
-                          result (first (result-set-seq rs))]
+                          result (first (result-set-seq rs :identifiers identifiers :as-arrays? false))]
                       ;; sqlite (and maybe others?) requires
                       ;; record set to be closed
                       (.close rs)
