@@ -1,7 +1,8 @@
-Changes coming in 0.3.8
+Changes in 0.4.0
 
 * `db-do-prepared` now allows `transaction?` to be omitted when a `PreparedStatement` is passed as the second argument [JDBC-111](http://dev.clojure.org/jira/browse/JDBC-111) - Stefan Kamphausen.
 * Nested transaction checks isolation level is the same [JDBC-110](http://dev.clojure.org/jira/browse/JDBC-110) - Donald Ball.
+* Default PostgreSQL port; Support more dbtype/dbname variants [JDBC-109](http://dev.clojure.org/jira/browse/JDBC-109).
 * Drop Clojure 1.2 compatibility.
 
 Changes in 0.3.7

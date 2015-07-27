@@ -16,7 +16,7 @@ Additional documentation can be found in the [java.jdbc section of clojure-doc.o
 Releases and Dependency Information
 ========================================
 
-Latest stable release: 0.3.7
+Latest stable release: 0.4.0
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22java.jdbc%22)
 
@@ -24,14 +24,14 @@ Latest stable release: 0.3.7
 
 [Leiningen](https://github.com/technomancy/leiningen) dependency information:
 ```clojure
-[org.clojure/java.jdbc "0.3.7"]
+[org.clojure/java.jdbc "0.4.0"]
 ```
 [Maven](http://maven.apache.org/) dependency information:
 ```xml
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>java.jdbc</artifactId>
-  <version>0.3.7</version>
+  <version>0.4.0</version>
 </dependency>
 ```
 You will also need to add dependencies for the JDBC driver you intend to use. Here are links (to Maven Central) for each of the common database drivers that clojure.java.jdbc is known to be used with:
@@ -103,6 +103,12 @@ Developer Information
 
 Change Log
 ====================
+
+* Release 0.4.0 on 2015-07-26
+  * `db-do-prepared` now allows `transaction?` to be omitted when a `PreparedStatement` is passed as the second argument [JDBC-111](http://dev.clojure.org/jira/browse/JDBC-111) - Stefan Kamphausen.
+  * Nested transaction checks isolation level is the same [JDBC-110](http://dev.clojure.org/jira/browse/JDBC-110) - Donald Ball.
+  * Default PostgreSQL port; Support more dbtype/dbname variants [JDBC-109](http://dev.clojure.org/jira/browse/JDBC-109).
+  * Drop Clojure 1.2 compatibility.
 
 * Release 0.3.7 on 2015-05-18
   * Bump all driver versions in `project.clj` and re-test.
