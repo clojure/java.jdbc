@@ -1,3 +1,7 @@
+Changes coming in 0.3.8
+
+* `db-do-prepared` now allows `transaction?` to be omitted when a `PreparedStatement` is passed as the second argument [JDBC-111](http://dev.clojure.org/jira/browse/JDBC-111) - Stefan Kamphausen.
+
 Changes in 0.3.7
 
 * Bump all driver versions in `project.clj` and re-test.
