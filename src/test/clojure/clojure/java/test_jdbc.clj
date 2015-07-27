@@ -62,15 +62,15 @@
                :user "clojure_test"
                :password "clojure_test"})
 
-(def derby-db {:subprotocol "derby"
-               :subname "clojure_test_derby"
+(def derby-db {:dbtype "derby"
+               :dbname "clojure_test_derby"
                :create true})
 
-(def hsqldb-db {:subprotocol "hsqldb"
-                :subname "clojure_test_hsqldb"})
+(def hsqldb-db {:dbtype "hsqldb"
+                :dbname "clojure_test_hsqldb"})
 
-(def sqlite-db {:subprotocol "sqlite"
-                :subname "clojure_test_sqlite"})
+(def sqlite-db {:dbtype "sqlite"
+                :dbname "clojure_test_sqlite"})
 
 (def postgres-db {:subprotocol "postgresql"
                   :subname "clojure_test"
@@ -125,12 +125,12 @@
 (defn- mysql? [db]
   (if (string? db)
     (re-find #"mysql:" db)
-    (= "mysql" (:subprotocol db))))
+    (= "mysql" (or (:subprotocol db) (:dbtype db)))))
 
 (defn- postgres? [db]
   (if (string? db)
     (re-find #"postgres" db)
-    (= "postgresql" (:subprotocol db))))
+    (= "postgresql" (or (:subprotocol db) (:dbtype db)))))
 
 (defmulti create-test-table
   "Create a standard test table. Uses db-do-commands.
@@ -272,7 +272,7 @@
              :fruit
              {:name "Pomegranate" :appearance "fresh" :cost 585}
              {:name "Kiwifruit" :grade 93})]
-      (condp = (:subprotocol db)
+      (condp = (or (:subprotocol db) (:dbtype db))
         nil              (when (mysql? db)
                            (is (= '({:generated_key 1} {:generated_key 2}) r)))
         "postgresql"     (is (= 2 (count r)))
@@ -579,7 +579,7 @@
                              clojure.string/lower-case))))))))
 
 (defn- returned-key [db k]
-  (condp = (:subprotocol db)
+  (condp = (or (:subprotocol db) (:dbtype db))
     "derby"  {(keyword "1") nil}
     "hsqldb" 1
     "mysql"  {:generated_key k}
@@ -592,7 +592,7 @@
     k))
 
 (defn- generated-key [db k]
-  (condp = (:subprotocol db)
+  (condp = (or (:subprotocol db) (:dbtype db))
     "derby" 0
     "hsqldb" 0
     "jtds:sqlserver" 0
@@ -601,7 +601,7 @@
     k))
 
 (defn- float-or-double [db v]
-  (condp = (:subprotocol db)
+  (condp = (or (:subprotocol db) (:dbtype db))
     "derby" (Float. v)
     "jtds:sqlserver" (Float. v)
     "sqlserver" (Float. v)
