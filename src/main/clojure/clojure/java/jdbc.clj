@@ -740,6 +740,7 @@ compatibility but it will be removed before a 1.0.0 release." }
   "Executes an (optionally parameterized) SQL prepared statement on the
   open database connection. Each param-group is a seq of values for all of
   the parameters. transaction? can be omitted and defaults to true.
+  The sql parameter can either be a SQL string or a PreparedStatement.
   Return a seq of update counts (one count for each param-group)."
   {:arglists '([db-spec sql & param-groups]
                  [db-spec transaction? sql & param-groups])}
