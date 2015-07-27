@@ -744,7 +744,8 @@ compatibility but it will be removed before a 1.0.0 release." }
   {:arglists '([db-spec sql & param-groups]
                  [db-spec transaction? sql & param-groups])}
   [db transaction? & [sql & param-groups :as opts]]
-  (if (string? transaction?)
+  (if (or (string? transaction?)
+          (instance? PreparedStatement transaction?))
     (apply db-do-prepared db true transaction? opts)
     (if-let [^java.sql.Connection con (db-find-connection db)]
       (if (instance? PreparedStatement sql)
