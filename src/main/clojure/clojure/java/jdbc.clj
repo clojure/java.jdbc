@@ -261,11 +261,14 @@ compatibility but it will be removed before a 1.0.0 release." }
                          "mysql" 3306
                          "mssql" 1433
                          "jtds"  1433
+                         "postgresql" 5432
                          nil))
          db-sep (if (= "mssql" subprotocol) ";DATABASENAME=" "/")
-         url (str "jdbc:" subprotocol "://" host
-                  (when port (str ":" port))
-                  db-sep dbname)
+         url (if (#{"derby" "hsqldb" "sqlite"} subprotocol)
+               (str "jdbc:" subprotocol ":" dbname)
+               (str "jdbc:" subprotocol "://" host
+                    (when port (str ":" port))
+                    db-sep dbname))
          etc (dissoc db-spec :dbtype :dbname)]
      (clojure.lang.RT/loadClassForName (classnames subprotocol))
      (DriverManager/getConnection url (as-properties etc)))

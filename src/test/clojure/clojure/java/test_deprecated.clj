@@ -101,7 +101,7 @@
   "Return a sequence of db-spec maps that should be used for tests"
   []
   (for [db test-databases]
-    @(ns-resolve 'clojure.java.test-jdbc (symbol (str (name db) "-db")))))
+    @(ns-resolve 'clojure.java.test-deprecated (symbol (str (name db) "-db")))))
 
 (defn- clean-up
   "Attempt to drop any test tables before we start a test."
@@ -405,4 +405,3 @@
     (is (= :K-W (sql/as-keyword "K_W")))
     (is (= :K_W (sql/as-keyword :K_W)))
     (is (= :k.w (sql/as-keyword :k.w)))))
-
