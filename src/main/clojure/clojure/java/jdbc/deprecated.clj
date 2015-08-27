@@ -51,7 +51,7 @@ generated keys are returned (as a map)." }
 
 (def ^{:private true :dynamic true
        :doc "The default entity naming strategy is to do nothing."}
-  *as-str* 
+  *as-str*
   identity)
 
 (def ^{:private true :dynamic true
@@ -117,6 +117,7 @@ generated keys are returned (as a map)." }
    "jtds:sqlserver" "net.sourceforge.jtds.jdbc.Driver"
    "derby"          "org.apache.derby.jdbc.EmbeddedDriver"
    "hsqldb"         "org.hsqldb.jdbcDriver"
+   "h2"             "org.h2.Driver"
    "sqlite"         "org.sqlite.JDBC"})
 
 (def ^{:private true :doc "Map of schemes to subprotocols"} subprotocols
@@ -164,35 +165,35 @@ generated keys are returned (as a map)." }
   (cond
     (instance? URI db-spec)
     (get-connection (parse-properties-uri db-spec))
-    
+
     (string? db-spec)
     (get-connection (URI. (strip-jdbc db-spec)))
-    
+
     factory
     (factory (dissoc db-spec :factory))
-    
+
     connection-uri
     (DriverManager/getConnection connection-uri)
-    
+
     (and subprotocol subname)
     (let [url (format "jdbc:%s:%s" subprotocol subname)
           etc (dissoc db-spec :classname :subprotocol :subname)
           classname (or classname (classnames subprotocol))]
       (clojure.lang.RT/loadClassForName classname)
       (DriverManager/getConnection url (as-properties etc)))
-    
+
     (and datasource username password)
     (.getConnection ^DataSource datasource ^String username ^String password)
-    
+
     datasource
     (.getConnection ^DataSource datasource)
-    
+
     name
     (let [env (and environment (Hashtable. ^Map environment))
           context (InitialContext. env)
           ^DataSource datasource (.lookup context ^String name)]
       (.getConnection datasource))
-    
+
     :else
     (let [^String msg (format "db-spec %s is missing a required parameter" db-spec)]
       (throw (IllegalArgumentException. msg)))))
@@ -252,20 +253,20 @@ generated keys are returned (as a map)." }
     (str q x q)))
 
 (defn as-named-identifier
-  "Given a naming strategy and a keyword, return the keyword as a string using the 
+  "Given a naming strategy and a keyword, return the keyword as a string using the
    entity naming strategy.
    Given a naming strategy and a string, return the string as-is.
-   The naming strategy should either be a function (the entity naming strategy) or 
+   The naming strategy should either be a function (the entity naming strategy) or
    a map containing :entity and/or :keyword keys which provide the entity naming
    strategy and/or keyword naming strategy respectively."
   [naming-strategy x]
   (as-identifier x (if (map? naming-strategy) (or (:entity naming-strategy) identity) naming-strategy)))
 
 (defn as-named-keyword
-  "Given a naming strategy and a string, return the string as a keyword using the 
+  "Given a naming strategy and a string, return the string as a keyword using the
    keyword naming strategy.
    Given a naming strategy and a keyword, return the keyword as-is.
-   The naming strategy should either be a function (the entity naming strategy) or 
+   The naming strategy should either be a function (the entity naming strategy) or
    a map containing :entity and/or :keyword keys which provide the entity naming
    strategy and/or keyword naming strategy respectively.
    Note that providing a single function will cause the default keyword naming
@@ -336,7 +337,7 @@ generated keys are returned (as a map)." }
 
   URI:
     Parsed JDBC connection string - see below
-  
+
   String:
     subprotocol://user:password@host:post/subname
                  An optional prefix of jdbc: is allowed."
@@ -435,19 +436,19 @@ generated keys are returned (as a map)." }
      (execute-batch stmt))))
 
 (def ^{:private true
-       :doc "Map friendly :concurrency values to ResultSet constants."} 
+       :doc "Map friendly :concurrency values to ResultSet constants."}
   result-set-concurrency
   {:read-only ResultSet/CONCUR_READ_ONLY
    :updatable ResultSet/CONCUR_UPDATABLE})
 
 (def ^{:private true
-       :doc "Map friendly :cursors values to ResultSet constants."} 
+       :doc "Map friendly :cursors values to ResultSet constants."}
   result-set-holdability
   {:hold ResultSet/HOLD_CURSORS_OVER_COMMIT
    :close ResultSet/CLOSE_CURSORS_AT_COMMIT})
 
 (def ^{:private true
-       :doc "Map friendly :type values to ResultSet constants."} 
+       :doc "Map friendly :type values to ResultSet constants."}
   result-set-type
   {:forward-only ResultSet/TYPE_FORWARD_ONLY
    :scroll-insensitive ResultSet/TYPE_SCROLL_INSENSITIVE
@@ -469,11 +470,11 @@ generated keys are returned (as a map)." }
                                                   ;; assume it is unsupported and try basic PreparedStatement:
                                                   (.prepareStatement con sql)))
                                   (and result-type concurrency) (if cursors
-                                                                  (.prepareStatement con sql 
+                                                                  (.prepareStatement con sql
                                                                                      (result-type result-set-type)
                                                                                      (concurrency result-set-concurrency)
                                                                                      (cursors result-set-holdability))
-                                                                  (.prepareStatement con sql 
+                                                                  (.prepareStatement con sql
                                                                                      (result-type result-set-type)
                                                                                      (concurrency result-set-concurrency)))
                                   :else (.prepareStatement con sql))]
@@ -559,7 +560,7 @@ generated keys are returned (as a map)." }
                               (.close rs)
                               result)
                             (catch Exception _
-                              ;; assume generated keys is unsupported and return counts instead: 
+                              ;; assume generated keys is unsupported and return counts instead:
                               counts)))))))
 
 (defn insert-values
@@ -661,12 +662,12 @@ generated keys are returned (as a map)." }
                               "vector"
                               "[sql param*]"
                               (.getName sql-params-class)
-                              (pr-str sql-params))] 
+                              (pr-str sql-params))]
       (throw (IllegalArgumentException. msg))))
   (let [special (first sql-params)
         sql-is-first (string? special)
         options-are-first (map? special)
-        sql (cond sql-is-first special 
+        sql (cond sql-is-first special
                   options-are-first (second sql-params))
         params (vec (cond sql-is-first (rest sql-params)
                           options-are-first (rest (rest sql-params))
@@ -719,10 +720,10 @@ generated keys are returned (as a map)." }
   "Prints the update counts from a BatchUpdateException to *out*"
   [^BatchUpdateException exception]
   (println "Update counts:")
-  (dorun 
-    (map-indexed 
-      (fn [index count] 
+  (dorun
+    (map-indexed
+      (fn [index count]
         (println (format " Statement %d: %s"
                          index
-                         (get special-counts count count)))) 
+                         (get special-counts count count))))
       (.getUpdateCounts exception))))

@@ -31,7 +31,7 @@
   (if-let [dbs (System/getenv "TEST_DBS")]
     (map keyword (.split dbs ","))
     ;; enable more by default once the build server is equipped?
-    [:derby :hsqldb :sqlite]))
+    [:derby :hsqldb :h2 :sqlite]))
 
 ;; MS SQL Server requires more specialized configuration:
 (def mssql-host
@@ -68,6 +68,9 @@
 
 (def hsqldb-db {:subprotocol "hsqldb"
                 :subname "clojure_test_hsqldb"})
+
+(def h2-db {:subprotocol "h2"
+            :subname "./clojure_test_h2"})
 
 (def sqlite-db {:subprotocol "sqlite"
                 :subname "clojure_test_sqlite"})
@@ -227,7 +230,8 @@
           "mysql"          (is (= '({:generated_key 1} {:generated_key 2}) r))
           "sqlserver"      (is (= '({:generated_keys nil} {:generated_keys nil}) r))
           "jtds:sqlserver" (is (= '({:id nil} {:id nil}) r))
-          "hsqldb"         (is (= '(1 1) r))
+          "hsqldb"         (is (= '(nil nil) r))
+          "h2"             (is (= '(nil nil) r))
           "sqlite"         (is (= (list {(keyword "last_insert_rowid()") 1}
                                         {(keyword "last_insert_rowid()") 2}) r))
           "derby"          (is (= '({:1 nil} {:1 nil}) r))))

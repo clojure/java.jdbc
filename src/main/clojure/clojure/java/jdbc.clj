@@ -264,7 +264,7 @@ compatibility but it will be removed before a 1.0.0 release." }
                          "postgresql" 5432
                          nil))
          db-sep (if (= "mssql" subprotocol) ";DATABASENAME=" "/")
-         url (if (#{"derby" "hsqldb" "sqlite"} subprotocol)
+         url (if (#{"derby" "hsqldb" "h2" "sqlite"} subprotocol)
                (str "jdbc:" subprotocol ":" dbname)
                (str "jdbc:" subprotocol "://" host
                     (when port (str ":" port))

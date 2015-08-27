@@ -31,7 +31,7 @@
   (if-let [dbs (System/getenv "TEST_DBS")]
     (map keyword (.split dbs ","))
     ;; enable more by default once the build server is equipped?
-    [:derby :hsqldb :sqlite]))
+    [:derby :hsqldb :h2 :sqlite]))
 
 ;; MS SQL Server requires more specialized configuration:
 (def mssql-host
@@ -68,6 +68,9 @@
 
 (def hsqldb-db {:dbtype "hsqldb"
                 :dbname "clojure_test_hsqldb"})
+
+(def h2-db {:dbtype "h2"
+            :dbname "./clojure_test_h2"})
 
 (def sqlite-db {:dbtype "sqlite"
                 :dbname "clojure_test_sqlite"})
@@ -279,7 +282,8 @@
         "mysql"          (is (= '({:generated_key 1} {:generated_key 2}) r))
         "sqlserver"      (is (= '({:generated_keys nil} {:generated_keys nil}) r))
         "jtds:sqlserver" (is (= '({:id nil} {:id nil}) r))
-        "hsqldb"         (is (= '(1 1) r))
+        "hsqldb"         (is (= '(nil nil) r))
+        "h2"             (is (= '(nil nil) r))
         "sqlite"         (is (= (list {(keyword "last_insert_rowid()") 1}
                                       {(keyword "last_insert_rowid()") 2}) r))
         "derby"          (is (= (list {(keyword "1") nil} {(keyword "1") nil}) r))))
@@ -622,7 +626,8 @@
 (defn- returned-key [db k]
   (condp = (or (:subprotocol db) (:dbtype db))
     "derby"  {(keyword "1") nil}
-    "hsqldb" 1
+    "hsqldb" nil
+    "h2"     nil
     "mysql"  {:generated_key k}
     nil      (if (mysql? db) ; string-based tests
                {:generated_key k}
@@ -636,6 +641,7 @@
   (condp = (or (:subprotocol db) (:dbtype db))
     "derby" 0
     "hsqldb" 0
+    "h2" 0
     "jtds:sqlserver" 0
     "sqlserver" 0
     "sqlite" 0
@@ -644,6 +650,7 @@
 (defn- float-or-double [db v]
   (condp = (or (:subprotocol db) (:dbtype db))
     "derby" (Float. v)
+    "h2" (Float. v)
     "jtds:sqlserver" (Float. v)
     "sqlserver" (Float. v)
     "postgresql" (Float. v)

@@ -18,11 +18,12 @@
                  ;; file exists for convenience -- the pom.xml file is the
                  ;; "system of record" as far as dependencies go!
                  [org.apache.derby/derby "10.11.1.1"]
-                 [hsqldb "1.8.0.10"]
+                 [org.hsqldb/hsqldb "2.3.3"]
+                 [com.h2database/h2 "1.4.188"]
                  [net.sourceforge.jtds/jtds "1.3.1"]
-                 [mysql/mysql-connector-java "5.1.35"]
+                 [mysql/mysql-connector-java "5.1.36"]
                  [org.postgresql/postgresql "9.4-1201-jdbc41"]
-                 [org.xerial/sqlite-jdbc "3.8.10.1"]
+                 [org.xerial/sqlite-jdbc "3.8.11.1"]
                  ;; if you have the MS driver in your local repo
                  [sqljdbc4 "4.0"]
                  ]
