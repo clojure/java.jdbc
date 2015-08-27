@@ -1,3 +1,7 @@
+Changes coming in 0.4.2
+
+* Add `metadata-query` macro to make metadata query / results easier to work with [JDBC-107](http://dev.clojure.org/jira/browse/JDBC-107).
+
 Changes in 0.4.0 / 0.4.1
 
 * `db-do-prepared` now allows `transaction?` to be omitted when a `PreparedStatement` is passed as the second argument [JDBC-111](http://dev.clojure.org/jira/browse/JDBC-111) - Stefan Kamphausen.

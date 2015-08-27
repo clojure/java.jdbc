@@ -563,6 +563,30 @@
                          :table_name
                          clojure.string/lower-case))))))
 
+(deftest test-metadata-managed
+  (doseq [db (test-specs)]
+    (create-test-table :fruit db)
+    (sql/with-db-metadata [metadata db]
+      (let [table-info (sql/metadata-query (.getTables metadata
+                                                       nil nil nil
+                                                       (into-array ["TABLE" "VIEW"])))]
+        (is (not= [] table-info))
+        (is (= "fruit" (-> table-info
+                           first
+                           :table_name
+                           clojure.string/lower-case)))))))
+
+(deftest test-metadata-managed-computed
+  (doseq [db (test-specs)]
+    (create-test-table :fruit db)
+    (is (= "fruit"
+           (sql/with-db-metadata [metadata db]
+             (sql/metadata-query (.getTables metadata
+                                             nil nil nil
+                                             (into-array ["TABLE" "VIEW"]))
+                                 :row-fn (comp clojure.string/lower-case :table_name)
+                                 :result-set-fn first))))))
+
 (deftest test-metadata
   (doseq [db (test-specs)]
     (create-test-table :fruit db)

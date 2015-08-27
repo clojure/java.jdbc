@@ -666,6 +666,19 @@ compatibility but it will be removed before a 1.0.0 release." }
        (result-set-seq rs-or-value :identifiers identifiers :as-arrays? as-arrays?))
       rs-or-value)))
 
+(defmacro metadata-query
+  "Given a Java expression that extracts metadata (in the context of with-db-metadata),
+  and additional optional arguments like metadata-result, manage the connection for a
+  single metadata-based query. Example usage:
+
+  (with-db-metadata [meta db-spec]
+    (metadata-query (.getTables meta nil nil nil (into-array String [\"TABLE\"]))
+      :row-fn ...
+      :result-set-fn ...))"
+  [meta-query & opt-args]
+  `(with-open [rs# ~meta-query]
+     (metadata-result rs# ~@opt-args)))
+
 (defn db-do-commands
   "Executes SQL commands on the specified database connection. Wraps the commands
   in a transaction if transaction? is true. transaction? can be ommitted and it
