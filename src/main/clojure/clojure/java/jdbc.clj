@@ -686,7 +686,8 @@ compatibility but it will be removed before a 1.0.0 release." }
 (defn db-do-commands
   "Executes SQL commands on the specified database connection. Wraps the commands
   in a transaction if transaction? is true. transaction? can be ommitted and it
-  defaults to true."
+  defaults to true.
+  Uses executeBatch. This may affect what SQL you can run via db-do-commands."
   {:arglists '([db-spec sql-command & sql-commands]
                  [db-spec transaction? sql-command & sql-commands])}
   [db transaction? & commands]
@@ -790,7 +791,8 @@ compatibility but it will be removed before a 1.0.0 release." }
                       (the PreparedStatement already contains the SQL query)
     [options sql & params] - options and a SQL query for creating a
                       PreparedStatement, followed by any parameters it needs
-  See prepare-statement for supported options."
+  See prepare-statement for supported options.
+  Uses executeQuery. This may affect what SQL you can run via query."
   {:arglists '([db-spec [sql-string & params] func]
                  [db-spec [stmt & params] func]
                    [db-spec [options-map sql-string & params] func])}
@@ -869,7 +871,9 @@ compatibility but it will be removed before a 1.0.0 release." }
 (defn execute!
   "Given a database connection and a vector containing SQL and optional parameters,
   perform a general (non-select) SQL operation. The optional keyword argument specifies
-  whether to run the operation in a transaction or not (default true)."
+  whether to run the operation in a transaction or not (default true).
+  If there are no parameters specified, executeUpdate will be used, otherwise
+  executeBatch will be used. This may affect what SQL you can run via execute!"
   {:arglists '([db-spec [sql & params] :multi? false :transaction? true]
                  [db-spec [sql & param-groups] :multi? true :transaction? true])}
   [db sql-params & {:keys [transaction? multi?]
