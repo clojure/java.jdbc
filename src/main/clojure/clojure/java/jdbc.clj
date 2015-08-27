@@ -428,7 +428,9 @@ compatibility but it will be removed before a 1.0.0 release." }
 (defn prepare-statement
   "Create a prepared statement from a connection, a SQL string and an
    optional list of parameters:
-     :return-keys true | false - default false
+     :return-keys truthy | nil - default nil
+       for some drivers, this may be a vector of column names to identify
+       the generated keys to return, otherwise it should just be true
      :result-type :forward-only | :scroll-insensitive | :scroll-sensitive
      :concurrency :read-only | :updatable
      :cursors
@@ -441,7 +443,9 @@ compatibility but it will be removed before a 1.0.0 release." }
   (let [^PreparedStatement
         stmt (cond return-keys
                    (try
-                     (.prepareStatement con sql java.sql.Statement/RETURN_GENERATED_KEYS)
+                     (if (vector? return-keys)
+                       (.prepareStatement con sql (into-array String return-keys))
+                       (.prepareStatement con sql java.sql.Statement/RETURN_GENERATED_KEYS))
                      (catch Exception _
                        ;; assume it is unsupported and try basic PreparedStatement:
                        (.prepareStatement con sql)))

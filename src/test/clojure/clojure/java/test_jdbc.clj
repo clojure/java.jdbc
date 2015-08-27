@@ -312,6 +312,23 @@
     (is (= "Pear" (sql/query db ["SELECT * FROM fruit WHERE cost = ?" 99]
                              :result-set-fn (comp :name first))))))
 
+(deftest execute-with-prepared-statement-return-keys
+  (doseq [db (test-specs)]
+    ;; Derby does not have auto-generated id column which we're testing here
+    (when-not (#{"derby" "jtds:sqlserver"} (or (:subprotocol db) (:dbtype db)))
+      (create-test-table :fruit db)
+      (sql/with-db-connection [conn db]
+        (let [connection (:connection conn)
+              prepared-statement (sql/prepare-statement connection (str "INSERT INTO fruit ( name, appearance, cost ) "
+                                                                        "VALUES ( ?, ?, ? )")
+                                                        :return-keys ["id"])]
+
+          (sql/execute! db [prepared-statement "Apple" "Green" 75])
+          (sql/execute! db [prepared-statement "Pear" "Yellow" 99])))
+      (is (= 2 (sql/query db ["SELECT * FROM fruit"] :result-set-fn count)))
+      (is (= "Pear" (sql/query db ["SELECT * FROM fruit WHERE cost = ?" 99]
+                               :result-set-fn (comp :name first)))))))
+
 (deftest test-update-values
   (doseq [db (test-specs)]
     (create-test-table :fruit db)
