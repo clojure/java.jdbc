@@ -580,7 +580,7 @@ compatibility but it will be removed before a 1.0.0 release." }
   The read-only? option puts the transaction in readonly mode (if supported)."
   [db func & {:keys [isolation read-only?]}]
   (if (zero? (get-level db))
-    (if-let [^java.sql.Connection con (db-find-connection db)]
+    (if-let [con (db-find-connection db)]
       (let [nested-db (inc-level db)
             auto-commit (.getAutoCommit con)
             old-isolation (.getTransactionIsolation con)
@@ -607,12 +607,12 @@ compatibility but it will be removed before a 1.0.0 release." }
                (.setTransactionIsolation con old-isolation))
              (when read-only?
                (.setReadOnly con old-readonly))))))
-      (with-open [^java.sql.Connection con (get-connection db)]
+      (with-open [con (get-connection db)]
         (db-transaction* (add-connection db con) func
                          :isolation isolation :read-only? read-only?)))
     (try
       (when (and isolation
-                 (let [^java.sql.Connection con (db-find-connection db)]
+                 (let [con (db-find-connection db)]
                    (not= (isolation isolation-levels)
                          (.getTransactionIsolation con))))
         (let [msg "Nested transactions may not have different isolation levels"]
@@ -641,7 +641,7 @@ compatibility but it will be removed before a 1.0.0 release." }
     ... con-db ...)"
   [binding & body]
   `(let [db-spec# ~(second binding)]
-     (with-open [^java.sql.Connection con# (get-connection db-spec#)]
+     (with-open [con# (get-connection db-spec#)]
        (let [~(first binding) (add-connection db-spec# con#)]
          ~@body))))
 
@@ -652,7 +652,7 @@ compatibility but it will be removed before a 1.0.0 release." }
    (with-db-metadata [md db-spec]
      ... md ...)"
   [binding & body]
-  `(with-open [^java.sql.Connection con# (get-connection ~(second binding))]
+  `(with-open [con# (get-connection ~(second binding))]
      (let [~(first binding) (.getMetaData con#)]
        ~@body)))
 
@@ -697,7 +697,7 @@ compatibility but it will be removed before a 1.0.0 release." }
   [db transaction? & commands]
   (if (string? transaction?)
     (apply db-do-commands db true transaction? commands)
-    (if-let [^java.sql.Connection con (db-find-connection db)]
+    (if-let [con (db-find-connection db)]
       (with-open [^Statement stmt (.createStatement con)]
         (doseq [^String cmd commands]
           (.addBatch stmt cmd))
@@ -708,7 +708,7 @@ compatibility but it will be removed before a 1.0.0 release." }
             (execute-batch stmt)
             (catch Exception e
               (throw-non-rte e)))))
-      (with-open [^java.sql.Connection con (get-connection db)]
+      (with-open [con (get-connection db)]
         (apply db-do-commands (add-connection db con) transaction? commands)))))
 
 (defn db-do-prepared-return-keys
@@ -719,7 +719,7 @@ compatibility but it will be removed before a 1.0.0 release." }
   ([db sql param-group]
      (db-do-prepared-return-keys db true sql param-group))
   ([db transaction? sql param-group]
-     (if-let [^java.sql.Connection con (db-find-connection db)]
+     (if-let [con (db-find-connection db)]
        (with-open [^PreparedStatement stmt (prepare-statement con sql :return-keys true)]
          ((or (:set-parameters db) set-parameters) stmt param-group)
          (let [exec-and-return-keys
@@ -742,7 +742,7 @@ compatibility but it will be removed before a 1.0.0 release." }
                (exec-and-return-keys)
                (catch Exception e
                  (throw-non-rte e))))))
-       (with-open [^java.sql.Connection con (get-connection db)]
+       (with-open [con (get-connection db)]
          (db-do-prepared-return-keys (add-connection db con) transaction? sql param-group)))))
 
 (defn- db-do-execute-prepared-statement
@@ -779,12 +779,12 @@ compatibility but it will be removed before a 1.0.0 release." }
   (if (or (string? transaction?)
           (instance? PreparedStatement transaction?))
     (apply db-do-prepared db true transaction? opts)
-    (if-let [^java.sql.Connection con (db-find-connection db)]
+    (if-let [con (db-find-connection db)]
       (if (instance? PreparedStatement sql)
         (db-do-execute-prepared-statement db sql param-groups transaction?)
         (with-open [^PreparedStatement stmt (prepare-statement con sql)]
           (db-do-execute-prepared-statement db stmt param-groups transaction?)))
-      (with-open [^java.sql.Connection con (get-connection db)]
+      (with-open [con (get-connection db)]
         (apply db-do-prepared (add-connection db con) transaction? sql param-groups)))))
 
 (defn db-query-with-resultset
@@ -826,10 +826,10 @@ compatibility but it will be removed before a 1.0.0 release." }
     (if (instance? PreparedStatement special)
       (let [^PreparedStatement stmt special]
         (run-query-with-params stmt))
-      (if-let [^java.sql.Connection con (db-find-connection db)]
+      (if-let [con (db-find-connection db)]
         (with-open [^PreparedStatement stmt (apply prepare-statement con sql prepare-args)]
           (run-query-with-params stmt))
-        (with-open [^java.sql.Connection con (get-connection db)]
+        (with-open [con (get-connection db)]
           (with-open [^PreparedStatement stmt (apply prepare-statement con sql prepare-args)]
             (run-query-with-params stmt)))))))
 
@@ -892,7 +892,7 @@ compatibility but it will be removed before a 1.0.0 release." }
              (db-do-prepared db transaction? (first sql-params)))))]
     (if-let [con (db-find-connection db)]
       (execute-helper db)
-      (with-open [^java.sql.Connection con (get-connection db)]
+      (with-open [con (get-connection db)]
         (execute-helper (add-connection db con))))))
 
 (defn- table-str
@@ -1035,7 +1035,7 @@ compatibility but it will be removed before a 1.0.0 release." }
         stmts (apply insert-sql table maps-or-cols-and-values-etc)]
     (if-let [con (db-find-connection db)]
       (insert-helper db transaction? stmts)
-      (with-open [^java.sql.Connection con (get-connection db)]
+      (with-open [con (get-connection db)]
         (insert-helper (add-connection db con) transaction? stmts)))))
 
 (defn- update-sql
