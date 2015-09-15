@@ -425,6 +425,10 @@ compatibility but it will be removed before a 1.0.0 release." }
    :scroll-insensitive ResultSet/TYPE_SCROLL_INSENSITIVE
    :scroll-sensitive ResultSet/TYPE_SCROLL_SENSITIVE})
 
+(defn ^{:tag (class (into-array String []))} string-array
+  [return-keys]
+  (into-array String return-keys))
+
 (defn prepare-statement
   "Create a prepared statement from a connection, a SQL string and an
    optional list of parameters:
@@ -444,7 +448,7 @@ compatibility but it will be removed before a 1.0.0 release." }
         stmt (cond return-keys
                    (try
                      (if (vector? return-keys)
-                       (.prepareStatement con sql (into-array String return-keys))
+                       (.prepareStatement con sql (string-array return-keys))
                        (.prepareStatement con sql java.sql.Statement/RETURN_GENERATED_KEYS))
                      (catch Exception _
                        ;; assume it is unsupported and try basic PreparedStatement:
