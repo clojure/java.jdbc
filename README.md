@@ -16,7 +16,7 @@ Additional documentation can be found in the [java.jdbc section of clojure-doc.o
 Releases and Dependency Information
 ========================================
 
-Latest stable release: 0.4.1
+Latest stable release: 0.4.2
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22java.jdbc%22)
 
@@ -24,14 +24,14 @@ Latest stable release: 0.4.1
 
 [Leiningen](https://github.com/technomancy/leiningen) dependency information:
 ```clojure
-[org.clojure/java.jdbc "0.4.1"]
+[org.clojure/java.jdbc "0.4.2"]
 ```
 [Maven](http://maven.apache.org/) dependency information:
 ```xml
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>java.jdbc</artifactId>
-  <version>0.4.1</version>
+  <version>0.4.2</version>
 </dependency>
 ```
 You will also need to add dependencies for the JDBC driver you intend to use. Here are links (to Maven Central) for each of the common database drivers that clojure.java.jdbc is known to be used with:
@@ -103,6 +103,13 @@ Developer Information
 
 Change Log
 ====================
+
+* Release 0.4.2 on 2015-09-15
+  * Remove redundant type hints [JDBC-113](http://dev.clojure.org/jira/browse/JDBC-113) - Michael Blume.
+  * Avoid reflection on `.prepareStatement` [JDBC-112](http://dev.clojure.org/jira/browse/JDBC-112) - Michael Blume.
+  * Add `metadata-query` macro to make metadata query / results easier to work with for [JDBC-107](http://dev.clojure.org/jira/browse/JDBC-107).
+  * `prepare-statement` `:return-keys` may now be a vector of (auto-generated) column names to return, in addition to just being truthy or falsey. This allows keys to be returned for more databases. [JDBC-104](http://dev.clojure.org/jira/browse/JDBC-104).
+  * Officially support H2 (and test against it) to support [JDBC-91](http://dev.clojure.org/jira/browse/JDBC-91) and clarify docstrings to improve debugging driver-specific restrictions on SQL.
 
 * Release 0.4.0 / 0.4.1 on 2015-07-26
   * `db-do-prepared` now allows `transaction?` to be omitted when a `PreparedStatement` is passed as the second argument [JDBC-111](http://dev.clojure.org/jira/browse/JDBC-111) - Stefan Kamphausen.
