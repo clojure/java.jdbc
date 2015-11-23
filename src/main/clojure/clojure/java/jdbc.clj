@@ -530,16 +530,6 @@ compatibility but it will be removed before a 1.0.0 release." }
   (or (db-find-connection db)
       (throw (Exception. "no current database connection"))))
 
-(defn- throw-non-rte
-  "This ugliness makes it easier to catch SQLException objects
-  rather than something wrapped in a RuntimeException which
-  can really obscure your code when working with JDBC from
-  Clojure... :("
-  [^Throwable ex]
-  (cond (instance? java.sql.SQLException ex) (throw ex)
-        (and (instance? RuntimeException ex) (.getCause ex)) (throw-non-rte (.getCause ex))
-        :else (throw ex)))
-
 (defn db-set-rollback-only!
   "Marks the outermost transaction such that it will rollback rather than
   commit when complete"
@@ -599,7 +589,7 @@ compatibility but it will be removed before a 1.0.0 release." }
              result)
            (catch Throwable t
              (.rollback con)
-             (throw-non-rte t))
+             (throw t))
            (finally
              (db-unset-rollback-only! nested-db)
              (.setAutoCommit con auto-commit)
@@ -610,16 +600,14 @@ compatibility but it will be removed before a 1.0.0 release." }
       (with-open [con (get-connection db)]
         (db-transaction* (add-connection db con) func
                          :isolation isolation :read-only? read-only?)))
-    (try
+    (do
       (when (and isolation
                  (let [con (db-find-connection db)]
                    (not= (isolation isolation-levels)
                          (.getTransactionIsolation con))))
         (let [msg "Nested transactions may not have different isolation levels"]
           (throw (IllegalStateException. msg))))
-      (func (inc-level db))
-      (catch Exception e
-        (throw-non-rte e)))))
+      (func (inc-level db)))))
 
 (defmacro with-db-transaction
   "Evaluates body in the context of a transaction on the specified database connection.
@@ -704,10 +692,7 @@ compatibility but it will be removed before a 1.0.0 release." }
         (if transaction?
           (with-db-transaction [t-db (add-connection db (.getConnection stmt))]
             (execute-batch stmt))
-          (try
-            (execute-batch stmt)
-            (catch Exception e
-              (throw-non-rte e)))))
+          (execute-batch stmt)))
       (with-open [con (get-connection db)]
         (apply db-do-commands (add-connection db con) transaction? commands)))))
 
@@ -738,10 +723,7 @@ compatibility but it will be removed before a 1.0.0 release." }
            (if transaction?
              (with-db-transaction [t-db (add-connection db (.getConnection stmt))]
                (exec-and-return-keys))
-             (try
-               (exec-and-return-keys)
-               (catch Exception e
-                 (throw-non-rte e))))))
+             (exec-and-return-keys))))
        (with-open [con (get-connection db)]
          (db-do-prepared-return-keys (add-connection db con) transaction? sql param-group)))))
 
@@ -751,10 +733,7 @@ compatibility but it will be removed before a 1.0.0 release." }
     (if transaction?
       (with-db-transaction [t-db (add-connection db (.getConnection stmt))]
         (vector (.executeUpdate stmt)))
-      (try
-        (vector (.executeUpdate stmt))
-        (catch Exception e
-          (throw-non-rte e))))
+      (vector (.executeUpdate stmt)))
     (do
       (doseq [param-group param-groups]
               ((or (:set-parameters db) set-parameters) stmt param-group)
@@ -762,10 +741,7 @@ compatibility but it will be removed before a 1.0.0 release." }
       (if transaction?
         (with-db-transaction [t-db (add-connection db (.getConnection stmt))]
           (execute-batch stmt))
-        (try
-          (execute-batch stmt)
-          (catch Exception e
-            (throw-non-rte e)))))))
+        (execute-batch stmt)))))
 
 (defn db-do-prepared
   "Executes an (optionally parameterized) SQL prepared statement on the

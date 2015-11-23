@@ -412,6 +412,14 @@
      ["name=?" "Apple"])
     (is (= 2 (sql/query db ["SELECT * FROM fruit"] :result-set-fn count)))))
 
+(defn- file-not-found-exception-via-reflection
+  "In Clojure 1.3.0 this caused a wrapped exception and we introduced throw-non-rte
+  to workaround that. This was fixed in 1.4.0 but we never removed the workaround.
+  Added this hack from the mailing list specifically to test the exception handling
+  so that we can verify only Clojure 1.3.0 fails the tests and drop support for it."
+  [f]
+  (java.io.FileReader. f))
+
 (deftest test-partial-exception
   (doseq [db (test-specs)]
     (create-test-table :fruit db)
@@ -423,9 +431,11 @@
                      ["Grape" "yummy"]
                      ["Pear" "bruised"])
         (is (= 2 (sql/query t-conn ["SELECT * FROM fruit"] :result-set-fn count)))
-        (throw (Exception. "deliberate exception")))
+        (file-not-found-exception-via-reflection "/etc/password_no_such_file"))
+      (catch java.io.FileNotFoundException _
+        (is (= 0 (sql/query db ["SELECT * FROM fruit"] :result-set-fn count))))
       (catch Exception _
-        (is (= 0 (sql/query db ["SELECT * FROM fruit"] :result-set-fn count)))))))
+        (is false "Unexpected exception encountered (not wrapped?).")))))
 
 (deftest test-partial-exception-with-isolation
   (doseq [db (test-specs)]
