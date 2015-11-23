@@ -1,3 +1,8 @@
+Changes coming in 0.5.0
+
+* Remove exception wrapping [JDBC-114](http://dev.clojure.org/jira/browse/JDBC-114).
+* Drop Clojure 1.3 compatibility.
+
 Changes in 0.4.2
 
 * Remove redundant type hints [JDBC-113](http://dev.clojure.org/jira/browse/JDBC-113) - Michael Blume.
