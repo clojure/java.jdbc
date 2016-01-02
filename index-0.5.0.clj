@@ -347,7 +347,7 @@
    ([rs-or-value
      &
      {:keys [identifiers as-arrays? row-fn result-set-fn],
-      :or {identifiers str/lower-case, row-fn identity}}]),
+      :or {identifiers lower-case, row-fn identity}}]),
    :doc
    "If the argument is a java.sql.ResultSet, turn it into a result-set-seq,\nelse return it as-is. This makes working with metadata easier.\nAlso accepts :identifiers, :as-arrays?, :row-fn, and :result-set-fn\nto control how the ResultSet is transformed and returned.\nSee query for more details.",
    :namespace "clojure.java.jdbc",
@@ -432,7 +432,7 @@
      :as-arrays?
      false
      :identifiers
-     clojure.string/lower-case
+     lower-case
      :result-set-fn
      doall
      :row-fn
@@ -442,7 +442,7 @@
      :as-arrays?
      true
      :identifiers
-     clojure.string/lower-case
+     lower-case
      :result-set-fn
      vec
      :row-fn
@@ -480,8 +480,7 @@
    :arglists
    ([rs
      &
-     {:keys [identifiers as-arrays?],
-      :or {identifiers str/lower-case}}]),
+     {:keys [identifiers as-arrays?], :or {identifiers lower-case}}]),
    :doc
    "Creates and returns a lazy sequence of maps corresponding to the rows in the\njava.sql.ResultSet rs. Loosely based on clojure.core/resultset-seq but it\nrespects the specified naming strategy. Duplicate column names are made unique\nby appending _N before applying the naming strategy (where N is a unique integer).",
    :namespace "clojure.java.jdbc",
@@ -550,51 +549,54 @@
    :namespace "clojure.java.jdbc",
    :wiki-url
    "http://clojure.github.com/java.jdbc//clojure.java.jdbc-api.html#clojure.java.jdbc/with-db-transaction"}
-  {:name "IResultSetReadColumn",
-   :doc
-   "Protocol for reading objects from the java.sql.ResultSet. Default\nimplementations (for Object and nil) return the argument, and the\nBoolean implementation ensures a canonicalized true/false value,\nbut it can be extended to provide custom behavior for special types.",
-   :var-type "protocol",
-   :line 347,
-   :namespace "clojure.java.jdbc",
-   :wiki-url
-   "http://clojure.github.com/java.jdbc//clojure.java.jdbc-api.html#clojure.java.jdbc/IResultSetReadColumn",
+  {:raw-source-url
+   "https://github.com/clojure/java.jdbc/raw/4842f2951a421e5ea3c4cfa805ed97780b426393/src/main/clojure/clojure/java/jdbc.clj",
+   :name "IResultSetReadColumn",
+   :file "src/main/clojure/clojure/java/jdbc.clj",
    :source-url
    "https://github.com/clojure/java.jdbc/blob/4842f2951a421e5ea3c4cfa805ed97780b426393/src/main/clojure/clojure/java/jdbc.clj#L347",
-   :raw-source-url
-   "https://github.com/clojure/java.jdbc/raw/4842f2951a421e5ea3c4cfa805ed97780b426393/src/main/clojure/clojure/java/jdbc.clj",
-   :file "src/main/clojure/clojure/java/jdbc.clj"}
-  {:name "ISQLParameter",
-   :doc
-   "Protocol for setting SQL parameters in statement objects, which\ncan convert from Clojure values. The default implementation just\ndelegates the conversion to ISQLValue's sql-value conversion and\nuses .setObject on the parameter. It can be extended to use other\nmethods of PreparedStatement to convert and set parameter values.",
+   :line 347,
    :var-type "protocol",
-   :line 328,
+   :arglists nil,
+   :doc
+   "Protocol for reading objects from the java.sql.ResultSet. Default\nimplementations (for Object and nil) return the argument, and the\nBoolean implementation ensures a canonicalized true/false value,\nbut it can be extended to provide custom behavior for special types.",
    :namespace "clojure.java.jdbc",
    :wiki-url
-   "http://clojure.github.com/java.jdbc//clojure.java.jdbc-api.html#clojure.java.jdbc/ISQLParameter",
+   "http://clojure.github.com/java.jdbc//clojure.java.jdbc-api.html#clojure.java.jdbc/IResultSetReadColumn"}
+  {:raw-source-url
+   "https://github.com/clojure/java.jdbc/raw/4842f2951a421e5ea3c4cfa805ed97780b426393/src/main/clojure/clojure/java/jdbc.clj",
+   :name "ISQLParameter",
+   :file "src/main/clojure/clojure/java/jdbc.clj",
    :source-url
    "https://github.com/clojure/java.jdbc/blob/4842f2951a421e5ea3c4cfa805ed97780b426393/src/main/clojure/clojure/java/jdbc.clj#L328",
-   :raw-source-url
-   "https://github.com/clojure/java.jdbc/raw/4842f2951a421e5ea3c4cfa805ed97780b426393/src/main/clojure/clojure/java/jdbc.clj",
-   :file "src/main/clojure/clojure/java/jdbc.clj"}
-  {:name "ISQLValue",
-   :doc
-   "Protocol for creating SQL values from Clojure values. Default\nimplementations (for Object and nil) just return the argument,\nbut it can be extended to provide custom behavior to support\nexotic types supported by different databases.",
+   :line 328,
    :var-type "protocol",
-   :line 314,
+   :arglists nil,
+   :doc
+   "Protocol for setting SQL parameters in statement objects, which\ncan convert from Clojure values. The default implementation just\ndelegates the conversion to ISQLValue's sql-value conversion and\nuses .setObject on the parameter. It can be extended to use other\nmethods of PreparedStatement to convert and set parameter values.",
    :namespace "clojure.java.jdbc",
    :wiki-url
-   "http://clojure.github.com/java.jdbc//clojure.java.jdbc-api.html#clojure.java.jdbc/ISQLValue",
+   "http://clojure.github.com/java.jdbc//clojure.java.jdbc-api.html#clojure.java.jdbc/ISQLParameter"}
+  {:raw-source-url
+   "https://github.com/clojure/java.jdbc/raw/4842f2951a421e5ea3c4cfa805ed97780b426393/src/main/clojure/clojure/java/jdbc.clj",
+   :name "ISQLValue",
+   :file "src/main/clojure/clojure/java/jdbc.clj",
    :source-url
    "https://github.com/clojure/java.jdbc/blob/4842f2951a421e5ea3c4cfa805ed97780b426393/src/main/clojure/clojure/java/jdbc.clj#L314",
-   :raw-source-url
-   "https://github.com/clojure/java.jdbc/raw/4842f2951a421e5ea3c4cfa805ed97780b426393/src/main/clojure/clojure/java/jdbc.clj",
-   :file "src/main/clojure/clojure/java/jdbc.clj"}
+   :line 314,
+   :var-type "protocol",
+   :arglists nil,
+   :doc
+   "Protocol for creating SQL values from Clojure values. Default\nimplementations (for Object and nil) just return the argument,\nbut it can be extended to provide custom behavior to support\nexotic types supported by different databases.",
+   :namespace "clojure.java.jdbc",
+   :wiki-url
+   "http://clojure.github.com/java.jdbc//clojure.java.jdbc-api.html#clojure.java.jdbc/ISQLValue"}
   {:name "result-set-read-column",
    :doc
    "Function for transforming values after reading them from the database",
-   :arglists ([val rsmeta idx]),
    :var-type "function",
    :namespace "clojure.java.jdbc",
+   :arglists ([val rsmeta idx]),
    :wiki-url
    "http://clojure.github.com/java.jdbc//clojure.java.jdbc-api.html#clojure.java.jdbc/result-set-read-column",
    :source-url nil,
@@ -603,9 +605,9 @@
   {:name "set-parameter",
    :doc
    "Convert a Clojure value into a SQL value and store it as the ix'th\nparameter in the given SQL statement object.",
-   :arglists ([val stmt ix]),
    :var-type "function",
    :namespace "clojure.java.jdbc",
+   :arglists ([val stmt ix]),
    :wiki-url
    "http://clojure.github.com/java.jdbc//clojure.java.jdbc-api.html#clojure.java.jdbc/set-parameter",
    :source-url nil,
@@ -613,9 +615,9 @@
    :file nil}
   {:name "sql-value",
    :doc "Convert a Clojure value into a SQL value.",
-   :arglists ([val]),
    :var-type "function",
    :namespace "clojure.java.jdbc",
+   :arglists ([val]),
    :wiki-url
    "http://clojure.github.com/java.jdbc//clojure.java.jdbc-api.html#clojure.java.jdbc/sql-value",
    :source-url nil,
