@@ -700,34 +700,42 @@ compatibility but it will be removed before a 1.0.0 release." }
       (with-open [con (get-connection db)]
         (apply db-do-commands (add-connection db con) transaction? commands)))))
 
+(defn- db-do-execute-prepared-return-keys
+  [db ^PreparedStatement stmt param-group transaction?]
+  ((or (:set-parameters db) set-parameters) stmt param-group)
+  (let [exec-and-return-keys
+        (^{:once true} fn* []
+         (let [counts (.executeUpdate stmt)]
+           (try
+             (let [rs (.getGeneratedKeys stmt)
+                   result (first (result-set-seq rs))]
+               ;; sqlite (and maybe others?) requires
+               ;; record set to be closed
+               (.close rs)
+               result)
+             (catch Exception _
+               ;; assume generated keys is unsupported and return counts instead:
+               counts))))]
+    (if transaction?
+      (with-db-transaction [t-db (add-connection db (.getConnection stmt))]
+        (exec-and-return-keys))
+      (exec-and-return-keys))))
+
 (defn db-do-prepared-return-keys
   "Executes an (optionally parameterized) SQL prepared statement on the
   open database connection. The param-group is a seq of values for all of
   the parameters. transaction? can be ommitted and will default to true.
-  Return the generated keys for the (single) update/insert."
+  Return the generated keys for the (single) update/insert.
+  A PreparedStatement may be passed in, instead of a SQL string, in which
+  case :return-keys MUST BE SET on that PreparedStatement!"
   ([db sql param-group]
-     (db-do-prepared-return-keys db true sql param-group))
+   (db-do-prepared-return-keys db true sql param-group))
   ([db transaction? sql param-group]
-     (if-let [con (db-find-connection db)]
+   (if-let [con (db-find-connection db)]
+     (if (instance? PreparedStatement sql)
+       (db-do-execute-prepared-return-keys db sql param-group transaction?)
        (with-open [^PreparedStatement stmt (prepare-statement con sql :return-keys true)]
-         ((or (:set-parameters db) set-parameters) stmt param-group)
-         (let [exec-and-return-keys
-               (^{:once true} fn* []
-                (let [counts (.executeUpdate stmt)]
-                  (try
-                    (let [rs (.getGeneratedKeys stmt)
-                          result (first (result-set-seq rs))]
-                      ;; sqlite (and maybe others?) requires
-                      ;; record set to be closed
-                      (.close rs)
-                      result)
-                    (catch Exception _
-                      ;; assume generated keys is unsupported and return counts instead:
-                      counts))))]
-           (if transaction?
-             (with-db-transaction [t-db (add-connection db (.getConnection stmt))]
-               (exec-and-return-keys))
-             (exec-and-return-keys))))
+         (db-do-execute-prepared-return-keys db stmt param-group transaction?)))
        (with-open [con (get-connection db)]
          (db-do-prepared-return-keys (add-connection db con) transaction? sql param-group)))))
 
