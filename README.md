@@ -16,7 +16,7 @@ Additional documentation can be found in the [java.jdbc section of clojure-doc.o
 Releases and Dependency Information
 ========================================
 
-Latest stable release: 0.4.2
+Latest stable release: 0.5.0
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22java.jdbc%22)
 
@@ -24,14 +24,14 @@ Latest stable release: 0.4.2
 
 [Leiningen](https://github.com/technomancy/leiningen) dependency information:
 ```clojure
-[org.clojure/java.jdbc "0.4.2"]
+[org.clojure/java.jdbc "0.5.0"]
 ```
 [Maven](http://maven.apache.org/) dependency information:
 ```xml
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>java.jdbc</artifactId>
-  <version>0.4.2</version>
+  <version>0.5.0</version>
 </dependency>
 ```
 You will also need to add dependencies for the JDBC driver you intend to use. Here are links (to Maven Central) for each of the common database drivers that clojure.java.jdbc is known to be used with:
@@ -103,6 +103,12 @@ Developer Information
 
 Change Log
 ====================
+
+* Release 0.5.0 on 2016-03-27
+  * Allow PreparedStatement in db-do-prepared-return-keys [JDBC-115](http://dev.clojure.org/jira/browse/JDBC-115).
+  * Remove exception wrapping [JDBC-114](http://dev.clojure.org/jira/browse/JDBC-114).
+  * Drop Clojure 1.3 compatibility.
+
 
 * Release 0.4.2 on 2015-09-15
   * Remove redundant type hints [JDBC-113](http://dev.clojure.org/jira/browse/JDBC-113) - Michael Blume.

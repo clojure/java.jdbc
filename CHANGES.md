@@ -1,4 +1,4 @@
-Changes coming in 0.5.0
+Changes in 0.5.0
 
 * Allow PreparedStatement in db-do-prepared-return-keys [JDBC-115](http://dev.clojure.org/jira/browse/JDBC-115).
 * Remove exception wrapping [JDBC-114](http://dev.clojure.org/jira/browse/JDBC-114).
