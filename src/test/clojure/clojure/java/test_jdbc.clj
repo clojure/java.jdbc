@@ -194,6 +194,39 @@
           (java.net.URI.
            "mysql://clojure_test:clojure_test@localhost:3306/clojure_test")))))
 
+(defn- returned-key [db k]
+  (condp = (or (:subprotocol db) (:dbtype db))
+    "derby"  {(keyword "1") nil}
+    "hsqldb" nil
+    "h2"     nil
+    "mysql"  {:generated_key k}
+    nil      (if (mysql? db) ; string-based tests
+               {:generated_key k}
+               k)
+    "jtds:sqlserver" {:id nil}
+    "sqlserver" {:generated_keys nil}
+    "sqlite" {(keyword "last_insert_rowid()") k}
+    k))
+
+(defn- generated-key [db k]
+  (condp = (or (:subprotocol db) (:dbtype db))
+    "derby" 0
+    "hsqldb" 0
+    "h2" 0
+    "jtds:sqlserver" 0
+    "sqlserver" 0
+    "sqlite" 0
+    k))
+
+(defn- float-or-double [db v]
+  (condp = (or (:subprotocol db) (:dbtype db))
+    "derby" (Float. v)
+    "h2" (Float. v)
+    "jtds:sqlserver" (Float. v)
+    "sqlserver" (Float. v)
+    "postgresql" (Float. v)
+    v))
+
 (deftest test-create-table
   (doseq [db (test-specs)]
     (create-test-table :fruit db)
@@ -275,18 +308,7 @@
              :fruit
              {:name "Pomegranate" :appearance "fresh" :cost 585}
              {:name "Kiwifruit" :grade 93})]
-      (condp = (or (:subprotocol db) (:dbtype db))
-        nil              (when (mysql? db)
-                           (is (= '({:generated_key 1} {:generated_key 2}) r)))
-        "postgresql"     (is (= 2 (count r)))
-        "mysql"          (is (= '({:generated_key 1} {:generated_key 2}) r))
-        "sqlserver"      (is (= '({:generated_keys nil} {:generated_keys nil}) r))
-        "jtds:sqlserver" (is (= '({:id nil} {:id nil}) r))
-        "hsqldb"         (is (= '(nil nil) r))
-        "h2"             (is (= '(nil nil) r))
-        "sqlite"         (is (= (list {(keyword "last_insert_rowid()") 1}
-                                      {(keyword "last_insert_rowid()") 2}) r))
-        "derby"          (is (= (list {(keyword "1") nil} {(keyword "1") nil}) r))))
+      (is (= (list (returned-key db 1) (returned-key db 2)) r)))
     (is (= 2 (sql/query db ["SELECT * FROM fruit"] :result-set-fn count)))
     (is (= "Pomegranate" (sql/query db ["SELECT * FROM fruit WHERE cost = ?" 585] :result-set-fn (comp :name first))))))
 
@@ -632,39 +654,6 @@
                              first
                              :table_name
                              clojure.string/lower-case))))))))
-
-(defn- returned-key [db k]
-  (condp = (or (:subprotocol db) (:dbtype db))
-    "derby"  {(keyword "1") nil}
-    "hsqldb" nil
-    "h2"     nil
-    "mysql"  {:generated_key k}
-    nil      (if (mysql? db) ; string-based tests
-               {:generated_key k}
-               k)
-    "jtds:sqlserver" {:id nil}
-    "sqlserver" {:generated_keys nil}
-    "sqlite" {(keyword "last_insert_rowid()") k}
-    k))
-
-(defn- generated-key [db k]
-  (condp = (or (:subprotocol db) (:dbtype db))
-    "derby" 0
-    "hsqldb" 0
-    "h2" 0
-    "jtds:sqlserver" 0
-    "sqlserver" 0
-    "sqlite" 0
-    k))
-
-(defn- float-or-double [db v]
-  (condp = (or (:subprotocol db) (:dbtype db))
-    "derby" (Float. v)
-    "h2" (Float. v)
-    "jtds:sqlserver" (Float. v)
-    "sqlserver" (Float. v)
-    "postgresql" (Float. v)
-    v))
 
 (deftest empty-query
   (doseq [db (test-specs)]
