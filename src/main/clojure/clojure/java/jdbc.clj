@@ -448,7 +448,11 @@ compatibility but it will be removed before a 1.0.0 release." }
         stmt (cond return-keys
                    (try
                      (if (vector? return-keys)
-                       (.prepareStatement con sql (string-array return-keys))
+                       (try
+                         (.prepareStatement con sql (string-array return-keys))
+                         (catch Exception _
+                           ;; assume it is unsupported and try regular generated keys:
+                           (.prepareStatement con sql java.sql.Statement/RETURN_GENERATED_KEYS)))
                        (.prepareStatement con sql java.sql.Statement/RETURN_GENERATED_KEYS))
                      (catch Exception _
                        ;; assume it is unsupported and try basic PreparedStatement:
