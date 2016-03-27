@@ -246,11 +246,45 @@
     (is (thrown? java.sql.SQLException
                  (sql/query db ["SELECT * FROM fruit2"] :result-set-fn count)))))
 
-(deftest test-do-prepared1
+(deftest test-do-prepared1a
   (doseq [db (test-specs)]
     (create-test-table :fruit2 db)
     (sql/db-do-prepared db "INSERT INTO fruit2 ( name, appearance, cost, grade ) VALUES ( 'test', 'test', 1, 1.0 )")
     (is (= 1 (sql/query db ["SELECT * FROM fruit2"] :result-set-fn count)))))
+
+(deftest test-do-prepared1b
+  (doseq [db (test-specs)]
+    (create-test-table :fruit2 db)
+    (with-open [con (sql/get-connection db)]
+      (let [stmt (sql/prepare-statement con "INSERT INTO fruit2 ( name, appearance, cost, grade ) VALUES ( 'test', 'test', 1, 1.0 )")]
+        (is (= [1] (sql/db-do-prepared db stmt)))))
+    (is (= 1 (sql/query db ["SELECT * FROM fruit2"] :result-set-fn count)))))
+
+(deftest test-do-prepared1c
+  (doseq [db (test-specs)]
+    (create-test-table :fruit2 db)
+    (is (= (returned-key db 1) (sql/db-do-prepared-return-keys db "INSERT INTO fruit2 ( name, appearance, cost, grade ) VALUES ( 'test', 'test', 1, 1.0 )" [])))
+    (is (= 1 (sql/query db ["SELECT * FROM fruit2"] :result-set-fn count)))))
+
+(deftest test-do-prepared1d
+  (doseq [db (test-specs)]
+    (create-test-table :fruit db)
+    (with-open [con (sql/get-connection db)]
+      (let [stmt (sql/prepare-statement con "INSERT INTO fruit ( name, appearance, cost, grade ) VALUES ( 'test', 'test', 1, 1.0 )"
+                                        :return-keys true)]
+        (is (= (returned-key db 1) (sql/db-do-prepared-return-keys db stmt [])))))
+    (is (= 1 (sql/query db ["SELECT * FROM fruit"] :result-set-fn count)))))
+
+(deftest test-do-prepared1e
+  (doseq [db (test-specs)]
+    ;; Derby/SQL Server does not have auto-generated id column which we're testing here
+    (when-not (#{"derby" "jtds:sqlserver"} (or (:subprotocol db) (:dbtype db)))
+      (create-test-table :fruit db)
+      (with-open [con (sql/get-connection db)]
+        (let [stmt (sql/prepare-statement con "INSERT INTO fruit ( name, appearance, cost, grade ) VALUES ( 'test', 'test', 1, 1.0 )"
+                                          :return-keys ["id"])]
+          (is (= (returned-key db 1) (sql/db-do-prepared-return-keys db stmt [])))))
+      (is (= 1 (sql/query db ["SELECT * FROM fruit"] :result-set-fn count))))))
 
 (deftest test-do-prepared2
   (doseq [db (test-specs)]
