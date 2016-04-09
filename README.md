@@ -67,7 +67,7 @@ Example Usage
 
 (j/query mysql-db
   ["select * from fruit where appearance = ?" "rosy"]
-  :row-fn :cost)
+  {:row-fn :cost})
 ;; (24)
 ```
 For more detail see the [generated documentation on github](http://clojure.github.com/java.jdbc/).
