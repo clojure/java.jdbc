@@ -109,7 +109,6 @@ Change Log
   * Remove exception wrapping [JDBC-114](http://dev.clojure.org/jira/browse/JDBC-114).
   * Drop Clojure 1.3 compatibility.
 
-
 * Release 0.4.2 on 2015-09-15
   * Remove redundant type hints [JDBC-113](http://dev.clojure.org/jira/browse/JDBC-113) - Michael Blume.
   * Avoid reflection on `.prepareStatement` [JDBC-112](http://dev.clojure.org/jira/browse/JDBC-112) - Michael Blume.

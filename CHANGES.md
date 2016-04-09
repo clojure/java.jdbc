@@ -1,3 +1,7 @@
+Changes coming in 0.5.5
+
+* Allow options map in all calls that previously took optional keyword arguments [JDBC-117](http://dev.clojure.org/jira/browse/JDBC-117). The unrolled keyword argument forms of call are deprecated and will go away in 0.6.0.
+
 Changes in 0.5.0
 
 * Allow PreparedStatement in db-do-prepared-return-keys [JDBC-115](http://dev.clojure.org/jira/browse/JDBC-115).
