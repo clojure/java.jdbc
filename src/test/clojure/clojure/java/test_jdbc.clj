@@ -154,7 +154,7 @@
        [:appearance "VARCHAR(32)"]
        [:cost :int]
        [:grade :real]
-       :table-spec "ENGINE=InnoDB")))
+       :options {:table-spec "ENGINE=InnoDB"})))
 
 (defmethod create-test-table :postgres
   [table db]
@@ -166,7 +166,7 @@
        [:appearance "VARCHAR(32)"]
        [:cost :int]
        [:grade :real]
-       :table-spec "")))
+       :options {:table-spec ""})))
 
 (defmethod create-test-table :default
   [table db]
@@ -178,7 +178,7 @@
        [:appearance "VARCHAR(32)"]
        [:cost :int]
        [:grade :real]
-       :table-spec "")))
+       :options {:table-spec ""})))
 
 (deftest test-uri-spec-parsing
   (is (= {:advanced "false" :ssl "required" :password "clojure_test"

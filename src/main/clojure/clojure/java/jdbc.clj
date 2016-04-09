@@ -1111,18 +1111,21 @@ compatibility but it will be removed before a 1.0.0 release." }
    (update! db table set-map where-clause (apply hash-map k v kvs))))
 
 (defn create-table-ddl
-  "Given a table name and column specs with an optional table-spec
-   return the DDL string for creating that table."
+  "Given a table name and column specs return the DDL string for creating that
+  table. The column specs may be followed by :options and an options map that
+  includes :table-spec -- a string that is appended to the DDL -- and/or
+  :entities -- a function to specify how column names are transformed.
+  For backward compatibility, those options may be specified inline instead of
+  via :options (but that is deprecated)."
   [table & specs]
-  (let [col-specs (take-while (fn [s]
-                                (not (or (= :table-spec s)
-                                         (= :entities s)))) specs)
-        other-specs (drop (count col-specs) specs)
-        {:keys [table-spec entities] :or {entities identity}} other-specs
-        table-spec-str (or (and table-spec (str " " table-spec)) "")
-        spec-to-string (fn [spec]
-                         (str/join " " (cons (as-sql-name entities (first spec))
-                                             (map name (rest spec)))))]
+  (let [[col-specs other] (split-with (complement keyword?) specs)
+        options           (parse-options other "create-table-ddl")
+        table-spec        (:table-spec options)
+        entities          (:entities   options identity)
+        table-spec-str    (or (and table-spec (str " " table-spec)) "")
+        spec-to-string    (fn [spec]
+                            (str/join " " (cons (as-sql-name entities (first spec))
+                                                (map name (rest spec)))))]
     (format "CREATE TABLE %s (%s)%s"
             (as-sql-name entities table)
             (str/join ", " (map spec-to-string col-specs))
