@@ -18,8 +18,8 @@
 ;;  Migrated from clojure.contrib.sql 17 April 2011
 
 (ns
-  ^{:author "Stephen C. Gilardi, Sean Corfield",
-    :doc "A Clojure interface to SQL databases via JDBC
+    ^{:author "Stephen C. Gilardi, Sean Corfield",
+      :doc "A Clojure interface to SQL databases via JDBC
 
 clojure.java.jdbc provides a simple abstraction for CRUD (create, read,
 update, delete) operations on a SQL database, along with basic transaction
@@ -61,14 +61,14 @@ compatibility but it will be removed before a 1.0.0 release." }
    joined back together so x.y might become `x`.`y` if the naming
    strategy quotes identifiers with `."
   ([f]
-     (fn [x]
-       (as-sql-name f x)))
+   (fn [x]
+     (as-sql-name f x)))
   ([f x]
-     (let [n (name x)
-           i (.indexOf n (int \.))]
-       (if (= -1 i)
-         (f n)
-         (str/join "." (map f (.split n "\\.")))))))
+   (let [n (name x)
+         i (.indexOf n (int \.))]
+     (if (= -1 i)
+       (f n)
+       (str/join "." (map f (.split n "\\.")))))))
 
 (defn quoted
   "With a single argument, returns a naming strategy function that quotes
@@ -79,12 +79,12 @@ compatibility but it will be removed before a 1.0.0 release." }
      (quoted \\` \"foo\") will return \"`foo`\"
      (quoted [\\[ \\]] \"foo\") will return \"[foo]\""
   ([q]
-     (fn [x]
-       (quoted q x)))
+   (fn [x]
+     (quoted q x)))
   ([q x]
-     (if (vector? q)
-       (str (first q) x (last q))
-       (str q x q))))
+   (if (vector? q)
+     (str (first q) x (last q))
+     (str q x q))))
 
 (defn- ^Properties as-properties
   "Convert any seq of pairs to a java.utils.Properties instance.
@@ -156,8 +156,8 @@ compatibility but it will be removed before a 1.0.0 release." }
                  (.getSchemeSpecificPart uri))
       :subprotocol (subprotocols scheme scheme)}
      (if-let [user-info (.getUserInfo uri)]
-             {:user (first (str/split user-info #":"))
-              :password (second (str/split user-info #":"))})
+       {:user (first (str/split user-info #":"))
+        :password (second (str/split user-info #":"))})
      (walk/keywordize-keys (into {} query-parts)))))
 
 (defn- strip-jdbc [^String spec]
@@ -232,65 +232,65 @@ compatibility but it will be removed before a 1.0.0 release." }
            name environment]
     :as db-spec}]
   (cond
-   connection
-   connection
+    connection
+    connection
 
-   (instance? URI db-spec)
-   (get-connection (parse-properties-uri db-spec))
+    (instance? URI db-spec)
+    (get-connection (parse-properties-uri db-spec))
 
-   (string? db-spec)
-   (get-connection (URI. (strip-jdbc db-spec)))
+    (string? db-spec)
+    (get-connection (URI. (strip-jdbc db-spec)))
 
-   factory
-   (factory (dissoc db-spec :factory))
+    factory
+    (factory (dissoc db-spec :factory))
 
-   connection-uri
-   (DriverManager/getConnection connection-uri)
+    connection-uri
+    (DriverManager/getConnection connection-uri)
 
-   (and subprotocol subname)
-   (let [url (format "jdbc:%s:%s" subprotocol subname)
-         etc (dissoc db-spec :classname :subprotocol :subname)
-         classname (or classname (classnames subprotocol))]
-     (clojure.lang.RT/loadClassForName classname)
-     (DriverManager/getConnection url (as-properties etc)))
+    (and subprotocol subname)
+    (let [url (format "jdbc:%s:%s" subprotocol subname)
+          etc (dissoc db-spec :classname :subprotocol :subname)
+          classname (or classname (classnames subprotocol))]
+      (clojure.lang.RT/loadClassForName classname)
+      (DriverManager/getConnection url (as-properties etc)))
 
-   (and dbtype dbname)
-   (let [subprotocol dbtype
-         host (or host "127.0.0.1")
-         port (or port (condp = subprotocol
-                         "mysql" 3306
-                         "mssql" 1433
-                         "jtds"  1433
-                         "postgresql" 5432
-                         nil))
-         db-sep (if (= "mssql" subprotocol) ";DATABASENAME=" "/")
-         url (if (#{"derby" "hsqldb" "h2" "sqlite"} subprotocol)
-               (str "jdbc:" subprotocol ":" dbname)
-               (str "jdbc:" subprotocol "://" host
-                    (when port (str ":" port))
-                    db-sep dbname))
-         etc (dissoc db-spec :dbtype :dbname)]
-     (clojure.lang.RT/loadClassForName (classnames subprotocol))
-     (DriverManager/getConnection url (as-properties etc)))
+    (and dbtype dbname)
+    (let [subprotocol dbtype
+          host (or host "127.0.0.1")
+          port (or port (condp = subprotocol
+                          "mysql" 3306
+                          "mssql" 1433
+                          "jtds"  1433
+                          "postgresql" 5432
+                          nil))
+          db-sep (if (= "mssql" subprotocol) ";DATABASENAME=" "/")
+          url (if (#{"derby" "hsqldb" "h2" "sqlite"} subprotocol)
+                (str "jdbc:" subprotocol ":" dbname)
+                (str "jdbc:" subprotocol "://" host
+                     (when port (str ":" port))
+                     db-sep dbname))
+          etc (dissoc db-spec :dbtype :dbname)]
+      (clojure.lang.RT/loadClassForName (classnames subprotocol))
+      (DriverManager/getConnection url (as-properties etc)))
 
-   (or (and datasource username password)
-       (and datasource user     password))
-   (.getConnection ^DataSource datasource ^String (or username user) ^String password)
+    (or (and datasource username password)
+        (and datasource user     password))
+    (.getConnection ^DataSource datasource ^String (or username user) ^String password)
 
-   datasource
-   (.getConnection ^DataSource datasource)
+    datasource
+    (.getConnection ^DataSource datasource)
 
-   name
-   (when-available
-    javax.naming.InitialContext
-    (let [env (and environment (Hashtable. ^Map environment))
-          context (javax.naming.InitialContext. env)
-          ^DataSource datasource (.lookup context ^String name)]
-      (.getConnection datasource)))
+    name
+    (when-available
+     javax.naming.InitialContext
+     (let [env (and environment (Hashtable. ^Map environment))
+           context (javax.naming.InitialContext. env)
+           ^DataSource datasource (.lookup context ^String name)]
+       (.getConnection datasource)))
 
-   :else
-   (let [^String msg (format "db-spec %s is missing a required parameter" db-spec)]
-     (throw (IllegalArgumentException. msg)))))
+    :else
+    (let [^String msg (format "db-spec %s is missing a required parameter" db-spec)]
+      (throw (IllegalArgumentException. msg)))))
 
 (defn- make-name-unique
   "Given a collection of column names and a new column name,
@@ -487,14 +487,14 @@ compatibility but it will be removed before a 1.0.0 release." }
   [^SQLException exception]
   (let [^Class exception-class (class exception)]
     (println
-      (format (str "%s:" \newline
-                   " Message: %s" \newline
-                   " SQLState: %s" \newline
-                   " Error Code: %d")
-              (.getSimpleName exception-class)
-              (.getMessage exception)
-              (.getSQLState exception)
-              (.getErrorCode exception)))))
+     (format (str "%s:" \newline
+                  " Message: %s" \newline
+                  " SQLState: %s" \newline
+                  " Error Code: %d")
+             (.getSimpleName exception-class)
+             (.getMessage exception)
+             (.getSQLState exception)
+             (.getErrorCode exception)))))
 
 (defn print-sql-exception-chain
   "Prints a chain of SQLExceptions to *out*"
@@ -513,12 +513,12 @@ compatibility but it will be removed before a 1.0.0 release." }
   [^BatchUpdateException exception]
   (println "Update counts:")
   (dorun
-    (map-indexed
-      (fn [index count]
-        (println (format " Statement %d: %s"
-                         index
-                         (get special-counts count count))))
-      (.getUpdateCounts exception))))
+   (map-indexed
+    (fn [index count]
+      (println (format " Statement %d: %s"
+                       index
+                       (get special-counts count count))))
+    (.getUpdateCounts exception))))
 
 ;; java.jdbc pieces rewritten to not use dynamic bindings
 
@@ -685,7 +685,7 @@ compatibility but it will be removed before a 1.0.0 release." }
   defaults to true.
   Uses executeBatch. This may affect what SQL you can run via db-do-commands."
   {:arglists '([db-spec sql-command & sql-commands]
-                 [db-spec transaction? sql-command & sql-commands])}
+               [db-spec transaction? sql-command & sql-commands])}
   [db transaction? & commands]
   (if (string? transaction?)
     (apply db-do-commands db true transaction? commands)
@@ -748,8 +748,8 @@ compatibility but it will be removed before a 1.0.0 release." }
       (vector (.executeUpdate stmt)))
     (do
       (doseq [param-group param-groups]
-              ((or (:set-parameters db) set-parameters) stmt param-group)
-              (.addBatch stmt))
+        ((or (:set-parameters db) set-parameters) stmt param-group)
+        (.addBatch stmt))
       (if transaction?
         (with-db-transaction [t-db (add-connection db (.getConnection stmt))]
           (execute-batch stmt))
@@ -762,7 +762,7 @@ compatibility but it will be removed before a 1.0.0 release." }
   The sql parameter can either be a SQL string or a PreparedStatement.
   Return a seq of update counts (one count for each param-group)."
   {:arglists '([db-spec sql & param-groups]
-                 [db-spec transaction? sql & param-groups])}
+               [db-spec transaction? sql & param-groups])}
   [db transaction? & [sql & param-groups :as opts]]
   (if (or (string? transaction?)
           (instance? PreparedStatement transaction?))
@@ -786,8 +786,8 @@ compatibility but it will be removed before a 1.0.0 release." }
   See prepare-statement for supported options.
   Uses executeQuery. This may affect what SQL you can run via query."
   {:arglists '([db-spec [sql-string & params] func]
-                 [db-spec [stmt & params] func]
-                   [db-spec [options-map sql-string & params] func])}
+               [db-spec [stmt & params] func]
+               [db-spec [options-map sql-string & params] func])}
   [db sql-params func]
   (when-not (vector? sql-params)
     (let [^Class sql-params-class (class sql-params)
