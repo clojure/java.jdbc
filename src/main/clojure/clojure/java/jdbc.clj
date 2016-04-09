@@ -942,21 +942,9 @@ compatibility but it will be removed before a 1.0.0 release." }
   "Given a (connected) database connection, a transaction flag and some SQL statements
    (for one or more inserts), run a prepared statement or a sequence of them."
   [db transaction? stmts]
-  (if (string? (first stmts))
-    (apply db-do-prepared db transaction? (first stmts) (rest stmts))
-    (if transaction?
-      (with-db-transaction [t-db db] (multi-insert-helper t-db stmts))
-      (multi-insert-helper db stmts))))
-
-(defn- extract-transaction?
-  "Given a sequence of data, look for :transaction? arg in it and return a pair of
-   the transaction? value (defaulting to true) and the data without the option."
-  [data]
-  (let [before (take-while (partial not= :transaction?) data)
-        after  (drop-while (partial not= :transaction?) data)]
-    (if (seq after)
-      [(second after) (concat before (nnext after))]
-      [true data])))
+  (if transaction?
+    (with-db-transaction [t-db db] (multi-insert-helper t-db stmts))
+    (multi-insert-helper db stmts)))
 
 (defn- col-str
   "Transform a column spec to an entity name for SQL. The column spec may be a
@@ -999,58 +987,84 @@ compatibility but it will be removed before a 1.0.0 release." }
                 " )")]
           (vals row))))
 
-(defn- insert-sql
-  "Given a table name and either column names and values or maps representing rows,
-  return a vector of the SQL for that insert operation followed by its parameters. An
-  optional entities spec (default 'as-is') specifies how to transform column names."
-  [table & clauses]
-  (let [rows (take-while map? clauses)
-        n-rows (count rows)
-        cols-and-vals-etc (drop n-rows clauses)
-        cols-and-vals (take-while (comp not keyword?) cols-and-vals-etc)
-        n-cols-and-vals (count cols-and-vals)
-        no-cols-and-vals (zero? n-cols-and-vals)
-        options (drop (+ n-rows n-cols-and-vals) clauses)
-        {:keys [entities] :or {entities identity}} (apply hash-map options)]
-    (if (zero? n-rows)
-      (if no-cols-and-vals
-        (throw (IllegalArgumentException. "insert called without data to insert"))
-        (if (< n-cols-and-vals 2)
-          (throw (IllegalArgumentException. "insert called with columns but no values"))
-          (insert-multi-row-sql table (first cols-and-vals) (rest cols-and-vals) entities)))
-      (if no-cols-and-vals
-        (map (fn [row] (insert-single-row-sql table row entities)) rows)
-        (throw (IllegalArgumentException. "insert may take records or columns and values, not both"))))))
+(defn- parse-insert!-options
+  "Given, potentially, options to insert! turn them into a hash map.
+  If the only key is :options, assume the value is the entire options."
+  [arguments]
+  (let [options (if (seq arguments) (apply hash-map arguments) {})]
+    (if (:options options)
+      (:options options)
+      options)))
+
+(defn- parse-insert!-rows
+  "Given arguments to insert! starting with a map, return a map of all the
+  rows and any options that follow."
+  [arguments]
+  (let [[maps other] (split-with map? arguments)
+        options      (parse-insert!-options other)]
+    {:rows maps :options options}))
+
+(defn- parse-insert!-cols
+  "Given arguments to insert! starting with a vector, return a map of all the
+  column names and values and any options that follow."
+  [names arguments]
+  (let [[values other] (split-with vector? arguments)
+        options        (parse-insert!-options other)]
+    {:names names :values values :options options}))
+
+(defn- parse-insert!
+  "Given arguments to insert! return a map of the various parts:
+  rows (maps) or names & values (vectors), options (keyword pairs)
+  If the keyword :options is present, assume the value is the entire set of
+  options to pass back, otherwise accumulate key/value pairs."
+  [arguments]
+  (cond (map? (first arguments))
+        (parse-insert!-rows arguments)
+        (and (or (nil? (first arguments))
+                 (vector? (first arguments)))
+             (vector? (second arguments)))
+        (parse-insert!-cols (first arguments) (rest arguments))
+        :else
+        (throw (IllegalArgumentException. "insert! expects row maps or column name/value vectors"))))
 
 (defn insert!
   "Given a database connection, a table name and either maps representing rows or
-   a list of column names followed by lists of column values, perform an insert.
-   Use :transaction? argument to specify whether to run in a transaction or not.
-   The default is true (use a transaction). Use :entities to specify how to convert
-   the table name and column names to SQL entities."
-  {:arglists '([db-spec table row-map :transaction? true :entities identity]
-                 [db-spec table row-map & row-maps :transaction? true :entities identity]
-                   [db-spec table col-name-vec col-val-vec & col-val-vecs :transaction? true :entities identity])}
-  [db table & options]
-  (let [[transaction? maps-or-cols-and-values-etc] (extract-transaction? options)
-        stmts (apply insert-sql table maps-or-cols-and-values-etc)]
-    (if-let [con (db-find-connection db)]
-      (insert-helper db transaction? stmts)
-      (with-open [con (get-connection db)]
-        (insert-helper (add-connection db con) transaction? stmts)))))
+  a list of column names followed by lists of column values, perform an insert.
+  The rows or columns may be followed by :options and a map of options (or, for
+  backward compatibility, just the unrolled options instead).
+  The :transaction? option specifies whether to run in a transaction or not.
+  The default is true (use a transaction). The :entities options specifies how
+  to convert the table name and column names to SQL entities."
+  {:arglists '([db-spec table row-map & row-maps]
+               [db-spec table col-name-vec col-val-vec & col-val-vecs]
+               [db-spec table rows-or-col-name-val-vecs :options options])}
+  [db table & arguments]
+  (let [{:keys [rows names values options]} (parse-insert! arguments)
+        transaction? (:transaction? options true)
+        entities     (:entities     options identity)]
+    (if rows
+
+      (let [stmts (map (fn [row] (insert-single-row-sql table row entities)) rows)]
+        (if-let [con (db-find-connection db)]
+          (insert-helper db transaction? stmts)
+          (with-open [con (get-connection db)]
+            (insert-helper (add-connection db con) transaction? stmts))))
+
+      (let [stmts (insert-multi-row-sql table names values entities)]
+        (if-let [con (db-find-connection db)]
+          (apply db-do-prepared db transaction? stmts)
+          (with-open [con (get-connection db)]
+            (apply db-do-prepared (add-connection db con) transaction? stmts)))))))
 
 (defn- update-sql
-  "Given a table name and a map of columns to set, and optional map of columns to
-  match (and an optional entities spec), return a vector of the SQL for that update
-  followed by its parameters. Example:
-    (update :person {:zip 94540} [\"zip = ?\" 94546])
+  "Given a table name, a map of columns to set, a optional map of columns to
+  match, and an entities, return a vector of the SQL for that update followed
+  by its parameters. Example:
+    (update :person {:zip 94540} [\"zip = ?\" 94546] identity)
   returns:
     [\"UPDATE person SET zip = ? WHERE zip = ?\" 94540 94546]"
-  [table set-map & where-etc]
-  (let [[where-clause & options] (when-not (keyword? (first where-etc)) where-etc)
-        [where & params] where-clause
-        {:keys [entities] :or {entities identity}} (if (keyword? (first where-etc)) where-etc options)
-        ks (keys set-map)
+  [table set-map [where & params] entities]
+  (let [ks (keys set-map)
         vs (vals set-map)]
     (cons (str "UPDATE " (table-str table entities)
                " SET " (str/join
