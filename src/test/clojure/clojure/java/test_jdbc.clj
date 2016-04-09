@@ -828,23 +828,25 @@
     String
     (result-set-read-column [s _ _] ::FOO))
 
-  (doseq [db (test-specs)]
-    (create-test-table :fruit db)
-    (sql/insert! db
-                 :fruit
-                 [:name :cost :grade]
-                 ["Crepes" 12 87.7]
-                 ["Vegetables" -88 nil]
-                 ["Teenage Mutant Ninja Turtles" 0 100.0])
-    (is (= {:name ::FOO, :cost -88, :grade nil}
-           (sql/query db ["SELECT name, cost, grade FROM fruit WHERE name = ?"
-                                        "Vegetables"]
-                      :result-set-fn first))))
+  (try
+    (doseq [db (test-specs)]
+      (create-test-table :fruit db)
+      (sql/insert! db
+                   :fruit
+                   [:name :cost :grade]
+                   ["Crepes" 12 87.7]
+                   ["Vegetables" -88 nil]
+                   ["Teenage Mutant Ninja Turtles" 0 100.0])
+      (is (= {:name ::FOO, :cost -88, :grade nil}
+             (sql/query db ["SELECT name, cost, grade FROM fruit WHERE name = ?"
+                            "Vegetables"]
+                        :result-set-fn first))))
 
-  ;; somewhat "undo" the first extension
-  (extend-protocol sql/IResultSetReadColumn
-    String
-    (result-set-read-column [s _ _] s)))
+    ;; somewhat "undo" the first extension
+    (finally
+      (extend-protocol sql/IResultSetReadColumn
+        String
+        (result-set-read-column [s _ _] s)))))
 
 (deftest test-sql-value
   (extend-protocol sql/ISQLValue
