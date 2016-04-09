@@ -394,7 +394,9 @@ compatibility but it will be removed before a 1.0.0 release." }
      (if as-arrays?
        (cons (vec keys) (rows))
        (records))))
-  ([rs k v & kvs] (result-set-seq rs (apply hash-map k v kvs))))
+  ([rs k v & kvs]
+   (println "DEPRECATED: unrolled key/value arguments to result-seq-seq")
+   (result-set-seq rs (apply hash-map k v kvs))))
 
 (defn- execute-batch
   "Executes a batch of SQL commands and returns a sequence of update counts.
@@ -478,6 +480,7 @@ compatibility but it will be removed before a 1.0.0 release." }
      (when timeout (.setQueryTimeout stmt timeout))
      stmt))
   ([con sql k v & kvs]
+   (println "DEPRECATED: unrolled key/value arguments to prepare-statement")
    (prepare-statement con sql (apply hash-map k v kvs))))
 
 (defn- set-parameters
@@ -618,6 +621,7 @@ compatibility but it will be removed before a 1.0.0 release." }
            (throw (IllegalStateException. msg))))
        (func (inc-level db)))))
   ([db func k v & kvs]
+   (println "DEPRECATED: unrolled key/value arguments to db-transaction*")
    (db-transaction* db func (apply hash-map k v kvs))))
 
 (defmacro with-db-transaction
@@ -674,6 +678,7 @@ compatibility but it will be removed before a 1.0.0 release." }
         (result-set-seq rs-or-value {:identifiers identifiers :as-arrays? as-arrays?}))
        rs-or-value)))
   ([rs-or-value k v & kvs]
+   (println "DEPRECATED: unrolled key/value arguments to metadata-result")
    (metadata-result rs-or-value (apply hash-map k v kvs))))
 
 (defmacro metadata-query
@@ -862,7 +867,9 @@ compatibility but it will be removed before a 1.0.0 release." }
                                                         (map row-fn (rest rs)))
                                                   (map row-fn rs))))
                                 (result-set-seq rset {:identifiers identifiers :as-arrays? as-arrays?}))))))
-  ([db sql-params k v & kvs] (query db sql-params (apply hash-map k v kvs))))
+  ([db sql-params k v & kvs]
+   (println "DEPRECATED: unrolled key/value arguments to query")
+   (query db sql-params (apply hash-map k v kvs))))
 
 (defn execute!
   "Given a database connection and a vector containing SQL (or PreparedStatement)
@@ -890,7 +897,9 @@ compatibility but it will be removed before a 1.0.0 release." }
        (execute-helper db)
        (with-open [con (get-connection db)]
          (execute-helper (add-connection db con))))))
-  ([db sql-params k v & kvs] (execute! db sql-params (apply hash-map k v kvs))))
+  ([db sql-params k v & kvs]
+   (println "DEPRECATED: unrolled key/value arguments to execute!")
+   (execute! db sql-params (apply hash-map k v kvs))))
 
 (defn- table-str
   "Transform a table spec to an entity name for SQL. The table spec may be a
@@ -927,6 +936,7 @@ compatibility but it will be removed before a 1.0.0 release." }
              (delete-sql table where-clause entities)
              {:transaction? transaction?}))
   ([db table where-clause k v & kvs]
+   (println "DEPRECATED: unrolled key/value arguments to delete!")
    (delete! db table where-clause (apply hash-map k v kvs))))
 
 (defn- multi-insert-helper
@@ -994,7 +1004,10 @@ compatibility but it will be removed before a 1.0.0 release." }
   (let [options (if (seq arguments) (apply hash-map arguments) {})]
     (if (:options options)
       (:options options)
-      options)))
+      (do
+        (when (seq options)
+          (println "DEPRECATED: unrolled key/value arguments to insert!"))
+        options))))
 
 (defn- parse-insert!-rows
   "Given arguments to insert! starting with a map, return a map of all the
@@ -1094,6 +1107,7 @@ compatibility but it will be removed before a 1.0.0 release." }
              (update-sql table set-map where-clause entities)
              {:transaction? transaction?}))
   ([db table set-map where-clause k v & kvs]
+   (println "DEPRECATED: unrolled key/value arguments to update!")
    (update! db table set-map where-clause (apply hash-map k v kvs))))
 
 (defn create-table-ddl
@@ -1117,9 +1131,11 @@ compatibility but it will be removed before a 1.0.0 release." }
 (defn drop-table-ddl
   "Given a table name, return the DDL string for dropping that table."
   ([name] (drop-table-ddl name {}))
-  ([name k v & kvs] (drop-table-ddl name (apply hash-map k v kvs)))
   ([name {:keys [entities] :or {entities identity}}]
-   (format "DROP TABLE %s" (as-sql-name entities name))))
+   (format "DROP TABLE %s" (as-sql-name entities name)))
+  ([name k v & kvs]
+   (println "DEPRECATED: unrolled key/value arguments to drop-table-ddl")
+   (drop-table-ddl name (apply hash-map k v kvs))))
 
 (defmacro
   ^{:doc "Original name for with-db-transaction. Use that instead."
