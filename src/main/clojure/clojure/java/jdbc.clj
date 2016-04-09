@@ -364,9 +364,13 @@ compatibility but it will be removed before a 1.0.0 release." }
 
 (defn result-set-seq
   "Creates and returns a lazy sequence of maps corresponding to the rows in the
-   java.sql.ResultSet rs. Loosely based on clojure.core/resultset-seq but it
-   respects the specified naming strategy. Duplicate column names are made unique
-   by appending _N before applying the naming strategy (where N is a unique integer)."
+  java.sql.ResultSet rs. Loosely based on clojure.core/resultset-seq but it
+  respects the specified naming strategy. Duplicate column names are made unique
+  by appending _N before applying the naming strategy (where N is a unique integer),
+  unless the :as-arrays? option is :cols-as-is, in which case the column names
+  are untouched (the result set maintains column name/value order).
+  The :identifiers option specifies how SQL column names are converted to Clojure
+  keywords. The default is to convert them to lower case."
   ([rs] (result-set-seq rs {}))
   ([^ResultSet rs {:keys [identifiers as-arrays?]
                    :or {identifiers str/lower-case}}]
@@ -434,8 +438,8 @@ compatibility but it will be removed before a 1.0.0 release." }
   (into-array String return-keys))
 
 (defn prepare-statement
-  "Create a prepared statement from a connection, a SQL string and an
-   optional list of parameters:
+  "Create a prepared statement from a connection, a SQL string and a map
+  of options:
      :return-keys truthy | nil - default nil
        for some drivers, this may be a vector of column names to identify
        the generated keys to return, otherwise it should just be true
@@ -630,7 +634,7 @@ compatibility but it will be removed before a 1.0.0 release." }
   that is bound for evaluation of the body. The binding may also specify the isolation
   level for the transaction, via the :isolation option and/or set the transaction to
   readonly via the :read-only? option.
-  (with-db-transaction [t-con db-spec :isolation level :read-only? true]
+  (with-db-transaction [t-con db-spec {:isolation level :read-only? true}]
     ... t-con ...)
   See db-transaction* for more details."
   [binding & body]
@@ -661,10 +665,10 @@ compatibility but it will be removed before a 1.0.0 release." }
 
 (defn metadata-result
   "If the argument is a java.sql.ResultSet, turn it into a result-set-seq,
-   else return it as-is. This makes working with metadata easier.
-   Also accepts :identifiers, :as-arrays?, :row-fn, and :result-set-fn
-   to control how the ResultSet is transformed and returned.
-   See query for more details."
+  else return it as-is. This makes working with metadata easier.
+  Also accepts an option map containing :identifiers, :as-arrays?, :row-fn,
+  and :result-set-fn to control how the ResultSet is transformed and returned.
+  See query for more details."
   ([rs-or-value] (metadata-result rs-or-value {}))
   ([rs-or-value {:keys [identifiers as-arrays? row-fn result-set-fn]
                  :or {identifiers str/lower-case row-fn identity}}]
@@ -683,13 +687,12 @@ compatibility but it will be removed before a 1.0.0 release." }
 
 (defmacro metadata-query
   "Given a Java expression that extracts metadata (in the context of with-db-metadata),
-  and additional optional arguments like metadata-result, manage the connection for a
-  single metadata-based query. Example usage:
+  and a map of options like metadata-result, manage the connection for a single
+  metadata-based query. Example usage:
 
   (with-db-metadata [meta db-spec]
     (metadata-query (.getTables meta nil nil nil (into-array String [\"TABLE\"]))
-      {:row-fn ...
-       :result-set-fn ...}))"
+      {:row-fn ... :result-set-fn ...}))"
   [meta-query & opt-args]
   `(with-open [rs# ~meta-query]
      (metadata-result rs# ~@opt-args)))
@@ -716,6 +719,8 @@ compatibility but it will be removed before a 1.0.0 release." }
         (apply db-do-commands (add-connection db con) transaction? commands)))))
 
 (defn- db-do-execute-prepared-return-keys
+  "Executes a PreparedStatement, optionally in a transaction, and (attempts to)
+  return any generated keys."
   [db ^PreparedStatement stmt param-group transaction?]
   ((or (:set-parameters db) set-parameters) stmt param-group)
   (let [exec-and-return-keys
@@ -755,6 +760,7 @@ compatibility but it will be removed before a 1.0.0 release." }
        (db-do-prepared-return-keys (add-connection db con) transaction? sql param-group)))))
 
 (defn- db-do-execute-prepared-statement
+  "Execute a PreparedStatment, optionally in a transaction."
   [db ^PreparedStatement stmt param-groups transaction?]
   (if (empty? param-groups)
     (if transaction?
@@ -922,9 +928,8 @@ compatibility but it will be removed before a 1.0.0 release." }
 
 (defn delete!
   "Given a database connection, a table name and a where clause of columns to match,
-  perform a delete. The optional keyword arguments specify how to transform
-  column names in the map (default 'as-is') and whether to run the delete in
-  a transaction (default true).
+  perform a delete. The options may specify how to transform column names in the
+  map (default 'as-is') and whether to run the delete in a transaction (default true).
   Example:
     (delete! db :person [\"zip = ?\" 94546])
   is equivalent to:
@@ -997,16 +1002,17 @@ compatibility but it will be removed before a 1.0.0 release." }
                 " )")]
           (vals row))))
 
-(defn- parse-insert!-options
+(defn- parse-options
   "Given, potentially, options to insert! turn them into a hash map.
-  If the only key is :options, assume the value is the entire options."
-  [arguments]
+  If the only key is :options, assume the value is the entire options.
+  Otherwise this a deprecated legacy form of insert! options."
+  [arguments caller]
   (let [options (if (seq arguments) (apply hash-map arguments) {})]
     (if (:options options)
       (:options options)
       (do
         (when (seq options)
-          (println "DEPRECATED: unrolled key/value arguments to insert!"))
+          (println "DEPRECATED: unrolled key/value arguments to" caller))
         options))))
 
 (defn- parse-insert!-rows
@@ -1014,7 +1020,7 @@ compatibility but it will be removed before a 1.0.0 release." }
   rows and any options that follow."
   [arguments]
   (let [[maps other] (split-with map? arguments)
-        options      (parse-insert!-options other)]
+        options      (parse-options other "insert!")]
     {:rows maps :options options}))
 
 (defn- parse-insert!-cols
@@ -1022,7 +1028,7 @@ compatibility but it will be removed before a 1.0.0 release." }
   column names and values and any options that follow."
   [names arguments]
   (let [[values other] (split-with vector? arguments)
-        options        (parse-insert!-options other)]
+        options        (parse-options other "insert!")]
     {:names names :values values :options options}))
 
 (defn- parse-insert!
@@ -1044,7 +1050,7 @@ compatibility but it will be removed before a 1.0.0 release." }
   "Given a database connection, a table name and either maps representing rows or
   a list of column names followed by lists of column values, perform an insert.
   The rows or columns may be followed by :options and a map of options (or, for
-  backward compatibility, just the unrolled options instead).
+  backward compatibility, just the unrolled options instead, but that is deprecated).
   The :transaction? option specifies whether to run in a transaction or not.
   The default is true (use a transaction). The :entities options specifies how
   to convert the table name and column names to SQL entities."
@@ -1093,8 +1099,8 @@ compatibility but it will be removed before a 1.0.0 release." }
 
 (defn update!
   "Given a database connection, a table name, a map of column values to set and a
-  where clause of columns to match, perform an update. The optional keyword arguments
-  specify how column names (in the set / match maps) should be transformed (default
+  where clause of columns to match, perform an update. The options may specify
+  how column names (in the set / match maps) should be transformed (default
   'as-is') and whether to run the update in a transaction (default true).
   Example:
     (update! db :person {:zip 94540} [\"zip = ?\" 94546])
