@@ -1,4 +1,4 @@
-Changes coming in 0.5.5
+Changes in 0.5.5
 
 * Allow options map in all calls that previously took optional keyword arguments [JDBC-117](http://dev.clojure.org/jira/browse/JDBC-117). The unrolled keyword argument forms of call are deprecated -- and print a "DEPRECATED" message to the console! -- and will go away in 0.6.0.
 
