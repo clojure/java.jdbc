@@ -38,12 +38,7 @@ generated keys are returned (as a map).
 
 For more documentation, see:
 
-http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html
-
-As of release 0.3.0, the API has undergone a major overhaul and most of the
-original API has been deprecated in favor of a more idiomatic API. The
-original API has been moved to java.jdbc.deprecated for backward
-compatibility but it will be removed before a 1.0.0 release." }
+http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
   clojure.java.jdbc
   (:import [java.net URI]
            [java.sql BatchUpdateException DriverManager
@@ -397,10 +392,7 @@ compatibility but it will be removed before a 1.0.0 release." }
                   (cons (vec (row-values)) (lazy-seq (thisfn)))))]
      (if as-arrays?
        (cons (vec keys) (rows))
-       (records))))
-  ([rs k v & kvs]
-   (println "DEPRECATED: unrolled key/value arguments to result-seq-seq")
-   (result-set-seq rs (apply hash-map k v kvs))))
+       (records)))))
 
 (defn- execute-batch
   "Executes a batch of SQL commands and returns a sequence of update counts.
@@ -482,10 +474,7 @@ compatibility but it will be removed before a 1.0.0 release." }
      (when fetch-size (.setFetchSize stmt fetch-size))
      (when max-rows (.setMaxRows stmt max-rows))
      (when timeout (.setQueryTimeout stmt timeout))
-     stmt))
-  ([con sql k v & kvs]
-   (println "DEPRECATED: unrolled key/value arguments to prepare-statement")
-   (prepare-statement con sql (apply hash-map k v kvs))))
+     stmt)))
 
 (defn- set-parameters
   "Add the parameters to the given statement."
@@ -623,10 +612,7 @@ compatibility but it will be removed before a 1.0.0 release." }
                           (.getTransactionIsolation con))))
          (let [msg "Nested transactions may not have different isolation levels"]
            (throw (IllegalStateException. msg))))
-       (func (inc-level db)))))
-  ([db func k v & kvs]
-   (println "DEPRECATED: unrolled key/value arguments to db-transaction*")
-   (db-transaction* db func (apply hash-map k v kvs))))
+       (func (inc-level db))))))
 
 (defmacro with-db-transaction
   "Evaluates body in the context of a transaction on the specified database connection.
@@ -680,10 +666,7 @@ compatibility but it will be removed before a 1.0.0 release." }
                                 (map row-fn (rest rs)))
                           (map row-fn rs))))
         (result-set-seq rs-or-value {:identifiers identifiers :as-arrays? as-arrays?}))
-       rs-or-value)))
-  ([rs-or-value k v & kvs]
-   (println "DEPRECATED: unrolled key/value arguments to metadata-result")
-   (metadata-result rs-or-value (apply hash-map k v kvs))))
+       rs-or-value))))
 
 (defmacro metadata-query
   "Given a Java expression that extracts metadata (in the context of with-db-metadata),
@@ -872,10 +855,7 @@ compatibility but it will be removed before a 1.0.0 release." }
                                                   (cons (first rs)
                                                         (map row-fn (rest rs)))
                                                   (map row-fn rs))))
-                                (result-set-seq rset {:identifiers identifiers :as-arrays? as-arrays?}))))))
-  ([db sql-params k v & kvs]
-   (println "DEPRECATED: unrolled key/value arguments to query")
-   (query db sql-params (apply hash-map k v kvs))))
+                                (result-set-seq rset {:identifiers identifiers :as-arrays? as-arrays?})))))))
 
 (defn execute!
   "Given a database connection and a vector containing SQL (or PreparedStatement)
@@ -902,10 +882,7 @@ compatibility but it will be removed before a 1.0.0 release." }
      (if-let [con (db-find-connection db)]
        (execute-helper db)
        (with-open [con (get-connection db)]
-         (execute-helper (add-connection db con))))))
-  ([db sql-params k v & kvs]
-   (println "DEPRECATED: unrolled key/value arguments to execute!")
-   (execute! db sql-params (apply hash-map k v kvs))))
+         (execute-helper (add-connection db con)))))))
 
 (defn- table-str
   "Transform a table spec to an entity name for SQL. The table spec may be a
@@ -939,10 +916,7 @@ compatibility but it will be removed before a 1.0.0 release." }
                            :or {entities identity transaction? true}}]
    (execute! db
              (delete-sql table where-clause entities)
-             {:transaction? transaction?}))
-  ([db table where-clause k v & kvs]
-   (println "DEPRECATED: unrolled key/value arguments to delete!")
-   (delete! db table where-clause (apply hash-map k v kvs))))
+             {:transaction? transaction?})))
 
 (defn- multi-insert-helper
   "Given a (connected) database connection and some SQL statements (for multiple
@@ -1002,46 +976,6 @@ compatibility but it will be removed before a 1.0.0 release." }
                 " )")]
           (vals row))))
 
-(defn- parse-options
-  "Given, potentially, options to insert! / create-table-ddl turn them into a
-  hash map. If the only key is :options, assume the value is the entire options."
-  [arguments]
-  (let [options (if (seq arguments) (apply hash-map arguments) {})]
-    (if (:options options)
-      (:options options)
-      options)))
-
-(defn- parse-insert!-rows
-  "Given arguments to insert! starting with a map, return a map of all the
-  rows and any options that follow."
-  [arguments]
-  (let [[maps other] (split-with map? arguments)
-        options      (parse-options other)]
-    {:rows maps :options options}))
-
-(defn- parse-insert!-cols
-  "Given arguments to insert! starting with a vector, return a map of all the
-  column names and values and any options that follow."
-  [names arguments]
-  (let [[values other] (split-with vector? arguments)
-        options        (parse-options other)]
-    {:names names :values values :options options}))
-
-(defn- parse-insert!
-  "Given arguments to insert! return a map of the various parts:
-  rows (maps) or names & values (vectors), options (keyword pairs)
-  If the keyword :options is present, assume the value is the entire set of
-  options to pass back, otherwise accumulate key/value pairs."
-  [arguments]
-  (cond (map? (first arguments))
-        (parse-insert!-rows arguments)
-        (and (or (nil? (first arguments))
-                 (vector? (first arguments)))
-             (vector? (second arguments)))
-        (parse-insert!-cols (first arguments) (rest arguments))
-        :else
-        (throw (IllegalArgumentException. "insert! expects row maps or column name/value vectors"))))
-
 (defn- insert-rows!
   "Given a database connection, a table name, a sequence of rows, and an options
   map, insert the rows into the database."
@@ -1067,74 +1001,21 @@ compatibility but it will be removed before a 1.0.0 release." }
       (with-open [con (get-connection db)]
         (apply db-do-prepared (add-connection db con) (:transaction? opts) sql-params)))))
 
-(defn- is-options-map?
-  "Given a map, return true if it seems to be an options map."
-  [opts]
-  (let [other (dissoc opts :transaction? :entities)]
-    (cond (seq other)
-          false ; it has other keys
-          (:entities opts) (fn? (:entities opts))
-          :else true)))
-
 (defn insert!
-  "Given a database connection, a table name and either maps representing rows or
-  a list of column names followed by lists of column values, perform an insert.
-  The rows or columns may be followed by :options and a map of options (or, for
-  backward compatibility, just the unrolled options instead, but that is deprecated).
+  "Given a database connection, a table name and either a map representing a rows,
+  or a list of column names followed by a list of column values also representing
+  a single row, perform an insert.
+  The row map or column value vector may be followed by a map of options:
   The :transaction? option specifies whether to run in a transaction or not.
   The default is true (use a transaction). The :entities option specifies how
   to convert the table name and column names to SQL entities."
-  {:arglists '([db-spec table row-map & row-maps]
-               [db-spec table col-name-vec col-val-vec & col-val-vecs]
-               [db-spec table rows-or-col-name-val-vecs :options options])}
   ([db table row] (insert! db table row {}))
   ([db table cols-or-row values-or-opts]
    (if (map? values-or-opts)
-     (if (is-options-map? values-or-opts) ; non-legacy version
-       (insert-rows! db table [cols-or-row] values-or-opts)
-       (do
-         (println "DEPRECATED: insert! with multiple rows; use insert-multi! instead")
-         (insert-rows! db table [cols-or-row values-or-opts] {})))
-     ;; also non-legacy version: column names and one set of row values
+     (insert-rows! db table [cols-or-row] values-or-opts)
      (insert-cols! db table cols-or-row [values-or-opts] {})))
   ([db table cols values opts]
-   ;; could also be
-   ;; cols values-1 values-2
-   ;; or row-1 row-2 row-3
-   ;; or row-1 option value
-   (cond (keyword? values) (do
-                             (println "DEPRECATED: insert! with :options or unrolled key/value arguments")
-                             (if (= :options values)
-                               (insert-rows! db table [cols] opts)
-                               (insert-rows! db table [cols] {values opts})))
-         (map? cols) (do
-                       (println "DEPRECATED: insert! with multiple rows; use insert-multi! instead")
-                       (insert-rows! db table [cols values opts]))
-         (map? opts) ; this is the only non-legacy version
-         (insert-cols! db table cols values opts)
-         :else (do
-                 (println "DEPRECATED: insert! with multiple rows; use insert-multi! instead")
-                 (insert-cols! db table cols [values opts] {}))))
-  ;; legacy version
-  ([db table cols-or-row row-or-values-1 row-or-values-2 row-or-values-3 & more]
-   (println "DEPRECATED: insert! with multiple rows; use insert-multi! instead")
-   (let [{:keys [rows names values options]}
-         (parse-insert! (concat [cols-or-row row-or-values-1 row-or-values-2 row-or-values-3] more))
-         transaction? (:transaction? options true)
-         entities     (:entities     options identity)]
-     (if rows
-
-       (let [stmts (map (fn [row] (insert-single-row-sql table row entities)) rows)]
-         (if-let [con (db-find-connection db)]
-           (insert-helper db transaction? stmts)
-           (with-open [con (get-connection db)]
-             (insert-helper (add-connection db con) transaction? stmts))))
-
-       (let [stmts (insert-multi-row-sql table names values entities)]
-         (if-let [con (db-find-connection db)]
-           (apply db-do-prepared db transaction? stmts)
-           (with-open [con (get-connection db)]
-             (apply db-do-prepared (add-connection db con) transaction? stmts))))))))
+   (insert-cols! db table cols [values] opts)))
 
 (defn insert-multi!
   "Given a database connection, a table name and either a sequence of maps (for
@@ -1188,68 +1069,28 @@ compatibility but it will be removed before a 1.0.0 release." }
                                    :or {entities identity transaction? true}}]
    (execute! db
              (update-sql table set-map where-clause entities)
-             {:transaction? transaction?}))
-  ([db table set-map where-clause k v & kvs]
-   (println "DEPRECATED: unrolled key/value arguments to update!")
-   (update! db table set-map where-clause (apply hash-map k v kvs))))
-
-(declare legacy-create-table-ddl)
+             {:transaction? transaction?})))
 
 (defn create-table-ddl
-  "Given a table name and column specs return the DDL string for creating that
-  table. An options map may be provided that can contain:
+  "Given a table name and a vector of column specs return the DDL string for
+  creating that table. An options map may be provided that can contain:
   :table-spec -- a string that is appended to the DDL -- and/or
-  :entities -- a function to specify how column names are transformed.
-  For backward compatibility, those options may be specified inline or via a
-  map introduced with the delimiting keyword :options (but that is deprecated).
-  In addition, also for backward compatibility, the column specs may be
-  specified as individual arguments rather than collected into a vector (but
-  that is also deprecated)."
+  :entities -- a function to specify how column names are transformed."
   ([table specs] (create-table-ddl table specs {}))
   ([table specs opts]
-   ;; check for deprecated legacy syntax
-   (if-not (vector? (first specs))
-     (legacy-create-table-ddl table specs opts)
-     (let [table-spec     (:table-spec opts)
-           entities       (:entities   opts identity)
-           table-spec-str (or (and table-spec (str " " table-spec)) "")
-           spec-to-string (fn [spec]
-                               (str/join " " (cons (as-sql-name entities (first spec))
-                                                   (map name (rest spec)))))]
-       (format "CREATE TABLE %s (%s)%s"
-               (as-sql-name entities table)
-               (str/join ", " (map spec-to-string specs))
-               table-spec-str))))
-  ([table spec1 spec2 spec3 & specs]
-   ;; just in case someone wraps the specs in a vector but still provides :options
-   ;; this allows for a DEPRECATED warning rather than an unpleasant exception
-   (if (and (= :options spec2)
-            (vector? (first spec1)))
-     (apply legacy-create-table-ddl table (concat spec1 [spec2 spec3] specs))
-     (apply legacy-create-table-ddl table spec1 spec2 spec3 specs))))
-
-(defn legacy-create-table-ddl
-  "Deprecated version of create-table-ddl."
-  [table & specs]
-  (println "DEPRECATED: unrolled column specs / key/value arguments to create-table-ddl")
-  (let [[col-specs other] (split-with (complement keyword?) specs)
-        options           (parse-options other)]
-    (create-table-ddl table col-specs options)))
+   (let [table-spec     (:table-spec opts)
+         entities       (:entities   opts identity)
+         table-spec-str (or (and table-spec (str " " table-spec)) "")
+         spec-to-string (fn [spec]
+                          (str/join " " (cons (as-sql-name entities (first spec))
+                                              (map name (rest spec)))))]
+     (format "CREATE TABLE %s (%s)%s"
+             (as-sql-name entities table)
+             (str/join ", " (map spec-to-string specs))
+             table-spec-str))))
 
 (defn drop-table-ddl
   "Given a table name, return the DDL string for dropping that table."
   ([name] (drop-table-ddl name {}))
   ([name {:keys [entities] :or {entities identity}}]
-   (format "DROP TABLE %s" (as-sql-name entities name)))
-  ([name k v & kvs]
-   (println "DEPRECATED: unrolled key/value arguments to drop-table-ddl")
-   (drop-table-ddl name (apply hash-map k v kvs))))
-
-(defmacro
-  ^{:doc "Original name for with-db-transaction. Use that instead."
-    :deprecated "0.3.0"}
-  db-transaction
-  [binding & body]
-  (println "DEPRECATED: Use with-db-transaction instead of db-transaction.")
-  `(db-transaction* ~(second binding)
-                    (^{:once true} fn* [~(first binding)] ~@body)))
+   (format "DROP TABLE %s" (as-sql-name entities name))))
