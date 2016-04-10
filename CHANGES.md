@@ -1,6 +1,8 @@
-Changes coming in 0.5.6
+Changes in 0.5.6
 
 * `create-table-ddl` now expects the column specs to be wrapped in a single vector and no longer needs the `:options` delimiter to specify the options map [JDBC-120](http://dev.clojure.org/jira/JDBC-120). If column specs are not wrapped in a vector, you will get a "DEPRECATED" warning printed to the console.
+* `insert!` now supports only single row insertion; multi-row insertion is deprecated. `insert-multi!` has been added for multi-row insertion. `:options` is no longer needed as a delimiter for the options map [JDBC-119](http://dev.clojure.org/jira/JDBC-119). If `insert!` is called with multiple rows, or `:options` is specified, you will get a "DEPRECATED" warning printed to the console.
+* NOTE: all deprecated functionality will go away in version 0.6.0!
 
 Changes in 0.5.5
 

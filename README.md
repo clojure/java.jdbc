@@ -16,7 +16,7 @@ Additional documentation can be found in the [java.jdbc section of clojure-doc.o
 Releases and Dependency Information
 ========================================
 
-Latest stable release: 0.5.5
+Latest stable release: 0.5.6
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22java.jdbc%22)
 
@@ -24,14 +24,14 @@ Latest stable release: 0.5.5
 
 [Leiningen](https://github.com/technomancy/leiningen) dependency information:
 ```clojure
-[org.clojure/java.jdbc "0.5.5"]
+[org.clojure/java.jdbc "0.5.6"]
 ```
 [Maven](http://maven.apache.org/) dependency information:
 ```xml
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>java.jdbc</artifactId>
-  <version>0.5.5</version>
+  <version>0.5.6</version>
 </dependency>
 ```
 You will also need to add dependencies for the JDBC driver you intend to use. Here are links (to Maven Central) for each of the common database drivers that clojure.java.jdbc is known to be used with:
@@ -103,6 +103,13 @@ Developer Information
 
 Change Log
 ====================
+
+* Release 0.5.6 on 2016-04-10
+  * `create-table-ddl` now expects the column specs to be wrapped in a single vector and no longer needs the `:options` delimiter to specify the options map [JDBC-120](http://dev.clojure.org/jira/JDBC-120).
+    - If column specs are not wrapped in a vector, you will get a "DEPRECATED" warning printed to the console.
+  * `insert!` now supports only single row insertion; multi-row insertion is deprecated. `insert-multi!` has been added for multi-row insertion. `:options` is no longer needed as a delimiter for the options map [JDBC-119](http://dev.clojure.org/jira/JDBC-119).
+    - If `insert!` is called with multiple rows, or `:options` is specified, you will get a "DEPRECATED" warning printed to the console.
+  * NOTE: all deprecated functionality will go away in version 0.6.0!
 
 * Release 0.5.5 on 2016-04-09
   * Allow options map in all calls that previously took optional keyword arguments [JDBC-117](http://dev.clojure.org/jira/browse/JDBC-117).
