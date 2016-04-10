@@ -709,6 +709,27 @@
           new-keys (if (postgres? db) (map :id new-keys) new-keys)]
       (is (= [(returned-key db 1)] new-keys)))))
 
+(deftest insert-one-row-opts
+  (doseq [db (test-specs)]
+    (create-test-table :fruit db)
+    (let [new-keys (sql/insert! db :fruit {:name "Apple"} {})
+          new-keys (if (postgres? db) (map :id new-keys) new-keys)]
+      (is (= [(returned-key db 1)] new-keys)))))
+
+(deftest insert-one-col-val
+  (doseq [db (test-specs)]
+    (create-test-table :fruit db)
+    (let [new-keys (sql/insert! db :fruit [:name] ["Apple"])
+          new-keys (if (postgres? db) (map :id new-keys) new-keys)]
+      (is (= [1] new-keys)))))
+
+(deftest insert-one-col-val-opts
+  (doseq [db (test-specs)]
+    (create-test-table :fruit db)
+    (let [new-keys (sql/insert! db :fruit [:name] ["Apple"] {})
+          new-keys (if (postgres? db) (map :id new-keys) new-keys)]
+      (is (= [1] new-keys)))))
+
 (deftest insert-query
   (doseq [db (test-specs)]
     (create-test-table :fruit db)

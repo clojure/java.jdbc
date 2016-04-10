@@ -1111,7 +1111,7 @@ compatibility but it will be removed before a 1.0.0 release." }
                        (println "DEPRECATED: insert! with multiple rows; use insert-multi! instead")
                        (insert-rows! db table [cols values opts]))
          (map? opts) ; this is the only non-legacy version
-         (insert-cols! db table cols values opts)
+         (insert-cols! db table cols [values] opts)
          :else (do
                  (println "DEPRECATED: insert! with multiple rows; use insert-multi! instead")
                  (insert-cols! db table cols [values opts] {}))))
