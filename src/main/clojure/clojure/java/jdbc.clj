@@ -1004,23 +1004,19 @@ compatibility but it will be removed before a 1.0.0 release." }
 
 (defn- parse-options
   "Given, potentially, options to insert! / create-table-ddl turn them into a
-  hash map. If the only key is :options, assume the value is the entire options.
-  Otherwise this a deprecated legacy form of options."
-  [arguments caller]
+  hash map. If the only key is :options, assume the value is the entire options."
+  [arguments]
   (let [options (if (seq arguments) (apply hash-map arguments) {})]
     (if (:options options)
       (:options options)
-      (do
-        (when (and caller (seq options))
-          (println "DEPRECATED: unrolled key/value arguments to" caller))
-        options))))
+      options)))
 
 (defn- parse-insert!-rows
   "Given arguments to insert! starting with a map, return a map of all the
   rows and any options that follow."
   [arguments]
   (let [[maps other] (split-with map? arguments)
-        options      (parse-options other "insert!")]
+        options      (parse-options other)]
     {:rows maps :options options}))
 
 (defn- parse-insert!-cols
@@ -1028,7 +1024,7 @@ compatibility but it will be removed before a 1.0.0 release." }
   column names and values and any options that follow."
   [names arguments]
   (let [[values other] (split-with vector? arguments)
-        options        (parse-options other "insert!")]
+        options        (parse-options other)]
     {:names names :values values :options options}))
 
 (defn- parse-insert!
@@ -1046,34 +1042,116 @@ compatibility but it will be removed before a 1.0.0 release." }
         :else
         (throw (IllegalArgumentException. "insert! expects row maps or column name/value vectors"))))
 
+(defn- insert-rows!
+  "Given a database connection, a table name, a sequence of rows, and an options
+  map, insert the rows into the database."
+  [db table rows opts]
+  (let [entities   (:entities opts identity)
+        sql-params (map (fn [row]
+                          (when-not (map? row)
+                            (throw (IllegalArgumentException. "insert-row! called with a non-map row")))
+                          (insert-single-row-sql table row entities)) rows)]
+    (if-let [con (db-find-connection db)]
+      (insert-helper db (:transaction? opts) sql-params)
+      (with-open [con (get-connection db)]
+        (insert-helper (add-connection db con) (:transaction? opts) sql-params)))))
+
+(defn- insert-cols!
+  "Given a database connection, a table name, a sequence of columns names, a
+  sequence of vectors of column values, one per row, and an options map,
+  insert the rows into the database."
+  [db table cols values opts]
+  (let [sql-params (insert-multi-row-sql table cols values (:entities opts identity))]
+    (if-let [con (db-find-connection db)]
+      (apply db-do-prepared db (:transaction? opts) sql-params)
+      (with-open [con (get-connection db)]
+        (apply db-do-prepared (add-connection db con) (:transaction? opts) sql-params)))))
+
+(defn- is-options-map?
+  "Given a map, return true if it seems to be an options map."
+  [opts]
+  (let [other (dissoc opts :transaction? :entities)]
+    (cond (seq other)
+          false ; it has other keys
+          (:entities opts) (fn? (:entities opts))
+          :else true)))
+
 (defn insert!
   "Given a database connection, a table name and either maps representing rows or
   a list of column names followed by lists of column values, perform an insert.
   The rows or columns may be followed by :options and a map of options (or, for
   backward compatibility, just the unrolled options instead, but that is deprecated).
   The :transaction? option specifies whether to run in a transaction or not.
-  The default is true (use a transaction). The :entities options specifies how
+  The default is true (use a transaction). The :entities option specifies how
   to convert the table name and column names to SQL entities."
   {:arglists '([db-spec table row-map & row-maps]
                [db-spec table col-name-vec col-val-vec & col-val-vecs]
                [db-spec table rows-or-col-name-val-vecs :options options])}
-  [db table & arguments]
-  (let [{:keys [rows names values options]} (parse-insert! arguments)
-        transaction? (:transaction? options true)
-        entities     (:entities     options identity)]
-    (if rows
+  ([db table row] (insert! db table row {}))
+  ([db table cols-or-row values-or-opts]
+   (if (map? values-or-opts)
+     (if (is-options-map? values-or-opts) ; non-legacy version
+       (insert-rows! db table [cols-or-row] values-or-opts)
+       (do
+         (println "DEPRECATED: insert! with multiple rows; use insert-multi! instead")
+         (insert-rows! db table [cols-or-row values-or-opts] {})))
+     (do
+       (println "DEPRECATED: insert! with multiple rows; use insert-multi! instead")
+       (insert-cols! db table cols-or-row [values-or-opts] {}))))
+  ([db table cols values opts]
+   ;; could also be
+   ;; cols values-1 values-2
+   ;; or row-1 row-2 row-3
+   ;; or row-1 option value
+   (cond (keyword? values) (do
+                             (println "DEPRECATED: insert! with :options or unrolled key/value arguments")
+                             (if (= :options values)
+                               (insert-rows! db table [cols] opts)
+                               (insert-rows! db table [cols] {values opts})))
+         (map? cols) (do
+                       (println "DEPRECATED: insert! with multiple rows; use insert-multi! instead")
+                       (insert-rows! db table [cols values opts]))
+         (map? opts) ; this is the only non-legacy version
+         (insert-cols! db table cols values opts)
+         :else (do
+                 (println "DEPRECATED: insert! with multiple rows; use insert-multi! instead")
+                 (insert-cols! db table cols [values opts] {}))))
+  ;; legacy version
+  ([db table cols-or-row row-or-values-1 row-or-values-2 row-or-values-3 & more]
+   (println "DEPRECATED: insert! with multiple rows; use insert-multi! instead")
+   (let [{:keys [rows names values options]}
+         (parse-insert! (concat [cols-or-row row-or-values-1 row-or-values-2 row-or-values-3] more))
+         transaction? (:transaction? options true)
+         entities     (:entities     options identity)]
+     (if rows
 
-      (let [stmts (map (fn [row] (insert-single-row-sql table row entities)) rows)]
-        (if-let [con (db-find-connection db)]
-          (insert-helper db transaction? stmts)
-          (with-open [con (get-connection db)]
-            (insert-helper (add-connection db con) transaction? stmts))))
+       (let [stmts (map (fn [row] (insert-single-row-sql table row entities)) rows)]
+         (if-let [con (db-find-connection db)]
+           (insert-helper db transaction? stmts)
+           (with-open [con (get-connection db)]
+             (insert-helper (add-connection db con) transaction? stmts))))
 
-      (let [stmts (insert-multi-row-sql table names values entities)]
-        (if-let [con (db-find-connection db)]
-          (apply db-do-prepared db transaction? stmts)
-          (with-open [con (get-connection db)]
-            (apply db-do-prepared (add-connection db con) transaction? stmts)))))))
+       (let [stmts (insert-multi-row-sql table names values entities)]
+         (if-let [con (db-find-connection db)]
+           (apply db-do-prepared db transaction? stmts)
+           (with-open [con (get-connection db)]
+             (apply db-do-prepared (add-connection db con) transaction? stmts))))))))
+
+(defn insert-multi!
+  "Given a database connection, a table name and either a sequence of maps (for
+  rows) or a sequence of column names, followed by a sequence of vectors (for
+  the values in each row), and possibly a map of options, insert that data into
+  the database.
+  The :transaction? option specifies whether to run in a transaction or not.
+  The default is true (use a transaction). The :entities option specifies how
+  to convert the table name and column names to SQL entities."
+  ([db table rows] (insert-rows! db table rows {}))
+  ([db table cols-or-rows values-or-opts]
+   (if (map? values-or-opts)
+     (insert-rows! db table cols-or-rows values-or-opts)
+     (insert-cols! db table cols-or-rows values-or-opts {})))
+  ([db table cols values opts]
+   (insert-cols! db table cols values opts)))
 
 (defn- update-sql
   "Given a table name, a map of columns to set, a optional map of columns to
@@ -1156,7 +1234,7 @@ compatibility but it will be removed before a 1.0.0 release." }
   [table & specs]
   (println "DEPRECATED: unrolled column specs / key/value arguments to create-table-ddl")
   (let [[col-specs other] (split-with (complement keyword?) specs)
-        options           (parse-options other nil)]
+        options           (parse-options other)]
     (create-table-ddl table col-specs options)))
 
 (defn drop-table-ddl
