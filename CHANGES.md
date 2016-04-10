@@ -1,3 +1,11 @@
+Changes coming in 0.6.0
+
+* ALL DEPRECATED FUNCTIONALITY HAS BEEN REMOVED! [JDBC-118](http://dev.clojure.org/jira/JDBC-118).
+  - See changes described in versions 0.5.5 and 0.5.6 for what was deprecated
+  - Use version 0.5.7 as a bridge to identify any deprecated API calls on which your code relies!
+  - `db-transaction` (deprecated in version 0.3.0) has been removed
+  - The `java.jdbc.deprecated` namespace has been removed
+  
 Changes in 0.5.7
 
 * `(insert! db table [:col] ["val"] {})` syntax, introduced in 0.5.6, threw an exception [JDBC-121](http://dev.clojure.org/jira/JDBC-121).
