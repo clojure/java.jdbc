@@ -700,23 +700,37 @@ compatibility but it will be removed before a 1.0.0 release." }
 (defn db-do-commands
   "Executes SQL commands on the specified database connection. Wraps the commands
   in a transaction if transaction? is true. transaction? can be ommitted and it
-  defaults to true.
+  defaults to true. Accepts a single SQL command (string) or a vector of them.
+  For backward compatibility, also accepts multiple string arguments but that
+  is deprecated and will be removed in 0.6.0.
   Uses executeBatch. This may affect what SQL you can run via db-do-commands."
-  {:arglists '([db-spec sql-command & sql-commands]
-               [db-spec transaction? sql-command & sql-commands])}
-  [db transaction? & commands]
-  (if (string? transaction?)
-    (apply db-do-commands db true transaction? commands)
-    (if-let [con (db-find-connection db)]
-      (with-open [^Statement stmt (.createStatement con)]
-        (doseq [^String cmd commands]
-          (.addBatch stmt cmd))
-        (if transaction?
-          (with-db-transaction [t-db (add-connection db (.getConnection stmt))]
-            (execute-batch stmt))
-          (execute-batch stmt)))
-      (with-open [con (get-connection db)]
-        (apply db-do-commands (add-connection db con) transaction? commands)))))
+  ([db sql-commands]
+   (db-do-commands db true (if (string? sql-commands) [sql-commands] sql-commands)))
+  ([db transaction? sql-commands]
+   (cond (string? transaction?)
+         ;; legacy call with two commands
+         (do
+           (println "DEPRECATED: unrolled SQL string arguments in db-do-commands")
+           (db-do-commands db true [transaction? sql-commands]))
+         (string? sql-commands)
+         ;; (db-do-commands db bool-val "SQL string") is acceptable
+         (db-do-commands db transaction? [sql-commands])
+         :else
+         (if-let [con (db-find-connection db)]
+           (with-open [^Statement stmt (.createStatement con)]
+             (doseq [^String cmd sql-commands]
+               (.addBatch stmt cmd))
+             (if transaction?
+               (with-db-transaction [t-db (add-connection db (.getConnection stmt))]
+                 (execute-batch stmt))
+               (execute-batch stmt)))
+           (with-open [con (get-connection db)]
+             (db-do-commands (add-connection db con) transaction? sql-commands)))))
+  ([db t-or-cmd cmd-1 cmd-2 & cmds]
+   (println "DEPRECATED: unrolled SQL string arguments in db-do-commands")
+   (if (string? t-or-cmd)
+     (db-do-commands db true (concat [t-or-cmd cmd-1 cmd-2] cmds))
+     (db-do-commands db t-or-cmd (concat [cmd-1 cmd-2] cmds)))))
 
 (defn- db-do-execute-prepared-return-keys
   "Executes a PreparedStatement, optionally in a transaction, and (attempts to)

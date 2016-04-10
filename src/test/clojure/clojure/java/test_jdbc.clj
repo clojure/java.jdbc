@@ -246,6 +246,35 @@
     (is (thrown? java.sql.SQLException
                  (sql/query db ["SELECT * FROM fruit2"] {:result-set-fn count})))))
 
+(deftest test-do-commands-transaction
+  (doseq [db (test-specs)]
+    (create-test-table :fruit2 db)
+    (sql/db-do-commands db true "DROP TABLE fruit2")
+    (is (thrown? java.sql.SQLException
+                 (sql/query db ["SELECT * FROM fruit2"] {:result-set-fn count})))))
+
+(deftest test-do-commands-multi
+  (doseq [db (test-specs)]
+    (sql/db-do-commands db
+                        [(sql/create-table-ddl :fruit3
+                                                [[:name       "VARCHAR(32)"]
+                                                 [:appearance "VARCHAR(32)"]
+                                                 [:cost       :int]])
+                         "DROP TABLE fruit3"])
+    (is (thrown? java.sql.SQLException
+                 (sql/query db ["SELECT * FROM fruit2"] {:result-set-fn count})))))
+
+(deftest test-do-commands-multi-transaction
+  (doseq [db (test-specs)]
+    (sql/db-do-commands db true
+                        [(sql/create-table-ddl :fruit3
+                                                [[:name       "VARCHAR(32)"]
+                                                 [:appearance "VARCHAR(32)"]
+                                                 [:cost       :int]])
+                         "DROP TABLE fruit3"])
+    (is (thrown? java.sql.SQLException
+                 (sql/query db ["SELECT * FROM fruit2"] {:result-set-fn count})))))
+
 (deftest test-do-prepared1a
   (doseq [db (test-specs)]
     (create-test-table :fruit2 db)

@@ -1,3 +1,7 @@
+Changes coming in 0.5.8
+
+* `db-do-commands` now expects multiple commands to be be wrapped in a vector [JDBC-122](http://dev.clojure.org/jira/JDBC-123). The single command form is unchanged (but may be wrapped in a vector). Calling `db-do-commands` with multiple commands (not wrapped in a single vector) will produce a "DEPRECATED" warning to printed to the console.
+
 Changes in 0.5.7
 
 * `(insert! db table [:col] ["val"] {})` syntax, introduced in 0.5.6, threw an exception [JDBC-121](http://dev.clojure.org/jira/JDBC-121).
