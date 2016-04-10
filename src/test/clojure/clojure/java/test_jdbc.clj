@@ -140,9 +140,9 @@
    For MySQL, ensure table uses an engine that supports transactions!"
   (fn [table db]
     (cond
-     (mysql? db) :mysql
-     (postgres? db) :postgres
-     :else :default)))
+      (mysql? db) :mysql
+      (postgres? db) :postgres
+      :else :default)))
 
 (defmethod create-test-table :mysql
   [table db]
@@ -308,14 +308,13 @@
 (deftest test-insert-rows
   (doseq [db (test-specs)]
     (create-test-table :fruit db)
-    (let [r (sql/insert!
-             db
-             :fruit
-             nil
-             [1 "Apple" "red" 59 87]
-             [2 "Banana" "yellow" 29 92.2]
-             [3 "Peach" "fuzzy" 139 90.0]
-             [4 "Orange" "juicy" 89 88.6])]
+    (let [r (sql/insert-multi! db
+                               :fruit
+                               nil
+                               [[1 "Apple" "red" 59 87]
+                                [2 "Banana" "yellow" 29 92.2]
+                                [3 "Peach" "fuzzy" 139 90.0]
+                                [4 "Orange" "juicy" 89 88.6]])]
       (is (= '(1 1 1 1) r)))
     (is (= 4 (sql/query db ["SELECT * FROM fruit"] {:result-set-fn count})))
     (is (= "Apple" (sql/query db ["SELECT * FROM fruit WHERE appearance = ?" "red"] {:row-fn :name :result-set-fn first})))
@@ -324,12 +323,11 @@
 (deftest test-insert-values
   (doseq [db (test-specs)]
     (create-test-table :fruit db)
-    (let [r (sql/insert!
-             db
-             :fruit
-             [:name :cost]
-             ["Mango" 722]
-             ["Feijoa" 441])]
+    (let [r (sql/insert-multi! db
+                               :fruit
+                               [:name :cost]
+                               [["Mango" 722]
+                                ["Feijoa" 441]])]
       (is (= '(1 1) r)))
     (is (= 2 (sql/query db ["SELECT * FROM fruit"] {:result-set-fn count})))
     (is (= "Mango" (sql/query db ["SELECT * FROM fruit WHERE cost = ?" 722] {:row-fn :name :result-set-fn first})))))
@@ -337,11 +335,10 @@
 (deftest test-insert-records
   (doseq [db (test-specs)]
     (create-test-table :fruit db)
-    (let [r (sql/insert!
-             db
-             :fruit
-             {:name "Pomegranate" :appearance "fresh" :cost 585}
-             {:name "Kiwifruit" :grade 93})]
+    (let [r (sql/insert-multi! db
+                               :fruit
+                               [{:name "Pomegranate" :appearance "fresh" :cost 585}
+                                {:name "Kiwifruit" :grade 93}])]
       (is (= (list (returned-key db 1) (returned-key db 2)) r)))
     (is (= 2 (sql/query db ["SELECT * FROM fruit"] {:result-set-fn count})))
     (is (= "Pomegranate" (sql/query db ["SELECT * FROM fruit WHERE cost = ?" 585] {:row-fn :name :result-set-fn first})))))
@@ -392,19 +389,18 @@
 (deftest test-update-values
   (doseq [db (test-specs)]
     (create-test-table :fruit db)
-    (let [r (sql/insert!
-             db
-             :fruit
-             nil
-             [1 "Apple" "red" 59 87]
-             [2 "Banana" "yellow" 29 92.2]
-             [3 "Peach" "fuzzy" 139 90.0]
-             [4 "Orange" "juicy" 89 88.6])]
+    (let [r (sql/insert-multi! db
+                               :fruit
+                               nil
+                               [[1 "Apple" "red" 59 87]
+                                [2 "Banana" "yellow" 29 92.2]
+                                [3 "Peach" "fuzzy" 139 90.0]
+                                [4 "Orange" "juicy" 89 88.6]])]
       (is (= '(1 1 1 1) r)))
     (sql/update! db
-     :fruit
-     {:appearance "bruised" :cost 14}
-     ["name=?" "Banana"])
+                 :fruit
+                 {:appearance "bruised" :cost 14}
+                 ["name=?" "Banana"])
     (is (= 4 (sql/query db ["SELECT * FROM fruit"] {:result-set-fn count})))
     (is (= "Apple" (sql/query db ["SELECT * FROM fruit WHERE appearance = ?" "red"]
                               {:row-fn :name :result-set-fn first})))
@@ -433,46 +429,46 @@
   (doseq [db (test-specs)]
     (create-test-table :fruit db)
     (update-or-insert-values db
-     :fruit
-     {:name "Pomegranate" :appearance "fresh" :cost 585}
-     ["name=?" "Pomegranate"])
+                             :fruit
+                             {:name "Pomegranate" :appearance "fresh" :cost 585}
+                             ["name=?" "Pomegranate"])
     (is (= 1 (sql/query db ["SELECT * FROM fruit"] {:result-set-fn count})))
     (is (= 585 (sql/query db ["SELECT * FROM fruit WHERE appearance = ?" "fresh"]
                           {:row-fn :cost :result-set-fn first})))
     (update-or-insert-values db
-     :fruit
-     {:name "Pomegranate" :appearance "ripe" :cost 565}
-     ["name=?" "Pomegranate"])
+                             :fruit
+                             {:name "Pomegranate" :appearance "ripe" :cost 565}
+                             ["name=?" "Pomegranate"])
     (is (= 1 (sql/query db ["SELECT * FROM fruit"] {:result-set-fn count})))
     (is (= 565 (sql/query db ["SELECT * FROM fruit WHERE appearance = ?" "ripe"]
                           {:row-fn :cost :result-set-fn first})))
     (update-or-insert-values db
-     :fruit
-     {:name "Apple" :appearance "green" :cost 74}
-     ["name=?" "Apple"])
+                             :fruit
+                             {:name "Apple" :appearance "green" :cost 74}
+                             ["name=?" "Apple"])
     (is (= 2 (sql/query db ["SELECT * FROM fruit"] {:result-set-fn count})))))
 
 (deftest test-update-or-insert-values-with-isolation
   (doseq [db (test-specs)]
     (create-test-table :fruit db)
     (update-or-insert-values-with-isolation db
-     :fruit
-     {:name "Pomegranate" :appearance "fresh" :cost 585}
-     ["name=?" "Pomegranate"])
+                                            :fruit
+                                            {:name "Pomegranate" :appearance "fresh" :cost 585}
+                                            ["name=?" "Pomegranate"])
     (is (= 1 (sql/query db ["SELECT * FROM fruit"] {:result-set-fn count})))
     (is (= 585 (sql/query db ["SELECT * FROM fruit WHERE appearance = ?" "fresh"]
                           {:row-fn :cost :result-set-fn first})))
     (update-or-insert-values db
-     :fruit
-     {:name "Pomegranate" :appearance "ripe" :cost 565}
-     ["name=?" "Pomegranate"])
+                             :fruit
+                             {:name "Pomegranate" :appearance "ripe" :cost 565}
+                             ["name=?" "Pomegranate"])
     (is (= 1 (sql/query db ["SELECT * FROM fruit"] {:result-set-fn count})))
     (is (= 565 (sql/query db ["SELECT * FROM fruit WHERE appearance = ?" "ripe"]
                           {:row-fn :cost :result-set-fn first})))
     (update-or-insert-values db
-     :fruit
-     {:name "Apple" :appearance "green" :cost 74}
-     ["name=?" "Apple"])
+                             :fruit
+                             {:name "Apple" :appearance "green" :cost 74}
+                             ["name=?" "Apple"])
     (is (= 2 (sql/query db ["SELECT * FROM fruit"] {:result-set-fn count})))))
 
 (defn- file-not-found-exception-via-reflection
@@ -488,11 +484,11 @@
     (create-test-table :fruit db)
     (try
       (sql/with-db-transaction [t-conn db]
-        (sql/insert! t-conn
-                     :fruit
-                     [:name :appearance]
-                     ["Grape" "yummy"]
-                     ["Pear" "bruised"])
+        (sql/insert-multi! t-conn
+                           :fruit
+                           [:name :appearance]
+                           [["Grape" "yummy"]
+                            ["Pear" "bruised"]])
         (is (= 2 (sql/query t-conn ["SELECT * FROM fruit"] {:result-set-fn count})))
         (file-not-found-exception-via-reflection "/etc/password_no_such_file"))
       (catch java.io.FileNotFoundException _
@@ -505,11 +501,11 @@
     (create-test-table :fruit db)
     (try
       (sql/with-db-transaction [t-conn db {:isolation :serializable}]
-        (sql/insert! t-conn
-                     :fruit
-                     [:name :appearance]
-                     ["Grape" "yummy"]
-                     ["Pear" "bruised"])
+        (sql/insert-multi! t-conn
+                           :fruit
+                           [:name :appearance]
+                           [["Grape" "yummy"]
+                            ["Pear" "bruised"]])
         (is (= 2 (sql/query t-conn ["SELECT * FROM fruit"] {:result-set-fn count})))
         (throw (Exception. "deliberate exception")))
       (catch Exception _
@@ -546,12 +542,12 @@
     (create-test-table :fruit db)
     (is (thrown? IllegalArgumentException
                  (sql/with-db-transaction [t-conn db]
-                   (sql/insert! t-conn
-                                :fruit
-                                [:name :appearance]
-                                ["Grape" "yummy"]
-                                ["Pear" "bruised"]
-                                ["Apple" "strange" "whoops"]))))
+                   (sql/insert-multi! t-conn
+                                      :fruit
+                                      [:name :appearance]
+                                      [["Grape" "yummy"]
+                                       ["Pear" "bruised"]
+                                       ["Apple" "strange" "whoops"]]))))
     (is (= 0 (sql/query db ["SELECT * FROM fruit"] {:result-set-fn count})))))
 
 (deftest test-insert-values-exception-with-isolation
@@ -559,12 +555,12 @@
     (create-test-table :fruit db)
     (is (thrown? IllegalArgumentException
                  (sql/with-db-transaction [t-conn db {:isolation :read-uncommitted}]
-                   (sql/insert! t-conn
-                                :fruit
-                                [:name :appearance]
-                                ["Grape" "yummy"]
-                                ["Pear" "bruised"]
-                                ["Apple" "strange" "whoops"]))))
+                   (sql/insert-multi! t-conn
+                                      :fruit
+                                      [:name :appearance]
+                                      [["Grape" "yummy"]
+                                       ["Pear" "bruised"]
+                                       ["Apple" "strange" "whoops"]]))))
     (is (= 0 (sql/query db ["SELECT * FROM fruit"] {:result-set-fn count})))))
 
 (deftest test-rollback
@@ -575,12 +571,12 @@
         (is (not (sql/db-is-rollback-only t-conn)))
         (sql/db-set-rollback-only! t-conn)
         (is (sql/db-is-rollback-only t-conn))
-        (sql/insert! t-conn
-                     :fruit
-                     [:name :appearance]
-                     ["Grape" "yummy"]
-                     ["Pear" "bruised"]
-                     ["Apple" "strange"])
+        (sql/insert-multi! t-conn
+                           :fruit
+                           [:name :appearance]
+                           [["Grape" "yummy"]
+                            ["Pear" "bruised"]
+                            ["Apple" "strange"]])
         (is (= 3 (sql/query t-conn ["SELECT * FROM fruit"] {:result-set-fn count}))))
       (catch java.sql.SQLException _
         (is (= 0 (sql/query db ["SELECT * FROM fruit"] {:result-set-fn count})))))
@@ -594,12 +590,12 @@
         (is (not (sql/db-is-rollback-only t-conn)))
         (sql/db-set-rollback-only! t-conn)
         (is (sql/db-is-rollback-only t-conn))
-        (sql/insert! t-conn
-                     :fruit
-                     [:name :appearance]
-                     ["Grape" "yummy"]
-                     ["Pear" "bruised"]
-                     ["Apple" "strange"])
+        (sql/insert-multi! t-conn
+                           :fruit
+                           [:name :appearance]
+                           [["Grape" "yummy"]
+                            ["Pear" "bruised"]
+                            ["Apple" "strange"]])
         (is (= 3 (sql/query t-conn ["SELECT * FROM fruit"] {:result-set-fn count}))))
       (catch java.sql.SQLException _
         (is (= 0 (sql/query db ["SELECT * FROM fruit"] {:result-set-fn count})))))
@@ -724,7 +720,7 @@
 (deftest insert-two-by-map-and-query
   (doseq [db (test-specs)]
     (create-test-table :fruit db)
-    (let [new-keys (sql/insert! db :fruit {:name "Apple"} {:name "Pear"})
+    (let [new-keys (sql/insert-multi! db :fruit [{:name "Apple"} {:name "Pear"}])
           new-keys (if (postgres? db) (map :id new-keys) new-keys)
           rows (sql/query db ["SELECT * FROM fruit ORDER BY name"])]
       (is (= [(returned-key db 1) (returned-key db 2)] new-keys))
@@ -734,7 +730,7 @@
 (deftest insert-two-by-map-and-query-as-arrays
   (doseq [db (test-specs)]
     (create-test-table :fruit db)
-    (let [new-keys (sql/insert! db :fruit {:name "Apple"} {:name "Pear"})
+    (let [new-keys (sql/insert-multi! db :fruit [{:name "Apple"} {:name "Pear"}])
           new-keys (if (postgres? db) (map :id new-keys) new-keys)
           rows (sql/query db ["SELECT * FROM fruit ORDER BY name"]
                           {:as-arrays? :cols-as-is})]
@@ -746,7 +742,7 @@
 (deftest insert-two-by-cols-and-query
   (doseq [db (test-specs)]
     (create-test-table :fruit db)
-    (let [update-counts (sql/insert! db :fruit [:name] ["Apple"] ["Pear"])
+    (let [update-counts (sql/insert-multi! db :fruit [:name] [["Apple"] ["Pear"]])
           rows (sql/query db ["SELECT * FROM fruit ORDER BY name"])]
       (is (= [1 1] update-counts))
       (is (= [{:id (generated-key db 1) :name "Apple" :appearance nil :grade nil :cost nil}
@@ -796,9 +792,9 @@
   (doseq [db (test-specs)]
     (is (thrown? IllegalArgumentException (sql/insert! db)))
     (is (thrown? IllegalArgumentException (sql/insert! db {:name "Apple"} [:name])))
-    (is (thrown? IllegalArgumentException (sql/insert! db {:name "Apple"} [:name] :options {:entities identity})))
+    (is (thrown? IllegalArgumentException (sql/insert! db {:name "Apple"} [:name] {:entities identity})))
     (is (thrown? IllegalArgumentException (sql/insert! db [:name])))
-    (is (thrown? IllegalArgumentException (sql/insert! db [:name] :options {:entities identity})))))
+    (is (thrown? ClassCastException (sql/insert! db [:name] {:entities identity})))))
 
 (deftest test-execute!-fails-with-multi-param-groups
   (doseq [db (test-specs)]
@@ -837,12 +833,12 @@
   (try
     (doseq [db (test-specs)]
       (create-test-table :fruit db)
-      (sql/insert! db
-                   :fruit
-                   [:name :cost :grade]
-                   ["Crepes" 12 87.7]
-                   ["Vegetables" -88 nil]
-                   ["Teenage Mutant Ninja Turtles" 0 100.0])
+      (sql/insert-multi! db
+                         :fruit
+                         [:name :cost :grade]
+                         [["Crepes" 12 87.7]
+                          ["Vegetables" -88 nil]
+                          ["Teenage Mutant Ninja Turtles" 0 100.0]])
       (is (= {:name ::FOO, :cost -88, :grade nil}
              (sql/query db ["SELECT name, cost, grade FROM fruit WHERE name = ?"
                             "Vegetables"]
