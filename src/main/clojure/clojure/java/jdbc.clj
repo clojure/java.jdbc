@@ -1003,15 +1003,15 @@ compatibility but it will be removed before a 1.0.0 release." }
           (vals row))))
 
 (defn- parse-options
-  "Given, potentially, options to insert! turn them into a hash map.
-  If the only key is :options, assume the value is the entire options.
-  Otherwise this a deprecated legacy form of insert! options."
+  "Given, potentially, options to insert! / create-table-ddl turn them into a
+  hash map. If the only key is :options, assume the value is the entire options.
+  Otherwise this a deprecated legacy form of options."
   [arguments caller]
   (let [options (if (seq arguments) (apply hash-map arguments) {})]
     (if (:options options)
       (:options options)
       (do
-        (when (seq options)
+        (when (and caller (seq options))
           (println "DEPRECATED: unrolled key/value arguments to" caller))
         options))))
 
@@ -1116,26 +1116,48 @@ compatibility but it will be removed before a 1.0.0 release." }
    (println "DEPRECATED: unrolled key/value arguments to update!")
    (update! db table set-map where-clause (apply hash-map k v kvs))))
 
+(declare legacy-create-table-ddl)
+
 (defn create-table-ddl
   "Given a table name and column specs return the DDL string for creating that
-  table. The column specs may be followed by :options and an options map that
-  includes :table-spec -- a string that is appended to the DDL -- and/or
+  table. An options map may be provided that can contain:
+  :table-spec -- a string that is appended to the DDL -- and/or
   :entities -- a function to specify how column names are transformed.
-  For backward compatibility, those options may be specified inline instead of
-  via :options (but that is deprecated)."
+  For backward compatibility, those options may be specified inline or via a
+  map introduced with the delimiting keyword :options (but that is deprecated).
+  In addition, also for backward compatibility, the column specs may be
+  specified as individual arguments rather than collected into a vector (but
+  that is also deprecated)."
+  ([table specs] (create-table-ddl table specs {}))
+  ([table specs opts]
+   ;; check for deprecated legacy syntax
+   (if-not (vector? (first specs))
+     (legacy-create-table-ddl table specs opts)
+     (let [table-spec     (:table-spec opts)
+           entities       (:entities   opts identity)
+           table-spec-str (or (and table-spec (str " " table-spec)) "")
+           spec-to-string (fn [spec]
+                               (str/join " " (cons (as-sql-name entities (first spec))
+                                                   (map name (rest spec)))))]
+       (format "CREATE TABLE %s (%s)%s"
+               (as-sql-name entities table)
+               (str/join ", " (map spec-to-string specs))
+               table-spec-str))))
+  ([table spec1 spec2 spec3 & specs]
+   ;; just in case someone wraps the specs in a vector but still provides :options
+   ;; this allows for a DEPRECATED warning rather than an unpleasant exception
+   (if (and (= :options spec2)
+            (vector? (first spec1)))
+     (apply legacy-create-table-ddl table (concat spec1 [spec2 spec3] specs))
+     (apply legacy-create-table-ddl table spec1 spec2 spec3 specs))))
+
+(defn legacy-create-table-ddl
+  "Deprecated version of create-table-ddl."
   [table & specs]
+  (println "DEPRECATED: unrolled column specs / key/value arguments to create-table-ddl")
   (let [[col-specs other] (split-with (complement keyword?) specs)
-        options           (parse-options other "create-table-ddl")
-        table-spec        (:table-spec options)
-        entities          (:entities   options identity)
-        table-spec-str    (or (and table-spec (str " " table-spec)) "")
-        spec-to-string    (fn [spec]
-                            (str/join " " (cons (as-sql-name entities (first spec))
-                                                (map name (rest spec)))))]
-    (format "CREATE TABLE %s (%s)%s"
-            (as-sql-name entities table)
-            (str/join ", " (map spec-to-string col-specs))
-            table-spec-str)))
+        options           (parse-options other nil)]
+    (create-table-ddl table col-specs options)))
 
 (defn drop-table-ddl
   "Given a table name, return the DDL string for dropping that table."

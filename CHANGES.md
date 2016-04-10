@@ -1,3 +1,7 @@
+Changes coming in 0.5.6
+
+* `create-table-ddl` now expects the column specs to be wrapped in a single vector and no longer needs the `:options` delimiter to specify the options map [JDBC-120](http://dev.clojure.org/jira/JDBC-120). If column specs are not wrapped in a vector, you will get a "DEPRECATED" warning printed to the console.
+
 Changes in 0.5.5
 
 * Allow options map in all calls that previously took optional keyword arguments [JDBC-117](http://dev.clojure.org/jira/browse/JDBC-117). The unrolled keyword argument forms of call are deprecated -- and print a "DEPRECATED" message to the console! -- and will go away in 0.6.0.

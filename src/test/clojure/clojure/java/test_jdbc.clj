@@ -149,36 +149,36 @@
   (sql/db-do-commands
    db (sql/create-table-ddl
        table
-       [:id :int "PRIMARY KEY AUTO_INCREMENT"]
-       [:name "VARCHAR(32)"]
-       [:appearance "VARCHAR(32)"]
-       [:cost :int]
-       [:grade :real]
-       :options {:table-spec "ENGINE=InnoDB"})))
+       [[:id :int "PRIMARY KEY AUTO_INCREMENT"]
+        [:name "VARCHAR(32)"]
+        [:appearance "VARCHAR(32)"]
+        [:cost :int]
+        [:grade :real]]
+       {:table-spec "ENGINE=InnoDB"})))
 
 (defmethod create-test-table :postgres
   [table db]
   (sql/db-do-commands
    db (sql/create-table-ddl
        table
-       [:id :serial "PRIMARY KEY"]
-       [:name "VARCHAR(32)"]
-       [:appearance "VARCHAR(32)"]
-       [:cost :int]
-       [:grade :real]
-       :options {:table-spec ""})))
+       [[:id :serial "PRIMARY KEY"]
+        [:name "VARCHAR(32)"]
+        [:appearance "VARCHAR(32)"]
+        [:cost :int]
+        [:grade :real]]
+       {:table-spec ""})))
 
 (defmethod create-test-table :default
   [table db]
   (sql/db-do-commands
    db (sql/create-table-ddl
        table
-       [:id :int "DEFAULT 0"]
-       [:name "VARCHAR(32)" "PRIMARY KEY"]
-       [:appearance "VARCHAR(32)"]
-       [:cost :int]
-       [:grade :real]
-       :options {:table-spec ""})))
+       [[:id :int "DEFAULT 0"]
+        [:name "VARCHAR(32)" "PRIMARY KEY"]
+        [:appearance "VARCHAR(32)"]
+        [:cost :int]
+        [:grade :real]]
+       {:table-spec ""})))
 
 (deftest test-uri-spec-parsing
   (is (= {:advanced "false" :ssl "required" :password "clojure_test"
