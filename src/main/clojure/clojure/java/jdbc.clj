@@ -798,17 +798,30 @@ compatibility but it will be removed before a 1.0.0 release." }
   Return a seq of update counts (one count for each param-group)."
   {:arglists '([db-spec sql & param-groups]
                [db-spec transaction? sql & param-groups])}
-  [db transaction? & [sql & param-groups :as opts]]
-  (if (or (string? transaction?)
-          (instance? PreparedStatement transaction?))
-    (apply db-do-prepared db true transaction? opts)
-    (if-let [con (db-find-connection db)]
-      (if (instance? PreparedStatement sql)
-        (db-do-execute-prepared-statement db sql param-groups transaction?)
-        (with-open [^PreparedStatement stmt (prepare-statement con sql)]
-          (db-do-execute-prepared-statement db stmt param-groups transaction?)))
-      (with-open [con (get-connection db)]
-        (apply db-do-prepared (add-connection db con) transaction? sql param-groups)))))
+  ([db sql-param-groups]
+   (db-do-prepared db true sql-param-groups))
+  ([db transaction? sql-param-groups]
+   (cond (string? transaction?)
+         ;; legacy deprecated
+         (db-do-prepared db true [transaction? sql-param-groups])
+         (or (string? sql-param-groups)
+             (instance? PreparedStatement sql-param-groups))
+         ;; string or stmt is acceptable, no param groups
+         (db-do-prepared db transaction? [sql-param-groups])
+         :else
+         (let [[sql & param-groups] sql-param-groups]
+           (if-let [con (db-find-connection db)]
+             (if (instance? PreparedStatement sql)
+               (db-do-execute-prepared-statement db sql param-groups transaction?)
+               (with-open [^PreparedStatement stmt (prepare-statement con sql)]
+                 (db-do-execute-prepared-statement db stmt param-groups transaction?)))
+             (with-open [con (get-connection db)]
+               (db-do-prepared (add-connection db con) transaction? sql-param-groups))))))
+  ([db t-or-sql-p-g sql-pg-1 pg-2 & pgs]
+   ;; legacy deprecated
+   (if (string? t-or-sql-p-g)
+     (db-do-prepared db true (concat [t-or-sql-p-g sql-pg-1 pg-2] pgs))
+     (db-do-prepared db t-or-sql-p-g (concat [sql-pg-1 pg-2] pgs)))))
 
 (defn db-query-with-resultset
   "Executes a query, then evaluates func passing in the raw ResultSet as an
@@ -907,7 +920,7 @@ compatibility but it will be removed before a 1.0.0 release." }
                    :or {transaction? true multi? false}}]
    (let [param-groups (rest sql-params)
          execute-helper
-         (^{:once true} fn* [db]
+           (^{:once true} fn* [db]
           (if multi?
             (apply db-do-prepared db transaction? (first sql-params) param-groups)
             (if (seq param-groups)
