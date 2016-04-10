@@ -1095,9 +1095,8 @@ compatibility but it will be removed before a 1.0.0 release." }
        (do
          (println "DEPRECATED: insert! with multiple rows; use insert-multi! instead")
          (insert-rows! db table [cols-or-row values-or-opts] {})))
-     (do
-       (println "DEPRECATED: insert! with multiple rows; use insert-multi! instead")
-       (insert-cols! db table cols-or-row [values-or-opts] {}))))
+     ;; also non-legacy version: column names and one set of row values
+     (insert-cols! db table cols-or-row [values-or-opts] {})))
   ([db table cols values opts]
    ;; could also be
    ;; cols values-1 values-2
