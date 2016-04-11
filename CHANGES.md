@@ -1,6 +1,7 @@
 Changes coming in 0.5.8
 
-* `db-do-commands` now expects multiple commands to be be wrapped in a vector [JDBC-122](http://dev.clojure.org/jira/JDBC-123). The single command form is unchanged (but may be wrapped in a vector). Calling `db-do-commands` with multiple commands (not wrapped in a single vector) will produce a "DEPRECATED" warning to printed to the console.
+* `db-do-commands` now expects multiple commands to be be wrapped in a vector [JDBC-122](http://dev.clojure.org/jira/JDBC-123). The single command form is unchanged (but may be wrapped in a vector). Calling `db-do-commands` with multiple commands (not wrapped in a single vector) will produce a "DEPRECATED" warning printed to the console.
+* `db-do-prepared` now expects to receive a `db-spec`, an optional `transaction?` boolean, and a final argument that is either a `PreparedStatement`, a SQL string, or a vector containing a SQL string followed by parameter groups -- vectors of parameters values, like the `:multi? true` version of `execute!` [JDBC-122](http://dev.clojure.org/jira/JDBC-123). Calling `db-do-prepared` with multiple arguments -- the SQL string / statement and the parameter groups unrolled is deprecated and will produce "DEPRECATED" warnings printed to the console.
 
 Changes in 0.5.7
 

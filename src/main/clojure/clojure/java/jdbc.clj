@@ -796,8 +796,6 @@ compatibility but it will be removed before a 1.0.0 release." }
   the parameters. transaction? can be omitted and defaults to true.
   The sql parameter can either be a SQL string or a PreparedStatement.
   Return a seq of update counts (one count for each param-group)."
-  {:arglists '([db-spec sql & param-groups]
-               [db-spec transaction? sql & param-groups])}
   ([db sql-param-groups]
    (db-do-prepared db true sql-param-groups))
   ([db transaction? sql-param-groups]
@@ -863,10 +861,10 @@ compatibility but it will be removed before a 1.0.0 release." }
       (let [^PreparedStatement stmt special]
         (run-query-with-params stmt))
       (if-let [con (db-find-connection db)]
-        (with-open [^PreparedStatement stmt (apply prepare-statement con sql prepare-args)]
+        (with-open [^PreparedStatement stmt (prepare-statement con sql prepare-args)]
           (run-query-with-params stmt))
         (with-open [con (get-connection db)]
-          (with-open [^PreparedStatement stmt (apply prepare-statement con sql prepare-args)]
+          (with-open [^PreparedStatement stmt (prepare-statement con sql prepare-args)]
             (run-query-with-params stmt)))))))
 
 ;; top-level API for actual SQL operations
@@ -920,12 +918,14 @@ compatibility but it will be removed before a 1.0.0 release." }
                    :or {transaction? true multi? false}}]
    (let [param-groups (rest sql-params)
          execute-helper
-           (^{:once true} fn* [db]
+         (^{:once true} fn* [db]
           (if multi?
-            (apply db-do-prepared db transaction? (first sql-params) param-groups)
+            ;; already in the correct form: [sql [params] [params]]
+            (db-do-prepared db transaction? sql-params)
             (if (seq param-groups)
-              (db-do-prepared db transaction? (first sql-params) param-groups)
-              (db-do-prepared db transaction? (first sql-params)))))]
+              ;; single param group: convert to correct form
+              (db-do-prepared db transaction? [(first sql-params) param-groups])
+              (db-do-prepared db transaction? sql-params))))]
      (if-let [con (db-find-connection db)]
        (execute-helper db)
        (with-open [con (get-connection db)]
@@ -1090,9 +1090,9 @@ compatibility but it will be removed before a 1.0.0 release." }
   [db table cols values opts]
   (let [sql-params (insert-multi-row-sql table cols values (:entities opts identity))]
     (if-let [con (db-find-connection db)]
-      (apply db-do-prepared db (:transaction? opts) sql-params)
+      (db-do-prepared db (:transaction? opts) sql-params)
       (with-open [con (get-connection db)]
-        (apply db-do-prepared (add-connection db con) (:transaction? opts) sql-params)))))
+        (db-do-prepared (add-connection db con) (:transaction? opts) sql-params)))))
 
 (defn- is-options-map?
   "Given a map, return true if it seems to be an options map."
@@ -1159,9 +1159,9 @@ compatibility but it will be removed before a 1.0.0 release." }
 
        (let [stmts (insert-multi-row-sql table names values entities)]
          (if-let [con (db-find-connection db)]
-           (apply db-do-prepared db transaction? stmts)
+           (db-do-prepared db transaction? stmts)
            (with-open [con (get-connection db)]
-             (apply db-do-prepared (add-connection db con) transaction? stmts))))))))
+             (db-do-prepared (add-connection db con) transaction? stmts))))))))
 
 (defn insert-multi!
   "Given a database connection, a table name and either a sequence of maps (for
@@ -1241,8 +1241,8 @@ compatibility but it will be removed before a 1.0.0 release." }
            entities       (:entities   opts identity)
            table-spec-str (or (and table-spec (str " " table-spec)) "")
            spec-to-string (fn [spec]
-                               (str/join " " (cons (as-sql-name entities (first spec))
-                                                   (map name (rest spec)))))]
+                            (str/join " " (cons (as-sql-name entities (first spec))
+                                                (map name (rest spec)))))]
        (format "CREATE TABLE %s (%s)%s"
                (as-sql-name entities table)
                (str/join ", " (map spec-to-string specs))

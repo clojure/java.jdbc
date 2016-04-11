@@ -346,6 +346,7 @@
                                 [4 "Orange" "juicy" 89 88.6]])]
       (is (= '(1 1 1 1) r)))
     (is (= 4 (sql/query db ["SELECT * FROM fruit"] {:result-set-fn count})))
+    (is (= 2 (sql/query db [{:max-rows 2} "SELECT * FROM fruit"] {:result-set-fn count})))
     (is (= "Apple" (sql/query db ["SELECT * FROM fruit WHERE appearance = ?" "red"] {:row-fn :name :result-set-fn first})))
     (is (= "juicy" (sql/query db ["SELECT * FROM fruit WHERE name = ?" "Orange"] {:row-fn :appearance :result-set-fn first})))))
 
@@ -765,7 +766,15 @@
     (let [new-keys (sql/insert! db :fruit {:name "Apple"})
           new-keys (if (postgres? db) (map :id new-keys) new-keys)]
       (is (= [(returned-key db 1)] new-keys))
-      (is (= [{:id (generated-key db 1) :name "Apple" :appearance nil :grade nil :cost nil}] (sql/query db ["SELECT * FROM fruit"]))))))
+      (is (= [{:id (generated-key db 1) :name "Apple" :appearance nil :grade nil :cost nil}]
+             (sql/query db "SELECT * FROM fruit")))
+      (is (= [{:id (generated-key db 1) :name "Apple" :appearance nil :grade nil :cost nil}]
+             (sql/query db ["SELECT * FROM fruit"])))
+      (is (= [{:id (generated-key db 1) :name "Apple" :appearance nil :grade nil :cost nil}]
+             (with-open [con (sql/get-connection db)]
+               (sql/query db [(sql/prepare-statement con "SELECT * FROM fruit")]))))
+      (is (= [{:id (generated-key db 1) :name "Apple" :appearance nil :grade nil :cost nil}]
+             (sql/query db [{:max-rows 1} "SELECT * FROM fruit"]))))))
 
 (deftest insert-two-by-map-and-query
   (doseq [db (test-specs)]
