@@ -762,8 +762,16 @@ compatibility but it will be removed before a 1.0.0 release." }
   Return the generated keys for the (single) update/insert.
   A PreparedStatement may be passed in, instead of a SQL string, in which
   case :return-keys MUST BE SET on that PreparedStatement!"
+  ([db sql]
+   (db-do-prepared-return-keys db true sql []))
   ([db sql param-group]
-   (db-do-prepared-return-keys db true sql param-group))
+   (cond (or (string? sql)
+             (instance? PreparedStatement sql))
+         (db-do-prepared-return-keys db true sql param-group)
+         (or (string? param-group)
+             (instance? PreparedStatement param-group))
+         (db-do-prepared-return-keys db sql param-group [])
+         :else (throw (IllegalArgumentException. "db-do-prepared-return-keys expects SQL string or PreparedStatement"))))
   ([db transaction? sql param-group]
    (if-let [con (db-find-connection db)]
      (if (instance? PreparedStatement sql)

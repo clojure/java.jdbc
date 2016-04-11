@@ -278,6 +278,7 @@
 (deftest test-do-prepared1a
   (doseq [db (test-specs)]
     (create-test-table :fruit2 db)
+    ;; single string is acceptable
     (sql/db-do-prepared db "INSERT INTO fruit2 ( name, appearance, cost, grade ) VALUES ( 'test', 'test', 1, 1.0 )")
     (is (= 1 (sql/query db ["SELECT * FROM fruit2"] {:result-set-fn count})))))
 
@@ -286,22 +287,42 @@
     (create-test-table :fruit2 db)
     (with-open [con (sql/get-connection db)]
       (let [stmt (sql/prepare-statement con "INSERT INTO fruit2 ( name, appearance, cost, grade ) VALUES ( 'test', 'test', 1, 1.0 )")]
+        ;; single PreparedStatement is acceptable
         (is (= [1] (sql/db-do-prepared db stmt)))))
     (is (= 1 (sql/query db ["SELECT * FROM fruit2"] {:result-set-fn count})))))
 
-(deftest test-do-prepared1c
+(deftest test-do-prepared1ci
   (doseq [db (test-specs)]
     (create-test-table :fruit2 db)
-    (is (= (returned-key db 1) (sql/db-do-prepared-return-keys db "INSERT INTO fruit2 ( name, appearance, cost, grade ) VALUES ( 'test', 'test', 1, 1.0 )" [])))
+    (is (= (returned-key db 1)
+           (sql/db-do-prepared-return-keys db "INSERT INTO fruit2 ( name, appearance, cost, grade ) VALUES ( 'test', 'test', 1, 1.0 )")))
     (is (= 1 (sql/query db ["SELECT * FROM fruit2"] {:result-set-fn count})))))
 
-(deftest test-do-prepared1d
+(deftest test-do-prepared1cii
+  (doseq [db (test-specs)]
+    (create-test-table :fruit2 db)
+    (is (= (returned-key db 1)
+           (sql/db-do-prepared-return-keys db "INSERT INTO fruit2 ( name, appearance, cost, grade ) VALUES ( 'test', 'test', 1, 1.0 )" [])))
+    (is (= 1 (sql/query db ["SELECT * FROM fruit2"] {:result-set-fn count})))))
+
+(deftest test-do-prepared1di
   (doseq [db (test-specs)]
     (create-test-table :fruit db)
     (with-open [con (sql/get-connection db)]
       (let [stmt (sql/prepare-statement con "INSERT INTO fruit ( name, appearance, cost, grade ) VALUES ( 'test', 'test', 1, 1.0 )"
                                         {:return-keys true})]
-        (is (= (returned-key db 1) (sql/db-do-prepared-return-keys db stmt [])))))
+        (is (= (returned-key db 1)
+               (sql/db-do-prepared-return-keys db stmt [])))))
+    (is (= 1 (sql/query db ["SELECT * FROM fruit"] {:result-set-fn count})))))
+
+(deftest test-do-prepared1dii
+  (doseq [db (test-specs)]
+    (create-test-table :fruit db)
+    (with-open [con (sql/get-connection db)]
+      (let [stmt (sql/prepare-statement con "INSERT INTO fruit ( name, appearance, cost, grade ) VALUES ( 'test', 'test', 1, 1.0 )"
+                                        {:return-keys true})]
+        (is (= (returned-key db 1)
+               (sql/db-do-prepared-return-keys db stmt)))))
     (is (= 1 (sql/query db ["SELECT * FROM fruit"] {:result-set-fn count})))))
 
 (deftest test-do-prepared1e
@@ -312,7 +333,7 @@
       (with-open [con (sql/get-connection db)]
         (let [stmt (sql/prepare-statement con "INSERT INTO fruit ( name, appearance, cost, grade ) VALUES ( 'test', 'test', 1, 1.0 )"
                                           {:return-keys ["id"]})]
-          (is (= (returned-key db 1) (sql/db-do-prepared-return-keys db stmt [])))))
+          (is (= (returned-key db 1) (sql/db-do-prepared-return-keys db stmt)))))
       (is (= 1 (sql/query db ["SELECT * FROM fruit"] {:result-set-fn count}))))))
 
 (deftest test-do-prepared2
