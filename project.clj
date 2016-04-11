@@ -2,7 +2,7 @@
 ;; develop and test java.jdbc locally. The pom.xml file is the
 ;; "system of record" as far as the project version is concerned.
 
-(defproject org.clojure/java.jdbc "0.5.6-SNAPSHOT"
+(defproject org.clojure/java.jdbc "0.5.8-SNAPSHOT"
   :description "A low-level Clojure wrapper for JDBC-based access to databases."
   :parent [org.clojure/pom.contrib "0.1.2"]
   :url "https://github.com/clojure/java.jdbc"
