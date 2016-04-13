@@ -16,7 +16,7 @@ Additional documentation can be found in the [java.jdbc section of clojure-doc.o
 Releases and Dependency Information
 ========================================
 
-Latest stable release: 0.5.7
+Latest stable release: 0.5.8
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22java.jdbc%22)
 
@@ -24,14 +24,14 @@ Latest stable release: 0.5.7
 
 [Leiningen](https://github.com/technomancy/leiningen) dependency information:
 ```clojure
-[org.clojure/java.jdbc "0.5.7"]
+[org.clojure/java.jdbc "0.5.8"]
 ```
 [Maven](http://maven.apache.org/) dependency information:
 ```xml
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>java.jdbc</artifactId>
-  <version>0.5.7</version>
+  <version>0.5.8</version>
 </dependency>
 ```
 You will also need to add dependencies for the JDBC driver you intend to use. Here are links (to Maven Central) for each of the common database drivers that clojure.java.jdbc is known to be used with:
@@ -103,6 +103,10 @@ Developer Information
 
 Change Log
 ====================
+
+* Release 0.5.8 on 2016-04-12
+  * `db-do-commands` now expects multiple commands to be be wrapped in a vector [JDBC-122](http://dev.clojure.org/jira/JDBC-123). The single command form is unchanged (but may be wrapped in a vector). Calling `db-do-commands` with multiple commands (not wrapped in a single vector) will produce a "DEPRECATED" warning printed to the console.
+  * `db-do-prepared` and `db-do-prepared-return-keys` now expect to receive a `db-spec`, an optional `transaction?` boolean, a `sql-params` argument, and an optional options map. `sql-params` is a vector containing a SQL string or `PreparedStatement` followed by parameters -- like other APIs in this library. In addition, like the `:multi? true` version of `execute!`, `db-do-prepared` can accept a vector that has parameter groups: multiple vectors containing groups of parameter values [JDBC-122](http://dev.clojure.org/jira/JDBC-123). Calling `db-do-prepared` with unrolled arguments -- the SQL string / statement followed by parameter groups -- is deprecated and will produce "DEPRECATED" warnings printed to the console.
 
 * Release 0.5.7 on 2016-04-10
   * `(insert! db table [:col] ["val"] {})` syntax, introduced in 0.5.6, threw an exception [JDBC-121](http://dev.clojure.org/jira/JDBC-121).

@@ -246,9 +246,39 @@
     (is (thrown? java.sql.SQLException
                  (sql/query db ["SELECT * FROM fruit2"] {:result-set-fn count})))))
 
+(deftest test-do-commands-transaction
+  (doseq [db (test-specs)]
+    (create-test-table :fruit2 db)
+    (sql/db-do-commands db true "DROP TABLE fruit2")
+    (is (thrown? java.sql.SQLException
+                 (sql/query db ["SELECT * FROM fruit2"] {:result-set-fn count})))))
+
+(deftest test-do-commands-multi
+  (doseq [db (test-specs)]
+    (sql/db-do-commands db
+                        [(sql/create-table-ddl :fruit3
+                                                [[:name       "VARCHAR(32)"]
+                                                 [:appearance "VARCHAR(32)"]
+                                                 [:cost       :int]])
+                         "DROP TABLE fruit3"])
+    (is (thrown? java.sql.SQLException
+                 (sql/query db ["SELECT * FROM fruit2"] {:result-set-fn count})))))
+
+(deftest test-do-commands-multi-transaction
+  (doseq [db (test-specs)]
+    (sql/db-do-commands db true
+                        [(sql/create-table-ddl :fruit3
+                                                [[:name       "VARCHAR(32)"]
+                                                 [:appearance "VARCHAR(32)"]
+                                                 [:cost       :int]])
+                         "DROP TABLE fruit3"])
+    (is (thrown? java.sql.SQLException
+                 (sql/query db ["SELECT * FROM fruit2"] {:result-set-fn count})))))
+
 (deftest test-do-prepared1a
   (doseq [db (test-specs)]
     (create-test-table :fruit2 db)
+    ;; single string is acceptable
     (sql/db-do-prepared db "INSERT INTO fruit2 ( name, appearance, cost, grade ) VALUES ( 'test', 'test', 1, 1.0 )")
     (is (= 1 (sql/query db ["SELECT * FROM fruit2"] {:result-set-fn count})))))
 
@@ -257,22 +287,42 @@
     (create-test-table :fruit2 db)
     (with-open [con (sql/get-connection db)]
       (let [stmt (sql/prepare-statement con "INSERT INTO fruit2 ( name, appearance, cost, grade ) VALUES ( 'test', 'test', 1, 1.0 )")]
+        ;; single PreparedStatement is acceptable
         (is (= [1] (sql/db-do-prepared db stmt)))))
     (is (= 1 (sql/query db ["SELECT * FROM fruit2"] {:result-set-fn count})))))
 
-(deftest test-do-prepared1c
+(deftest test-do-prepared1ci
   (doseq [db (test-specs)]
     (create-test-table :fruit2 db)
-    (is (= (returned-key db 1) (sql/db-do-prepared-return-keys db "INSERT INTO fruit2 ( name, appearance, cost, grade ) VALUES ( 'test', 'test', 1, 1.0 )" [])))
+    (is (= (returned-key db 1)
+           (sql/db-do-prepared-return-keys db "INSERT INTO fruit2 ( name, appearance, cost, grade ) VALUES ( 'test', 'test', 1, 1.0 )")))
     (is (= 1 (sql/query db ["SELECT * FROM fruit2"] {:result-set-fn count})))))
 
-(deftest test-do-prepared1d
+(deftest test-do-prepared1cii
+  (doseq [db (test-specs)]
+    (create-test-table :fruit2 db)
+    (is (= (returned-key db 1)
+           (sql/db-do-prepared-return-keys db ["INSERT INTO fruit2 ( name, appearance, cost, grade ) VALUES ( 'test', 'test', 1, 1.0 )"])))
+    (is (= 1 (sql/query db ["SELECT * FROM fruit2"] {:result-set-fn count})))))
+
+(deftest test-do-prepared1di
   (doseq [db (test-specs)]
     (create-test-table :fruit db)
     (with-open [con (sql/get-connection db)]
       (let [stmt (sql/prepare-statement con "INSERT INTO fruit ( name, appearance, cost, grade ) VALUES ( 'test', 'test', 1, 1.0 )"
                                         {:return-keys true})]
-        (is (= (returned-key db 1) (sql/db-do-prepared-return-keys db stmt [])))))
+        (is (= (returned-key db 1)
+               (sql/db-do-prepared-return-keys db [stmt])))))
+    (is (= 1 (sql/query db ["SELECT * FROM fruit"] {:result-set-fn count})))))
+
+(deftest test-do-prepared1dii
+  (doseq [db (test-specs)]
+    (create-test-table :fruit db)
+    (with-open [con (sql/get-connection db)]
+      (let [stmt (sql/prepare-statement con "INSERT INTO fruit ( name, appearance, cost, grade ) VALUES ( 'test', 'test', 1, 1.0 )"
+                                        {:return-keys true})]
+        (is (= (returned-key db 1)
+               (sql/db-do-prepared-return-keys db stmt)))))
     (is (= 1 (sql/query db ["SELECT * FROM fruit"] {:result-set-fn count})))))
 
 (deftest test-do-prepared1e
@@ -283,7 +333,7 @@
       (with-open [con (sql/get-connection db)]
         (let [stmt (sql/prepare-statement con "INSERT INTO fruit ( name, appearance, cost, grade ) VALUES ( 'test', 'test', 1, 1.0 )"
                                           {:return-keys ["id"]})]
-          (is (= (returned-key db 1) (sql/db-do-prepared-return-keys db stmt [])))))
+          (is (= (returned-key db 1) (sql/db-do-prepared-return-keys db stmt)))))
       (is (= 1 (sql/query db ["SELECT * FROM fruit"] {:result-set-fn count}))))))
 
 (deftest test-do-prepared2
@@ -293,16 +343,22 @@
     (is (thrown? java.sql.SQLException
                  (sql/query db ["SELECT * FROM fruit2"] {:result-set-fn count})))))
 
-(deftest test-do-prepared3
+(deftest test-do-prepared3a
   (doseq [db (test-specs)]
     (create-test-table :fruit2 db)
-    (sql/db-do-prepared db "INSERT INTO fruit2 ( name, appearance, cost, grade ) VALUES ( ?, ?, ?, ? )" ["test" "test" 1 1.0])
+    (sql/db-do-prepared db ["INSERT INTO fruit2 ( name, appearance, cost, grade ) VALUES ( ?, ?, ?, ? )" ["test" "test" 1 1.0]] {:multi? true})
+    (is (= 1 (sql/query db ["SELECT * FROM fruit2"] {:result-set-fn count})))))
+
+(deftest test-do-prepared3b
+  (doseq [db (test-specs)]
+    (create-test-table :fruit2 db)
+    (sql/db-do-prepared db ["INSERT INTO fruit2 ( name, appearance, cost, grade ) VALUES ( ?, ?, ?, ? )" "test" "test" 1 1.0])
     (is (= 1 (sql/query db ["SELECT * FROM fruit2"] {:result-set-fn count})))))
 
 (deftest test-do-prepared4
   (doseq [db (test-specs)]
     (create-test-table :fruit2 db)
-    (sql/db-do-prepared db "INSERT INTO fruit2 ( name, appearance, cost, grade ) VALUES ( ?, ?, ?, ? )" ["test" "test" 1 1.0] ["two" "two" 2 2.0])
+    (sql/db-do-prepared db ["INSERT INTO fruit2 ( name, appearance, cost, grade ) VALUES ( ?, ?, ?, ? )" ["test" "test" 1 1.0] ["two" "two" 2 2.0]] {:multi? true})
     (is (= 2 (sql/query db ["SELECT * FROM fruit2"] {:result-set-fn count})))))
 
 (deftest test-insert-rows
@@ -317,6 +373,11 @@
                                 [4 "Orange" "juicy" 89 88.6]])]
       (is (= '(1 1 1 1) r)))
     (is (= 4 (sql/query db ["SELECT * FROM fruit"] {:result-set-fn count})))
+    (is (= 4 (sql/with-db-connection [con db]
+               (sql/query con (sql/prepare-statement (sql/db-connection con) "SELECT * FROM fruit") {:result-set-fn count}))))
+    (is (= 2 (sql/query db [{:max-rows 2} "SELECT * FROM fruit"] {:result-set-fn count})))
+    (is (= 2 (sql/with-db-connection [con db]
+               (sql/query con [(sql/prepare-statement (sql/db-connection con) "SELECT * FROM fruit" {:max-rows 2})] {:result-set-fn count}))))
     (is (= "Apple" (sql/query db ["SELECT * FROM fruit WHERE appearance = ?" "red"] {:row-fn :name :result-set-fn first})))
     (is (= "juicy" (sql/query db ["SELECT * FROM fruit WHERE name = ?" "Orange"] {:row-fn :appearance :result-set-fn first})))))
 
@@ -736,7 +797,15 @@
     (let [new-keys (sql/insert! db :fruit {:name "Apple"})
           new-keys (if (postgres? db) (map :id new-keys) new-keys)]
       (is (= [(returned-key db 1)] new-keys))
-      (is (= [{:id (generated-key db 1) :name "Apple" :appearance nil :grade nil :cost nil}] (sql/query db ["SELECT * FROM fruit"]))))))
+      (is (= [{:id (generated-key db 1) :name "Apple" :appearance nil :grade nil :cost nil}]
+             (sql/query db "SELECT * FROM fruit")))
+      (is (= [{:id (generated-key db 1) :name "Apple" :appearance nil :grade nil :cost nil}]
+             (sql/query db ["SELECT * FROM fruit"])))
+      (is (= [{:id (generated-key db 1) :name "Apple" :appearance nil :grade nil :cost nil}]
+             (with-open [con (sql/get-connection db)]
+               (sql/query db [(sql/prepare-statement con "SELECT * FROM fruit")]))))
+      (is (= [{:id (generated-key db 1) :name "Apple" :appearance nil :grade nil :cost nil}]
+             (sql/query db [{:max-rows 1} "SELECT * FROM fruit"]))))))
 
 (deftest insert-two-by-map-and-query
   (doseq [db (test-specs)]

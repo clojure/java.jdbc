@@ -683,23 +683,37 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
 (defn db-do-commands
   "Executes SQL commands on the specified database connection. Wraps the commands
   in a transaction if transaction? is true. transaction? can be ommitted and it
-  defaults to true.
+  defaults to true. Accepts a single SQL command (string) or a vector of them.
+  For backward compatibility, also accepts multiple string arguments but that
+  is deprecated and will be removed in 0.6.0.
   Uses executeBatch. This may affect what SQL you can run via db-do-commands."
-  {:arglists '([db-spec sql-command & sql-commands]
-               [db-spec transaction? sql-command & sql-commands])}
-  [db transaction? & commands]
-  (if (string? transaction?)
-    (apply db-do-commands db true transaction? commands)
-    (if-let [con (db-find-connection db)]
-      (with-open [^Statement stmt (.createStatement con)]
-        (doseq [^String cmd commands]
-          (.addBatch stmt cmd))
-        (if transaction?
-          (with-db-transaction [t-db (add-connection db (.getConnection stmt))]
-            (execute-batch stmt))
-          (execute-batch stmt)))
-      (with-open [con (get-connection db)]
-        (apply db-do-commands (add-connection db con) transaction? commands)))))
+  ([db sql-commands]
+   (db-do-commands db true (if (string? sql-commands) [sql-commands] sql-commands)))
+  ([db transaction? sql-commands]
+   (cond (string? transaction?)
+         ;; legacy call with two commands
+         (do
+           (println "DEPRECATED: unrolled SQL string arguments in db-do-commands")
+           (db-do-commands db true [transaction? sql-commands]))
+         (string? sql-commands)
+         ;; (db-do-commands db bool-val "SQL string") is acceptable
+         (db-do-commands db transaction? [sql-commands])
+         :else
+         (if-let [con (db-find-connection db)]
+           (with-open [^Statement stmt (.createStatement con)]
+             (doseq [^String cmd sql-commands]
+               (.addBatch stmt cmd))
+             (if transaction?
+               (with-db-transaction [t-db (add-connection db (.getConnection stmt))]
+                 (execute-batch stmt))
+               (execute-batch stmt)))
+           (with-open [con (get-connection db)]
+             (db-do-commands (add-connection db con) transaction? sql-commands)))))
+  ([db t-or-cmd cmd-1 cmd-2 & cmds]
+   (println "DEPRECATED: unrolled SQL string arguments in db-do-commands")
+   (if (string? t-or-cmd)
+     (db-do-commands db true (concat [t-or-cmd cmd-1 cmd-2] cmds))
+     (db-do-commands db t-or-cmd (concat [cmd-1 cmd-2] cmds)))))
 
 (defn- db-do-execute-prepared-return-keys
   "Executes a PreparedStatement, optionally in a transaction, and (attempts to)
@@ -724,6 +738,13 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
         (exec-and-return-keys))
       (exec-and-return-keys))))
 
+(defn- sql-stmt?
+  "Given an expression, return true if it is either a string (SQL) or a
+  PreparedStatement. Used primarily to support legacy (deprecated) API
+  calls."
+  [expr]
+  (or (string? expr) (instance? PreparedStatement expr)))
+
 (defn db-do-prepared-return-keys
   "Executes an (optionally parameterized) SQL prepared statement on the
   open database connection. The param-group is a seq of values for all of
@@ -731,19 +752,36 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
   Return the generated keys for the (single) update/insert.
   A PreparedStatement may be passed in, instead of a SQL string, in which
   case :return-keys MUST BE SET on that PreparedStatement!"
-  ([db sql param-group]
-   (db-do-prepared-return-keys db true sql param-group))
-  ([db transaction? sql param-group]
-   (if-let [con (db-find-connection db)]
-     (if (instance? PreparedStatement sql)
-       (db-do-execute-prepared-return-keys db sql param-group transaction?)
-       (with-open [^PreparedStatement stmt (prepare-statement con sql {:return-keys true})]
-         (db-do-execute-prepared-return-keys db stmt param-group transaction?)))
-     (with-open [con (get-connection db)]
-       (db-do-prepared-return-keys (add-connection db con) transaction? sql param-group)))))
+  ([db sql-params]
+   (db-do-prepared-return-keys db true sql-params {}))
+  ([db transaction? sql-params]
+   (cond (map? sql-params)
+         ;; transaction? omitted
+         (db-do-prepared-return-keys db true transaction? sql-params)
+         (sql-stmt? transaction?)
+         (do
+           (println "DEPRECATED: unrolled sql / param groups in db-do-prepared-return-keys")
+           (db-do-prepared-return-keys db true (into [transaction?] sql-params) {}))
+         :else
+         ;; opts? omitted
+         (db-do-prepared-return-keys db transaction? sql-params {})))
+  ([db transaction? sql-params opts]
+   (cond (map? opts)
+         (if-let [con (db-find-connection db)]
+           (let [[sql & params] (if (sql-stmt? sql-params) [sql-params] sql-params)]
+             (if (instance? PreparedStatement sql)
+               (db-do-execute-prepared-return-keys db sql params transaction?)
+               (with-open [^PreparedStatement stmt (prepare-statement con sql {:return-keys true})]
+                 (db-do-execute-prepared-return-keys db stmt params transaction?))))
+           (with-open [con (get-connection db)]
+             (db-do-prepared-return-keys (add-connection db con) transaction? sql-params opts)))
+         :else
+         (do
+           (println "DEPRECATED: unrolled sql / param groups in db-do-prepared-return-keys")
+           (db-do-prepared-return-keys db transaction? (into [sql-params] opts) {})))))
 
 (defn- db-do-execute-prepared-statement
-  "Execute a PreparedStatment, optionally in a transaction."
+  "Execute a PreparedStatement, optionally in a transaction."
   [db ^PreparedStatement stmt param-groups transaction?]
   (if (empty? param-groups)
     (if transaction?
@@ -765,19 +803,44 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
   the parameters. transaction? can be omitted and defaults to true.
   The sql parameter can either be a SQL string or a PreparedStatement.
   Return a seq of update counts (one count for each param-group)."
-  {:arglists '([db-spec sql & param-groups]
-               [db-spec transaction? sql & param-groups])}
-  [db transaction? & [sql & param-groups :as opts]]
-  (if (or (string? transaction?)
-          (instance? PreparedStatement transaction?))
-    (apply db-do-prepared db true transaction? opts)
-    (if-let [con (db-find-connection db)]
-      (if (instance? PreparedStatement sql)
-        (db-do-execute-prepared-statement db sql param-groups transaction?)
-        (with-open [^PreparedStatement stmt (prepare-statement con sql)]
-          (db-do-execute-prepared-statement db stmt param-groups transaction?)))
-      (with-open [con (get-connection db)]
-        (apply db-do-prepared (add-connection db con) transaction? sql param-groups)))))
+  ([db sql-params]
+   (db-do-prepared db true sql-params {}))
+  ([db transaction? sql-params]
+   (cond (map? sql-params)
+         ;; transaction? omitted
+         (db-do-prepared db true transaction? sql-params)
+         (sql-stmt? transaction?)
+         (do
+           (println "DEPRECATED: unrolled sql / param groups in db-do-prepared")
+           (db-do-prepared db true (into [transaction?] sql-params) {}))
+         :else
+         ;; opts omitted
+         (db-do-prepared db transaction? sql-params {})))
+  ([db transaction? sql-params opts]
+   (cond (map? opts)
+         (if-let [con (db-find-connection db)]
+           (let [[sql & params] (if (sql-stmt? sql-params) [sql-params] sql-params)
+                 params         (if (or (:multi? opts) (empty? params)) params [params])]
+             (if (instance? PreparedStatement sql)
+               (db-do-execute-prepared-statement db sql params transaction?)
+               (with-open [^PreparedStatement stmt (prepare-statement con sql)]
+                 (db-do-execute-prepared-statement db stmt params transaction?))))
+           (with-open [con (get-connection db)]
+             (db-do-prepared (add-connection db con) transaction? sql-params opts)))
+         (sql-stmt? transaction?)
+         (do
+           (println "DEPRECATED: unrolled sql / param groups in db-do-prepared")
+           (db-do-prepared db true [transaction? sql-params opts] {:multi? true}))
+         :else
+         (do
+           (println "DEPRECATED: unrolled sql / param groups in db-do-prepared")
+           (db-do-prepared db transaction? [sql-params opts] {:multi? true}))))
+  ([db t-or-sql-p-g sql-pg-1 pg-2 & pgs]
+   ;; legacy deprecated
+   (println "DEPRECATED: unrolled sql / param groups in db-do-prepared")
+   (if (sql-stmt? t-or-sql-p-g)
+     (db-do-prepared db true (concat [t-or-sql-p-g sql-pg-1 pg-2] pgs) {:multi? true})
+     (db-do-prepared db t-or-sql-p-g (concat [sql-pg-1 pg-2] pgs) {:multi? true}))))
 
 (defn db-query-with-resultset
   "Executes a query, then evaluates func passing in the raw ResultSet as an
@@ -802,27 +865,25 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
                               (.getName sql-params-class)
                               (pr-str sql-params))]
       (throw (IllegalArgumentException. msg))))
-  (let [special (first sql-params)
-        sql-is-first (string? special)
-        options-are-first (map? special)
-        sql (cond sql-is-first special
-                  options-are-first (second sql-params))
-        params (vec (cond sql-is-first (rest sql-params)
-                          options-are-first (rest (rest sql-params))
-                          :else (rest sql-params)))
-        prepare-args (when (map? special) special)
+  (let [[prepare-args sql & params] (if (map? (first sql-params))
+                                      sql-params
+                                      (cons nil sql-params))
         run-query-with-params (^{:once true} fn* [^PreparedStatement stmt]
                                ((or (:set-parameters db) set-parameters) stmt params)
                                (with-open [rset (.executeQuery stmt)]
                                  (func rset)))]
-    (if (instance? PreparedStatement special)
-      (let [^PreparedStatement stmt special]
+    (if (instance? PreparedStatement sql)
+
+      (let [^PreparedStatement stmt sql]
+        (when prepare-args
+          (throw (IllegalArgumentException. "query/db-query-with-resultset: options ignored when PreparedStatement provided")))
         (run-query-with-params stmt))
+
       (if-let [con (db-find-connection db)]
-        (with-open [^PreparedStatement stmt (apply prepare-statement con sql prepare-args)]
+        (with-open [^PreparedStatement stmt (prepare-statement con sql prepare-args)]
           (run-query-with-params stmt))
         (with-open [con (get-connection db)]
-          (with-open [^PreparedStatement stmt (apply prepare-statement con sql prepare-args)]
+          (with-open [^PreparedStatement stmt (prepare-statement con sql prepare-args)]
             (run-query-with-params stmt)))))))
 
 ;; top-level API for actual SQL operations
@@ -845,7 +906,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
                    :or {row-fn identity
                         identifiers str/lower-case}}]
    (let [result-set-fn (or result-set-fn (if as-arrays? vec doall))
-         sql-params-vector (if (string? sql-params)
+         sql-params-vector (if (sql-stmt? sql-params)
                              (vector sql-params)
                              (vec sql-params))]
      (db-query-with-resultset db sql-params-vector
@@ -871,14 +932,11 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
   ([db sql-params] (execute! db sql-params {}))
   ([db sql-params {:keys [transaction? multi?]
                    :or {transaction? true multi? false}}]
-   (let [param-groups (rest sql-params)
-         execute-helper
+   (let [execute-helper
          (^{:once true} fn* [db]
           (if multi?
-            (apply db-do-prepared db transaction? (first sql-params) param-groups)
-            (if (seq param-groups)
-              (db-do-prepared db transaction? (first sql-params) param-groups)
-              (db-do-prepared db transaction? (first sql-params)))))]
+            (db-do-prepared db transaction? sql-params {:multi? true})
+            (db-do-prepared db transaction? sql-params {})))]
      (if-let [con (db-find-connection db)]
        (execute-helper db)
        (with-open [con (get-connection db)]
@@ -923,9 +981,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
    inserts), run a prepared statement on each and return any generated keys.
    Note: we are eager so an unrealized lazy-seq cannot escape from the connection."
   [db stmts]
-  (doall (map (fn [row]
-                (db-do-prepared-return-keys db false (first row) (rest row)))
-              stmts)))
+  (doall (map (fn [row] (db-do-prepared-return-keys db false row {})) stmts)))
 
 (defn- insert-helper
   "Given a (connected) database connection, a transaction flag and some SQL statements
@@ -952,7 +1008,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
   (let [nc (count columns)
         vcs (map count values)]
     (if (not (and (or (zero? nc) (= nc (first vcs))) (apply = vcs)))
-      (throw (IllegalArgumentException. "insert called with inconsistent number of columns / values"))
+      (throw (IllegalArgumentException. "insert! called with inconsistent number of columns / values"))
       (into [(str "INSERT INTO " (table-str table entities)
                   (when (seq columns)
                     (str " ( "
@@ -983,7 +1039,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
   (let [entities   (:entities opts identity)
         sql-params (map (fn [row]
                           (when-not (map? row)
-                            (throw (IllegalArgumentException. "insert-row! called with a non-map row")))
+                            (throw (IllegalArgumentException. "insert! / insert-milti! called with a non-map row")))
                           (insert-single-row-sql table row entities)) rows)]
     (if-let [con (db-find-connection db)]
       (insert-helper db (:transaction? opts) sql-params)
@@ -997,9 +1053,9 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
   [db table cols values opts]
   (let [sql-params (insert-multi-row-sql table cols values (:entities opts identity))]
     (if-let [con (db-find-connection db)]
-      (apply db-do-prepared db (:transaction? opts) sql-params)
+      (db-do-prepared db (:transaction? opts) sql-params {:multi? true})
       (with-open [con (get-connection db)]
-        (apply db-do-prepared (add-connection db con) (:transaction? opts) sql-params)))))
+        (db-do-prepared (add-connection db con) (:transaction? opts) sql-params {:multi? true})))))
 
 (defn insert!
   "Given a database connection, a table name and either a map representing a rows,
