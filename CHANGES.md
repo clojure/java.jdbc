@@ -1,4 +1,4 @@
-Changes coming in 0.6.0
+Changes in 0.6.0
 
 * ALL DEPRECATED FUNCTIONALITY HAS BEEN REMOVED! [JDBC-118](http://dev.clojure.org/jira/JDBC-118).
   - See changes described in versions 0.5.5 through 0.5.8 for what was deprecated

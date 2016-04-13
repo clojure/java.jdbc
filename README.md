@@ -16,7 +16,7 @@ Additional documentation can be found in the [java.jdbc section of clojure-doc.o
 Releases and Dependency Information
 ========================================
 
-Latest stable release: 0.5.8
+Latest stable release: 0.6.0-alpha1
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22java.jdbc%22)
 
@@ -24,14 +24,14 @@ Latest stable release: 0.5.8
 
 [Leiningen](https://github.com/technomancy/leiningen) dependency information:
 ```clojure
-[org.clojure/java.jdbc "0.5.8"]
+[org.clojure/java.jdbc "0.6.0-alpha1"]
 ```
 [Maven](http://maven.apache.org/) dependency information:
 ```xml
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>java.jdbc</artifactId>
-  <version>0.5.8</version>
+  <version>0.6.0-alpha1</version>
 </dependency>
 ```
 You will also need to add dependencies for the JDBC driver you intend to use. Here are links (to Maven Central) for each of the common database drivers that clojure.java.jdbc is known to be used with:
@@ -103,6 +103,13 @@ Developer Information
 
 Change Log
 ====================
+
+* Release 0.6.0-alpha1 on 2016-04-13 -- BREAKING RELEASE!
+  * ALL DEPRECATED FUNCTIONALITY HAS BEEN REMOVED! [JDBC-118](http://dev.clojure.org/jira/JDBC-118).
+    - See changes described in versions 0.5.5 through 0.5.8 for what was deprecated
+    - Use version 0.5.8 as a bridge to identify any deprecated API calls on which your code relies!
+    - `db-transaction` (deprecated in version 0.3.0) has been removed
+    - The `java.jdbc.deprecated` namespace has been removed
 
 * Release 0.5.8 on 2016-04-12
   * `db-do-commands` now expects multiple commands to be be wrapped in a vector [JDBC-122](http://dev.clojure.org/jira/JDBC-123). The single command form is unchanged (but may be wrapped in a vector). Calling `db-do-commands` with multiple commands (not wrapped in a single vector) will produce a "DEPRECATED" warning printed to the console.
