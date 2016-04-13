@@ -104,6 +104,10 @@ Developer Information
 Change Log
 ====================
 
+* Release 0.5.8 on 2016-04-12
+  * `db-do-commands` now expects multiple commands to be be wrapped in a vector [JDBC-122](http://dev.clojure.org/jira/JDBC-123). The single command form is unchanged (but may be wrapped in a vector). Calling `db-do-commands` with multiple commands (not wrapped in a single vector) will produce a "DEPRECATED" warning printed to the console.
+  * `db-do-prepared` and `db-do-prepared-return-keys` now expect to receive a `db-spec`, an optional `transaction?` boolean, a `sql-params` argument, and an optional options map. `sql-params` is a vector containing a SQL string or `PreparedStatement` followed by parameters -- like other APIs in this library. In addition, like the `:multi? true` version of `execute!`, `db-do-prepared` can accept a vector that has parameter groups: multiple vectors containing groups of parameter values [JDBC-122](http://dev.clojure.org/jira/JDBC-123). Calling `db-do-prepared` with unrolled arguments -- the SQL string / statement followed by parameter groups -- is deprecated and will produce "DEPRECATED" warnings printed to the console.
+
 * Release 0.5.7 on 2016-04-10
   * `(insert! db table [:col] ["val"] {})` syntax, introduced in 0.5.6, threw an exception [JDBC-121](http://dev.clojure.org/jira/JDBC-121).
 
