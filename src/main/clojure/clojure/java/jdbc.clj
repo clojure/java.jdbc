@@ -905,22 +905,20 @@ compatibility but it will be removed before a 1.0.0 release." }
                               (.getName sql-params-class)
                               (pr-str sql-params))]
       (throw (IllegalArgumentException. msg))))
-  (let [special (first sql-params)
-        sql-is-first (string? special)
-        options-are-first (map? special)
-        sql (cond sql-is-first special
-                  options-are-first (second sql-params))
-        params (vec (cond sql-is-first (rest sql-params)
-                          options-are-first (rest (rest sql-params))
-                          :else (rest sql-params)))
-        prepare-args (when (map? special) special)
+  (let [[prepare-args sql & params] (if (map? (first sql-params))
+                                      sql-params
+                                      (cons nil sql-params))
         run-query-with-params (^{:once true} fn* [^PreparedStatement stmt]
                                ((or (:set-parameters db) set-parameters) stmt params)
                                (with-open [rset (.executeQuery stmt)]
                                  (func rset)))]
-    (if (instance? PreparedStatement special)
-      (let [^PreparedStatement stmt special]
+    (if (instance? PreparedStatement sql)
+
+      (let [^PreparedStatement stmt sql]
+        (when prepare-args
+          (throw (IllegalArgumentException. "query/db-query-with-resultset: options ignored when PreparedStatement provided")))
         (run-query-with-params stmt))
+
       (if-let [con (db-find-connection db)]
         (with-open [^PreparedStatement stmt (prepare-statement con sql prepare-args)]
           (run-query-with-params stmt))
@@ -948,7 +946,7 @@ compatibility but it will be removed before a 1.0.0 release." }
                    :or {row-fn identity
                         identifiers str/lower-case}}]
    (let [result-set-fn (or result-set-fn (if as-arrays? vec doall))
-         sql-params-vector (if (string? sql-params)
+         sql-params-vector (if (sql-stmt? sql-params)
                              (vector sql-params)
                              (vec sql-params))]
      (db-query-with-resultset db sql-params-vector

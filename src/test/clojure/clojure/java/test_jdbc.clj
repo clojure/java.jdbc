@@ -373,7 +373,11 @@
                                 [4 "Orange" "juicy" 89 88.6]])]
       (is (= '(1 1 1 1) r)))
     (is (= 4 (sql/query db ["SELECT * FROM fruit"] {:result-set-fn count})))
+    (is (= 4 (sql/with-db-connection [con db]
+               (sql/query con (sql/prepare-statement (sql/db-connection con) "SELECT * FROM fruit") {:result-set-fn count}))))
     (is (= 2 (sql/query db [{:max-rows 2} "SELECT * FROM fruit"] {:result-set-fn count})))
+    (is (= 2 (sql/with-db-connection [con db]
+               (sql/query con [(sql/prepare-statement (sql/db-connection con) "SELECT * FROM fruit" {:max-rows 2})] {:result-set-fn count}))))
     (is (= "Apple" (sql/query db ["SELECT * FROM fruit WHERE appearance = ?" "red"] {:row-fn :name :result-set-fn first})))
     (is (= "juicy" (sql/query db ["SELECT * FROM fruit WHERE name = ?" "Orange"] {:row-fn :appearance :result-set-fn first})))))
 
