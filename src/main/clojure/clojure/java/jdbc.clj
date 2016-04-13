@@ -755,6 +755,13 @@ compatibility but it will be removed before a 1.0.0 release." }
         (exec-and-return-keys))
       (exec-and-return-keys))))
 
+(defn- sql-stmt?
+  "Given an expression, return true if it is either a string (SQL) or a
+  PreparedStatement. Used primarily to support legacy (deprecated) API
+  calls."
+  [expr]
+  (or (string? expr) (instance? PreparedStatement expr)))
+
 (defn db-do-prepared-return-keys
   "Executes an (optionally parameterized) SQL prepared statement on the
   open database connection. The param-group is a seq of values for all of
@@ -762,27 +769,46 @@ compatibility but it will be removed before a 1.0.0 release." }
   Return the generated keys for the (single) update/insert.
   A PreparedStatement may be passed in, instead of a SQL string, in which
   case :return-keys MUST BE SET on that PreparedStatement!"
-  ([db sql]
-   (db-do-prepared-return-keys db true sql []))
-  ([db sql param-group]
-   (cond (or (string? sql)
-             (instance? PreparedStatement sql))
-         (db-do-prepared-return-keys db true sql param-group)
-         (or (string? param-group)
-             (instance? PreparedStatement param-group))
-         (db-do-prepared-return-keys db sql param-group [])
-         :else (throw (IllegalArgumentException. "db-do-prepared-return-keys expects SQL string or PreparedStatement"))))
-  ([db transaction? sql param-group]
-   (if-let [con (db-find-connection db)]
-     (if (instance? PreparedStatement sql)
-       (db-do-execute-prepared-return-keys db sql param-group transaction?)
-       (with-open [^PreparedStatement stmt (prepare-statement con sql {:return-keys true})]
-         (db-do-execute-prepared-return-keys db stmt param-group transaction?)))
-     (with-open [con (get-connection db)]
-       (db-do-prepared-return-keys (add-connection db con) transaction? sql param-group)))))
+  ([db sql-params]
+   (cond (sql-stmt? sql-params)
+         ;; transaction? and options omitted; string or stmt acceptable
+         (db-do-prepared-return-keys db true [sql-params] {})
+         :else ; transaction? and options omitted
+         (db-do-prepared-return-keys db true sql-params {})))
+  ([db transaction? sql-params]
+   (cond (sql-stmt? transaction?)
+         (if (map? sql-params)
+           ;; transaction? omitted; string or stmt acceptable
+           (db-do-prepared-return-keys db true [transaction?] sql-params)
+           ;; legacy db sql param-group call
+           (do
+             (println "DEPRECATED: unrolled sql / param groups in db-do-prepared-return-keys")
+             (db-do-prepared-return-keys db true (into [transaction?] sql-params) {})))
+         (sequential? transaction?)
+         ;; transaction? omitted
+         (db-do-prepared-return-keys db true transaction? sql-params)
+         :else (throw (IllegalArgumentException. "db-do-prepared-return-keys expects db transaction? [sql & params]"))))
+  ([db transaction? sql-params opts]
+   (cond (sql-stmt? sql-params)
+         (if (map? opts)
+           ;; string or stmt acceptable; should this be deprecated?
+           (db-do-prepared-return-keys db transaction? [sql-params] opts)
+           ;; legacy db transaction? sql param
+           (do
+             (println "DEPRECATED: unrolled sql / param groups in db-do-prepared-return-keys")
+             (db-do-prepared-return-keys db transaction? (into [sql-params] opts) {})))
+         :else ; regular db transaction? [sql params] opts call
+         (let [[sql & params] sql-params]
+           (if-let [con (db-find-connection db)]
+             (if (instance? PreparedStatement sql)
+               (db-do-execute-prepared-return-keys db sql params transaction?)
+               (with-open [^PreparedStatement stmt (prepare-statement con sql {:return-keys true})]
+                 (db-do-execute-prepared-return-keys db stmt params transaction?)))
+             (with-open [con (get-connection db)]
+               (db-do-prepared-return-keys (add-connection db con) transaction? sql-params opts)))))))
 
 (defn- db-do-execute-prepared-statement
-  "Execute a PreparedStatment, optionally in a transaction."
+  "Execute a PreparedStatement, optionally in a transaction."
   [db ^PreparedStatement stmt param-groups transaction?]
   (if (empty? param-groups)
     (if transaction?
@@ -804,30 +830,57 @@ compatibility but it will be removed before a 1.0.0 release." }
   the parameters. transaction? can be omitted and defaults to true.
   The sql parameter can either be a SQL string or a PreparedStatement.
   Return a seq of update counts (one count for each param-group)."
-  ([db sql-param-groups]
-   (db-do-prepared db true sql-param-groups))
-  ([db transaction? sql-param-groups]
-   (cond (string? transaction?)
-         ;; legacy deprecated
-         (db-do-prepared db true [transaction? sql-param-groups])
-         (or (string? sql-param-groups)
-             (instance? PreparedStatement sql-param-groups))
-         ;; string or stmt is acceptable, no param groups
-         (db-do-prepared db transaction? [sql-param-groups])
-         :else
-         (let [[sql & param-groups] sql-param-groups]
-           (if-let [con (db-find-connection db)]
+  ([db sql-params]
+   (if (sql-stmt? sql-params)
+     ;; transaction? and opts omitted; string or stmt acceptable
+     (db-do-prepared db true [sql-params] {})
+     ;; transaction? and opts omitted
+     (db-do-prepared db true sql-params {})))
+  ([db sql-params opts]
+   (cond (sql-stmt? sql-params)
+         (if (map? opts)
+           ;; transaction? omitted, opts present; string or stmt acceptable
+           (db-do-prepared db true [sql-params] opts)
+           ;; legacy call db sql param-group
+           (do
+             (println "DEPRECATED: unrolled sql / param groups in db-do-prepared")
+             (db-do-prepared db true (into [sql-params] opts) {})))
+         (sql-stmt? opts)
+         ;; transaction? present, opts omitted; string or stmt acceptable
+         (db-do-prepared db sql-params [opts] {})
+         (and (coll? sql-params) (map? opts))
+         ;; transaction? omitted, [sql & params] and opts present
+         (db-do-prepared db true sql-params opts)
+         (coll? opts)
+         ;; transaction? present, opts omitted
+         (db-do-prepared db sql-params opts {})
+         :else (throw (IllegalArgumentException. "db-do-prepared expects db transaction? [sql & params] opts"))))
+  ([db transaction? sql-params opts]
+   (cond (map? opts)
+         ;; string or stmt is acceptable, with param groups
+         (if-let [con (db-find-connection db)]
+           (let [[sql & params] (if (sql-stmt? sql-params) [sql-params] sql-params)
+                 params         (if (or (:multi? opts) (empty? params)) params [params])]
              (if (instance? PreparedStatement sql)
-               (db-do-execute-prepared-statement db sql param-groups transaction?)
+               (db-do-execute-prepared-statement db sql params transaction?)
                (with-open [^PreparedStatement stmt (prepare-statement con sql)]
-                 (db-do-execute-prepared-statement db stmt param-groups transaction?)))
-             (with-open [con (get-connection db)]
-               (db-do-prepared (add-connection db con) transaction? sql-param-groups))))))
+                 (db-do-execute-prepared-statement db stmt params transaction?))))
+           (with-open [con (get-connection db)]
+             (db-do-prepared (add-connection db con) transaction? sql-params opts)))
+         (sql-stmt? transaction?)
+         (do
+           (println "DEPRECATED: unrolled sql / param groups in db-do-prepared")
+           (db-do-prepared db true [transaction? sql-params opts] {:multi? true}))
+         :else
+         (do
+           (println "DEPRECATED: unrolled sql / param groups in db-do-prepared")
+           (db-do-prepared db transaction? [sql-params opts] {:multi? true}))))
   ([db t-or-sql-p-g sql-pg-1 pg-2 & pgs]
    ;; legacy deprecated
-   (if (string? t-or-sql-p-g)
-     (db-do-prepared db true (concat [t-or-sql-p-g sql-pg-1 pg-2] pgs))
-     (db-do-prepared db t-or-sql-p-g (concat [sql-pg-1 pg-2] pgs)))))
+   (println "DEPRECATED: unrolled sql / param groups in db-do-prepared")
+   (if (sql-stmt? t-or-sql-p-g)
+     (db-do-prepared db true (concat [t-or-sql-p-g sql-pg-1 pg-2] pgs) {:multi? true})
+     (db-do-prepared db t-or-sql-p-g (concat [sql-pg-1 pg-2] pgs) {:multi? true}))))
 
 (defn db-query-with-resultset
   "Executes a query, then evaluates func passing in the raw ResultSet as an
@@ -924,16 +977,11 @@ compatibility but it will be removed before a 1.0.0 release." }
   ([db sql-params] (execute! db sql-params {}))
   ([db sql-params {:keys [transaction? multi?]
                    :or {transaction? true multi? false}}]
-   (let [param-groups (rest sql-params)
-         execute-helper
+   (let [execute-helper
          (^{:once true} fn* [db]
           (if multi?
-            ;; already in the correct form: [sql [params] [params]]
-            (db-do-prepared db transaction? sql-params)
-            (if (seq param-groups)
-              ;; single param group: convert to correct form
-              (db-do-prepared db transaction? [(first sql-params) param-groups])
-              (db-do-prepared db transaction? sql-params))))]
+            (db-do-prepared db transaction? sql-params {:multi? true})
+            (db-do-prepared db transaction? sql-params {})))]
      (if-let [con (db-find-connection db)]
        (execute-helper db)
        (with-open [con (get-connection db)]
@@ -984,9 +1032,7 @@ compatibility but it will be removed before a 1.0.0 release." }
    inserts), run a prepared statement on each and return any generated keys.
    Note: we are eager so an unrealized lazy-seq cannot escape from the connection."
   [db stmts]
-  (doall (map (fn [row]
-                (db-do-prepared-return-keys db false (first row) (rest row)))
-              stmts)))
+  (doall (map (fn [row] (db-do-prepared-return-keys db false row {})) stmts)))
 
 (defn- insert-helper
   "Given a (connected) database connection, a transaction flag and some SQL statements
@@ -1013,7 +1059,7 @@ compatibility but it will be removed before a 1.0.0 release." }
   (let [nc (count columns)
         vcs (map count values)]
     (if (not (and (or (zero? nc) (= nc (first vcs))) (apply = vcs)))
-      (throw (IllegalArgumentException. "insert called with inconsistent number of columns / values"))
+      (throw (IllegalArgumentException. "insert! called with inconsistent number of columns / values"))
       (into [(str "INSERT INTO " (table-str table entities)
                   (when (seq columns)
                     (str " ( "
@@ -1084,7 +1130,7 @@ compatibility but it will be removed before a 1.0.0 release." }
   (let [entities   (:entities opts identity)
         sql-params (map (fn [row]
                           (when-not (map? row)
-                            (throw (IllegalArgumentException. "insert-row! called with a non-map row")))
+                            (throw (IllegalArgumentException. "insert! / insert-milti! called with a non-map row")))
                           (insert-single-row-sql table row entities)) rows)]
     (if-let [con (db-find-connection db)]
       (insert-helper db (:transaction? opts) sql-params)
@@ -1098,9 +1144,9 @@ compatibility but it will be removed before a 1.0.0 release." }
   [db table cols values opts]
   (let [sql-params (insert-multi-row-sql table cols values (:entities opts identity))]
     (if-let [con (db-find-connection db)]
-      (db-do-prepared db (:transaction? opts) sql-params)
+      (db-do-prepared db (:transaction? opts) sql-params {:multi? true})
       (with-open [con (get-connection db)]
-        (db-do-prepared (add-connection db con) (:transaction? opts) sql-params)))))
+        (db-do-prepared (add-connection db con) (:transaction? opts) sql-params {:multi? true})))))
 
 (defn- is-options-map?
   "Given a map, return true if it seems to be an options map."
@@ -1167,9 +1213,9 @@ compatibility but it will be removed before a 1.0.0 release." }
 
        (let [stmts (insert-multi-row-sql table names values entities)]
          (if-let [con (db-find-connection db)]
-           (db-do-prepared db transaction? stmts)
+           (db-do-prepared db transaction? stmts {:multi? true})
            (with-open [con (get-connection db)]
-             (db-do-prepared (add-connection db con) transaction? stmts))))))))
+             (db-do-prepared (add-connection db con) transaction? stmts {:multi? true}))))))))
 
 (defn insert-multi!
   "Given a database connection, a table name and either a sequence of maps (for
