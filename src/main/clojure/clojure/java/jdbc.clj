@@ -1039,7 +1039,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
   (let [entities   (:entities opts identity)
         sql-params (map (fn [row]
                           (when-not (map? row)
-                            (throw (IllegalArgumentException. "insert! / insert-milti! called with a non-map row")))
+                            (throw (IllegalArgumentException. "insert! / insert-multi! called with a non-map row")))
                           (insert-single-row-sql table row entities)) rows)]
     (if-let [con (db-find-connection db)]
       (insert-helper db (:transaction? opts) sql-params)
