@@ -16,7 +16,7 @@ Additional documentation can be found in the [java.jdbc section of clojure-doc.o
 Releases and Dependency Information
 ========================================
 
-Latest stable release: 0.6.0-alpha1
+Latest stable release: 0.6.0-alpha2
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22java.jdbc%22)
 
@@ -24,14 +24,14 @@ Latest stable release: 0.6.0-alpha1
 
 [Leiningen](https://github.com/technomancy/leiningen) dependency information:
 ```clojure
-[org.clojure/java.jdbc "0.6.0-alpha1"]
+[org.clojure/java.jdbc "0.6.0-alpha2"]
 ```
 [Maven](http://maven.apache.org/) dependency information:
 ```xml
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>java.jdbc</artifactId>
-  <version>0.6.0-alpha1</version>
+  <version>0.6.0-alpha2</version>
 </dependency>
 ```
 You will also need to add dependencies for the JDBC driver you intend to use. Here are links (to Maven Central) for each of the common database drivers that clojure.java.jdbc is known to be used with:
@@ -104,8 +104,14 @@ Developer Information
 Change Log
 ====================
 
-* Release 0.6.0-alpha1 on 2016-04-13 -- BREAKING RELEASE!
+* Release 0.6.0-alpha2 on 2016-04-18 -- BREAKING RELEASE!
   * ALL DEPRECATED FUNCTIONALITY HAS BEEN REMOVED! [JDBC-118](http://dev.clojure.org/jira/JDBC-118).
+    - This removes deprecated functionality from db-do-commands and db-do-prepared* which should have been removed in Alpha 1.
+  * Ensures SQL / params are actually vectors prior to destructuring (this addresses an interop edge case from other languages) [JDBC-124](http://dev.clojure.org/jira/JDBC-124).
+  * Fix typo in `insert-multi!` argument validation exception [JDBC-123](http://dev.clojure.org/jira/JDBC-123).
+
+* Release 0.6.0-alpha1 on 2016-04-13 -- BREAKING RELEASE!
+  * (ALMOST) ALL DEPRECATED FUNCTIONALITY HAS BEEN REMOVED! [JDBC-118](http://dev.clojure.org/jira/JDBC-118).
     - See changes described in versions 0.5.5 through 0.5.8 for what was deprecated
     - Use version 0.5.8 as a bridge to identify any deprecated API calls on which your code relies!
     - `db-transaction` (deprecated in version 0.3.0) has been removed
@@ -255,7 +261,7 @@ Change Log
   * Add :as-arrays to query / result-set-seq [JDBC-41](http://dev.clojure.org/jira/browse/JDBC-41)
   * Better handling of NULL values [JDBC-40](http://dev.clojure.org/jira/browse/JDBC-40) and [JDBC-18](http://dev.clojure.org/jira/browse/JDBC-18)
     Note: JDBC-40 is being reverted in 0.3.0-alpha2 because it introduces regressions in PostgreSQL
-  * db-do-command allows you to execute SQL without a transaction wrapping it [JDBC-38](http://dev.clojure.org/jira/browse/JDBC-38)
+  * db-do-commands allows you to execute SQL without a transaction wrapping it [JDBC-38](http://dev.clojure.org/jira/browse/JDBC-38)
   * Remove reflection warning from execute-batch
   * Add notes to README about 3rd party database driver dependencies
   * Add optional :identifiers argument to resultset-seq so you can explicitly pass in the naming strategy
