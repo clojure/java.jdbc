@@ -1,13 +1,13 @@
 Changes in 0.6.0-alpha2
 
-* ALL DEPRECATED FUNCTIONALITY HAS BEEN REMOVED! [JDBC-118](http://dev.clojure.org/jira/JDBC-118).
+* ALL DEPRECATED FUNCTIONALITY HAS BEEN REMOVED! [JDBC-118](http://dev.clojure.org/jira/browse/JDBC-118).
   - This removes deprecated functionality from db-do-commands and db-do-prepared* which should have been removed in Alpha 1.
-* Ensures SQL / params are actually vectors prior to destructuring (this addresses an interop edge case from other languages) [JDBC-124](http://dev.clojure.org/jira/JDBC-124).
-* Fix typo in `insert-multi!` argument validation exception [JDBC-123](http://dev.clojure.org/jira/JDBC-123).
+* Ensures SQL / params are actually vectors prior to destructuring (this addresses an interop edge case from other languages) [JDBC-124](http://dev.clojure.org/jira/browse/JDBC-124).
+* Fix typo in `insert-multi!` argument validation exception [JDBC-123](http://dev.clojure.org/jira/browse/JDBC-123).
 
 Changes in 0.6.0-alpha1
 
-* (ALMOST) ALL DEPRECATED FUNCTIONALITY HAS BEEN REMOVED! [JDBC-118](http://dev.clojure.org/jira/JDBC-118).
+* (ALMOST) ALL DEPRECATED FUNCTIONALITY HAS BEEN REMOVED! [JDBC-118](http://dev.clojure.org/jira/browse/JDBC-118).
   - See changes described in versions 0.5.5 through 0.5.8 for what was deprecated
   - Use version 0.5.8 as a bridge to identify any deprecated API calls on which your code relies!
   - `db-transaction` (deprecated in version 0.3.0) has been removed
@@ -15,17 +15,17 @@ Changes in 0.6.0-alpha1
   
 Changes in 0.5.8
 
-* `db-do-commands` now expects multiple commands to be be wrapped in a vector [JDBC-122](http://dev.clojure.org/jira/JDBC-123). The single command form is unchanged (but may be wrapped in a vector). Calling `db-do-commands` with multiple commands (not wrapped in a single vector) will produce a "DEPRECATED" warning printed to the console.
-* `db-do-prepared` and `db-do-prepared-return-keys` now expect to receive a `db-spec`, an optional `transaction?` boolean, a `sql-params` argument, and an optional options map. `sql-params` is a vector containing a SQL string or `PreparedStatement` followed by parameters -- like other APIs in this library. In addition, like the `:multi? true` version of `execute!`, `db-do-prepared` can accept a vector that has parameter groups: multiple vectors containing groups of parameter values [JDBC-122](http://dev.clojure.org/jira/JDBC-123). Calling `db-do-prepared` with unrolled arguments -- the SQL string / statement followed by parameter groups -- is deprecated and will produce "DEPRECATED" warnings printed to the console.
+* `db-do-commands` now expects multiple commands to be be wrapped in a vector [JDBC-122](http://dev.clojure.org/jira/browse/JDBC-123). The single command form is unchanged (but may be wrapped in a vector). Calling `db-do-commands` with multiple commands (not wrapped in a single vector) will produce a "DEPRECATED" warning printed to the console.
+* `db-do-prepared` and `db-do-prepared-return-keys` now expect to receive a `db-spec`, an optional `transaction?` boolean, a `sql-params` argument, and an optional options map. `sql-params` is a vector containing a SQL string or `PreparedStatement` followed by parameters -- like other APIs in this library. In addition, like the `:multi? true` version of `execute!`, `db-do-prepared` can accept a vector that has parameter groups: multiple vectors containing groups of parameter values [JDBC-122](http://dev.clojure.org/jira/browse/JDBC-123). Calling `db-do-prepared` with unrolled arguments -- the SQL string / statement followed by parameter groups -- is deprecated and will produce "DEPRECATED" warnings printed to the console.
 
 Changes in 0.5.7
 
-* `(insert! db table [:col] ["val"] {})` syntax, introduced in 0.5.6, threw an exception [JDBC-121](http://dev.clojure.org/jira/JDBC-121).
+* `(insert! db table [:col] ["val"] {})` syntax, introduced in 0.5.6, threw an exception [JDBC-121](http://dev.clojure.org/jira/browse/JDBC-121).
 
 Changes in 0.5.6
 
-* `create-table-ddl` now expects the column specs to be wrapped in a single vector and no longer needs the `:options` delimiter to specify the options map [JDBC-120](http://dev.clojure.org/jira/JDBC-120). If column specs are not wrapped in a vector, you will get a "DEPRECATED" warning printed to the console.
-* `insert!` now supports only single row insertion; multi-row insertion is deprecated. `insert-multi!` has been added for multi-row insertion. `:options` is no longer needed as a delimiter for the options map [JDBC-119](http://dev.clojure.org/jira/JDBC-119). If `insert!` is called with multiple rows, or `:options` is specified, you will get a "DEPRECATED" warning printed to the console.
+* `create-table-ddl` now expects the column specs to be wrapped in a single vector and no longer needs the `:options` delimiter to specify the options map [JDBC-120](http://dev.clojure.org/jira/browse/JDBC-120). If column specs are not wrapped in a vector, you will get a "DEPRECATED" warning printed to the console.
+* `insert!` now supports only single row insertion; multi-row insertion is deprecated. `insert-multi!` has been added for multi-row insertion. `:options` is no longer needed as a delimiter for the options map [JDBC-119](http://dev.clojure.org/jira/browse/JDBC-119). If `insert!` is called with multiple rows, or `:options` is specified, you will get a "DEPRECATED" warning printed to the console.
 * NOTE: all deprecated functionality will go away in version 0.6.0!
 
 Changes in 0.5.5
