@@ -1,3 +1,9 @@
+Changes coming in 0.6.0-rc1
+
+* Adds `get-by-id` and `find-by-keys` convenience functions (these were easy to add after the API changes in 0.6.0 and we rely very heavily on them at World Singles so putting them in the core for everyone seemed reasonable).
+* REMINDER: ALL DEPRECATED FUNCTIONALITY HAS BEEN REMOVED! [JDBC-118](http://dev.clojure.org/jira/browse/JDBC-118).
+  - See alpha2 / alpha1 below for more details.
+
 Changes in 0.6.0-alpha2
 
 * ALL DEPRECATED FUNCTIONALITY HAS BEEN REMOVED! [JDBC-118](http://dev.clojure.org/jira/browse/JDBC-118).

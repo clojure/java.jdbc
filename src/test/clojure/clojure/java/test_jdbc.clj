@@ -379,7 +379,11 @@
     (is (= 2 (sql/with-db-connection [con db]
                (sql/query con [(sql/prepare-statement (sql/db-connection con) "SELECT * FROM fruit" {:max-rows 2})] {:result-set-fn count}))))
     (is (= "Apple" (sql/query db ["SELECT * FROM fruit WHERE appearance = ?" "red"] {:row-fn :name :result-set-fn first})))
-    (is (= "juicy" (sql/query db ["SELECT * FROM fruit WHERE name = ?" "Orange"] {:row-fn :appearance :result-set-fn first})))))
+    (is (= "juicy" (sql/query db ["SELECT * FROM fruit WHERE name = ?" "Orange"] {:row-fn :appearance :result-set-fn first})))
+    (is (= "Apple" (:name (sql/get-by-id db :fruit 1))))
+    (is (= ["Apple"] (map :name (sql/find-by-keys db :fruit {:appearance "red"}))))
+    (is (= "Peach" (:name (sql/get-by-id db :fruit 3 :id))))
+    (is (= ["Peach"] (map :name (sql/find-by-keys db :fruit {:id 3 :cost 139}))))))
 
 (deftest test-insert-values
   (doseq [db (test-specs)]

@@ -81,6 +81,27 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
      (str (first q) x (last q))
      (str q x q))))
 
+(defn- table-str
+  "Transform a table spec to an entity name for SQL. The table spec may be a
+  string, a keyword or a map with a single pair - table name and alias."
+  [table entities]
+  (let [entities (or entities identity)]
+    (if (map? table)
+      (let [[k v] (first table)]
+        (str (as-sql-name entities k) " " (as-sql-name entities v)))
+      (as-sql-name entities table))))
+
+(defn- kv-sql
+  "Given a sequence of column name keys and a matching sequence of column
+  values, and an entities mapping function, return a sequence of SQL fragments
+  that can be joined for part of an UPDATE SET or a SELECT WHERE clause."
+  [ks vs entities]
+  (map (fn [k v]
+         (str (as-sql-name entities k)
+              " = "
+              (if (nil? v) "NULL" "?")))
+       ks vs))
+
 (defn- ^Properties as-properties
   "Convert any seq of pairs to a java.utils.Properties instance.
    Uses as-sql-name to convert both keys and values into strings."
@@ -867,6 +888,35 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
                                                   (map row-fn rs))))
                                 (result-set-seq rset {:identifiers identifiers :as-arrays? as-arrays?})))))))
 
+(defn find-by-keys
+  "Given a database connection, a table name, a map of column name/value
+  pairs, and an optional options map, return any matching rows."
+  ([db table columns] (find-by-keys db table columns {}))
+  ([db table columns opts]
+   (let [entities (:entities opts identity)
+         ks (keys columns)
+         vs (vals columns)]
+     (query db (into [(str "SELECT * FROM " (table-str table entities)
+                           " WHERE " (str/join " AND "
+                                               (kv-sql ks vs entities)))]
+                     (remove nil? vs))
+            opts))))
+
+(defn get-by-id
+  "Given a database connection, a table name, a primary key value, an
+  optional primary key column name, and an optional options map, return
+  a single matching row, or nil.
+  The primary key column name defaults to :id."
+  ([db table pk-value] (get-by-id db table pk-value :id {}))
+  ([db table pk-value pk-name-or-opts]
+   (if (map? pk-name-or-opts)
+     (get-by-id db table pk-value :id pk-name-or-opts)
+     (get-by-id db table pk-value pk-name-or-opts {})))
+  ([db table pk-value pk-name opts]
+   (let [r-s-fn (or (:result-set-fn opts) identity)]
+     (find-by-keys db table {pk-name pk-value}
+                   (assoc opts :result-set-fn (comp first r-s-fn))))))
+
 (defn execute!
   "Given a database connection and a vector containing SQL (or PreparedStatement)
   followed by optional parameters, perform a general (non-select) SQL operation.
@@ -890,16 +940,6 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
        (execute-helper db)
        (with-open [con (get-connection db)]
          (execute-helper (add-connection db con)))))))
-
-(defn- table-str
-  "Transform a table spec to an entity name for SQL. The table spec may be a
-  string, a keyword or a map with a single pair - table name and alias."
-  [table entities]
-  (let [entities (or entities identity)]
-    (if (map? table)
-      (let [[k v] (first table)]
-        (str (as-sql-name entities k) " " (as-sql-name entities v)))
-      (as-sql-name entities table))))
 
 (defn- delete-sql
   "Given a table name, a where class and its parameters and an optional entities spec,
@@ -1051,11 +1091,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
     (cons (str "UPDATE " (table-str table entities)
                " SET " (str/join
                         ","
-                        (map (fn [k v]
-                               (str (as-sql-name entities k)
-                                    " = "
-                                    (if (nil? v) "NULL" "?")))
-                             ks vs))
+                        (kv-sql ks vs entities))
                (when where " WHERE ")
                where)
           (concat (remove nil? vs) params))))
