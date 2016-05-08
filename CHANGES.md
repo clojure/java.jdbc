@@ -1,3 +1,8 @@
+Changes coming in 0.6.0
+
+* `db-query-with-resultset` now accepts an options map and passes it to `prepare-statement`. `query`'s options map is passed through `db-query-with-resultset` and thus can contain options to be used to construct the `PreparedStatement` [JDBC-125](http://dev.clojure.org/jira/browse/JDBC-125).
+  - Passing the `prepare-statement` options as the first element of the `[sql & params]` vector is no longer supported (it was very poorly documented and almost never used).
+
 Changes in 0.6.0-rc1
 
 * Adds `get-by-id` and `find-by-keys` convenience functions (these were easy to add after the API changes in 0.6.0 and we rely very heavily on them at World Singles so putting them in the core for everyone seemed reasonable).

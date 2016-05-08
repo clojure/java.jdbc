@@ -375,7 +375,7 @@
     (is (= 4 (sql/query db ["SELECT * FROM fruit"] {:result-set-fn count})))
     (is (= 4 (sql/with-db-connection [con db]
                (sql/query con (sql/prepare-statement (sql/db-connection con) "SELECT * FROM fruit") {:result-set-fn count}))))
-    (is (= 2 (sql/query db [{:max-rows 2} "SELECT * FROM fruit"] {:result-set-fn count})))
+    (is (= 2 (sql/query db ["SELECT * FROM fruit"] {:result-set-fn count :max-rows 2})))
     (is (= 2 (sql/with-db-connection [con db]
                (sql/query con [(sql/prepare-statement (sql/db-connection con) "SELECT * FROM fruit" {:max-rows 2})] {:result-set-fn count}))))
     (is (= "Apple" (sql/query db ["SELECT * FROM fruit WHERE appearance = ?" "red"] {:row-fn :name :result-set-fn first})))
@@ -809,7 +809,7 @@
              (with-open [con (sql/get-connection db)]
                (sql/query db [(sql/prepare-statement con "SELECT * FROM fruit")]))))
       (is (= [{:id (generated-key db 1) :name "Apple" :appearance nil :grade nil :cost nil}]
-             (sql/query db [{:max-rows 1} "SELECT * FROM fruit"]))))))
+             (sql/query db ["SELECT * FROM fruit"] {:max-rows 1}))))))
 
 (deftest insert-two-by-map-and-query
   (doseq [db (test-specs)]

@@ -769,7 +769,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
      (let [[sql & params] (if (sql-stmt? sql-params) (vector sql-params) (vec sql-params))]
        (if (instance? PreparedStatement sql)
          (db-do-execute-prepared-return-keys db sql params transaction?)
-         (with-open [^PreparedStatement stmt (prepare-statement con sql {:return-keys true})]
+         (with-open [^PreparedStatement stmt (prepare-statement con sql (assoc opts :return-keys true))]
            (db-do-execute-prepared-return-keys db stmt params transaction?))))
      (with-open [con (get-connection db)]
        (db-do-prepared-return-keys (add-connection db con) transaction? sql-params opts)))))
@@ -809,7 +809,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
            params         (if (or (:multi? opts) (empty? params)) params [params])]
        (if (instance? PreparedStatement sql)
          (db-do-execute-prepared-statement db sql params transaction?)
-         (with-open [^PreparedStatement stmt (prepare-statement con sql)]
+         (with-open [^PreparedStatement stmt (prepare-statement con sql opts)]
            (db-do-execute-prepared-statement db stmt params transaction?))))
      (with-open [con (get-connection db)]
        (db-do-prepared (add-connection db con) transaction? sql-params opts)))))
@@ -820,50 +820,43 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
     [sql & params] - a SQL query, followed by any parameters it needs
     [stmt & params] - a PreparedStatement, followed by any parameters it needs
                       (the PreparedStatement already contains the SQL query)
-    [options sql & params] - options and a SQL query for creating a
-                      PreparedStatement, followed by any parameters it needs
-  See prepare-statement for supported options.
+  The opts map is passed to prepare-statement.
   Uses executeQuery. This may affect what SQL you can run via query."
   {:arglists '([db-spec [sql-string & params] func]
                [db-spec [stmt & params] func]
                [db-spec [options-map sql-string & params] func])}
-  [db sql-params func]
-  (when-not (vector? sql-params)
-    (let [^Class sql-params-class (class sql-params)
-          ^String msg (format "\"%s\" expected %s %s, found %s %s"
-                              "sql-params"
-                              "vector"
-                              "[sql param*]"
-                              (.getName sql-params-class)
-                              (pr-str sql-params))]
-      (throw (IllegalArgumentException. msg))))
-  (let [[prepare-args sql & params] (if (map? (first sql-params))
-                                      sql-params
-                                      (cons nil sql-params))
-        run-query-with-params (^{:once true} fn* [^PreparedStatement stmt]
-                               ((or (:set-parameters db) set-parameters) stmt params)
-                               (with-open [rset (.executeQuery stmt)]
-                                 (func rset)))]
-    (if (instance? PreparedStatement sql)
-
-      (let [^PreparedStatement stmt sql]
-        (when prepare-args
-          (throw (IllegalArgumentException. "query/db-query-with-resultset: options ignored when PreparedStatement provided")))
-        (run-query-with-params stmt))
-
-      (if-let [con (db-find-connection db)]
-        (with-open [^PreparedStatement stmt (prepare-statement con sql prepare-args)]
-          (run-query-with-params stmt))
-        (with-open [con (get-connection db)]
-          (with-open [^PreparedStatement stmt (prepare-statement con sql prepare-args)]
-            (run-query-with-params stmt)))))))
+  ([db sql-params func] (db-query-with-resultset db sql-params func {}))
+  ([db sql-params func opts]
+   (let [[sql & params] (if (sql-stmt? sql-params) (vector sql-params) (vec sql-params))
+         run-query-with-params (^{:once true} fn* [^PreparedStatement stmt]
+                                ((or (:set-parameters db) set-parameters) stmt params)
+                                (with-open [rset (.executeQuery stmt)]
+                                  (func rset)))]
+     (when-not (sql-stmt? sql)
+       (let [^Class sql-class (class sql)
+             ^String msg (format "\"%s\" expected %s %s, found %s %s"
+                                 "sql-params"
+                                 "vector"
+                                 "[sql param*]"
+                                 (.getName sql-class)
+                                 (pr-str sql))]
+         (throw (IllegalArgumentException. msg))))
+     (if (instance? PreparedStatement sql)
+       (let [^PreparedStatement stmt sql]
+         (run-query-with-params stmt))
+       (if-let [con (db-find-connection db)]
+         (with-open [^PreparedStatement stmt (prepare-statement con sql opts)]
+           (run-query-with-params stmt))
+         (with-open [con (get-connection db)]
+           (with-open [^PreparedStatement stmt (prepare-statement con sql opts)]
+             (run-query-with-params stmt))))))))
 
 ;; top-level API for actual SQL operations
 
 (defn query
   "Given a database connection and a vector containing SQL and optional parameters,
   perform a simple database query. The options specify how to construct the result
-  set:
+  set (and are also passed to prepare-statement as needed):
     :result-set-fn - applied to the entire result set, default doall / vec
         if :as-arrays? true, :result-set-fn will default to vec
         if :as-arrays? false, :result-set-fn will default to doall
@@ -871,12 +864,13 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
     :identifiers - applied to each column name in the result set, default lower-case
     :as-arrays? - return the results as a set of arrays, default false.
   The second argument is a vector containing a SQL string or PreparedStatement, followed
-  by any parameters it needs. It may optionally include an options map before the SQL
-  string or PreparedStatement. See db-query-with-resultset for details."
+  by any parameters it needs.
+  See also prepare-statement for additional options."
   ([db sql-params] (query db sql-params {}))
   ([db sql-params {:keys [result-set-fn row-fn identifiers as-arrays?]
                    :or {row-fn identity
-                        identifiers str/lower-case}}]
+                        identifiers str/lower-case}
+                   :as opts}]
    (let [result-set-fn (or result-set-fn (if as-arrays? vec doall))
          sql-params-vector (if (sql-stmt? sql-params) (vector sql-params) (vec sql-params))]
      (db-query-with-resultset db sql-params-vector
@@ -886,7 +880,8 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
                                                   (cons (first rs)
                                                         (map row-fn (rest rs)))
                                                   (map row-fn rs))))
-                                (result-set-seq rset {:identifiers identifiers :as-arrays? as-arrays?})))))))
+                                (result-set-seq rset {:identifiers identifiers :as-arrays? as-arrays?})))
+                              opts))))
 
 (defn find-by-keys
   "Given a database connection, a table name, a map of column name/value
