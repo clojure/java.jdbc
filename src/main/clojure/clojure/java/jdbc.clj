@@ -883,17 +883,45 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
                                 (result-set-seq rset {:identifiers identifiers :as-arrays? as-arrays?})))
                               opts))))
 
+(defn- direction
+  "Given an entities function, a column name, and a direction,
+  return the matching SQL column / order.
+  Throw an exception for an invalid direction."
+  [entities c d]
+  (str (as-sql-name entities c) " "
+       (if-let [dir (#{"ASC" "DESC"} (str/upper-case (name d)))]
+         dir
+         (throw (IllegalArgumentException. (str "expected :asc or :desc, found: " d))))))
+
+(defn- order-by-sql
+  "Given a sequence of column specs and an entities function, return
+  a SQL fragment for the ORDER BY clause. A column spec may be a name
+  (either a string or keyword) or a map from column name to direction
+  (:asc or :desc)."
+  [order-by entities]
+  (str/join ", " (mapcat (fn [col]
+                           (if (map? col)
+                             (reduce-kv (fn [v c d]
+                                          (conj v (direction entities c d)))
+                                        []
+                                        col)
+                             [(direction entities col :asc)])) order-by)))
+
 (defn find-by-keys
   "Given a database connection, a table name, a map of column name/value
   pairs, and an optional options map, return any matching rows."
   ([db table columns] (find-by-keys db table columns {}))
   ([db table columns opts]
    (let [entities (:entities opts identity)
+         order-by (:order-by opts)
          ks (keys columns)
          vs (vals columns)]
      (query db (into [(str "SELECT * FROM " (table-str table entities)
                            " WHERE " (str/join " AND "
-                                               (kv-sql ks vs entities)))]
+                                               (kv-sql ks vs entities))
+                           (when order-by
+                             (str " ORDER BY "
+                                  (order-by-sql order-by entities))))]
                      (remove nil? vs))
             opts))))
 

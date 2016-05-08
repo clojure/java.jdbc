@@ -370,7 +370,7 @@
                                [[1 "Apple" "red" 59 87]
                                 [2 "Banana" "yellow" 29 92.2]
                                 [3 "Peach" "fuzzy" 139 90.0]
-                                [4 "Orange" "juicy" 89 88.6]])]
+                                [4 "Orange" "juicy" 139 88.6]])]
       (is (= '(1 1 1 1) r)))
     (is (= 4 (sql/query db ["SELECT * FROM fruit"] {:result-set-fn count})))
     (is (= 4 (sql/with-db-connection [con db]
@@ -383,7 +383,9 @@
     (is (= "Apple" (:name (sql/get-by-id db :fruit 1))))
     (is (= ["Apple"] (map :name (sql/find-by-keys db :fruit {:appearance "red"}))))
     (is (= "Peach" (:name (sql/get-by-id db :fruit 3 :id))))
-    (is (= ["Peach"] (map :name (sql/find-by-keys db :fruit {:id 3 :cost 139}))))))
+    (is (= ["Peach"] (map :name (sql/find-by-keys db :fruit {:id 3 :cost 139}))))
+    (is (= ["Peach" "Orange"] (map :name (sql/find-by-keys db :fruit {:cost 139} {:order-by [:id]}))))
+    (is (= ["Orange" "Peach"] (map :name (sql/find-by-keys db :fruit {:cost 139} {:order-by [{:appearance :desc}]}))))))
 
 (deftest test-insert-values
   (doseq [db (test-specs)]

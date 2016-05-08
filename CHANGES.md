@@ -1,7 +1,11 @@
-Changes coming in 0.6.0
+Changes in 0.6.0-rc2
 
-* `db-query-with-resultset` now accepts an options map and passes it to `prepare-statement`. `query`'s options map is passed through `db-query-with-resultset` and thus can contain options to be used to construct the `PreparedStatement` [JDBC-125](http://dev.clojure.org/jira/browse/JDBC-125).
-  - Passing the `prepare-statement` options as the first element of the `[sql & params]` vector is no longer supported (it was very poorly documented and almost never used).
+* `db-query-with-resultset` now accepts an options map and passes it to `prepare-statement` [JDBC-125](http://dev.clojure.org/jira/browse/JDBC-125).
+  - Passing the `prepare-statement` options map as the first element of the `[sql & params]` vector is no longer supported and will throw an `IllegalArgumentException`. It was always very poorly documented and almost never used, as far as I can tell.
+* `db-query-with-resultset` no longer requires the `sql-params` argument to be a vector: a sequence is acceptable. This is in line with other functions that accept a sequence.
+* `db-query-with-resultset` now accepts a bare SQL string or `PreparedStatement` as the `sql-params` argument, when there are no parameters needed. This is in line with other functions that accept SQL or a `PreparedStatement`.
+* `query`'s options map now is passed to `db-query-with-resultset` and thus can contain options to be used to construct the `PreparedStatement` [JDBC-125](http://dev.clojure.org/jira/browse/JDBC-125).
+* `find-by-keys` now accepts an `:order-by` option that specifies a sequence of orderings; an ordering is either a column (to sort ascending) or a map from column name to direct (`:asc` or `:desc`).
 
 Changes in 0.6.0-rc1
 

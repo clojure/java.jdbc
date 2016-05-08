@@ -16,7 +16,7 @@ Additional documentation can be found in the [java.jdbc section of clojure-doc.o
 Releases and Dependency Information
 ========================================
 
-Latest stable release: 0.6.0-rc1
+Latest stable release: 0.6.0-rc2
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22java.jdbc%22)
 
@@ -24,14 +24,14 @@ Latest stable release: 0.6.0-rc1
 
 [Leiningen](https://github.com/technomancy/leiningen) dependency information:
 ```clojure
-[org.clojure/java.jdbc "0.6.0-rc1"]
+[org.clojure/java.jdbc "0.6.0-rc2"]
 ```
 [Maven](http://maven.apache.org/) dependency information:
 ```xml
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>java.jdbc</artifactId>
-  <version>0.6.0-rc1</version>
+  <version>0.6.0-rc2</version>
 </dependency>
 ```
 You will also need to add dependencies for the JDBC driver you intend to use. Here are links (to Maven Central) for each of the common database drivers that clojure.java.jdbc is known to be used with:
@@ -104,19 +104,17 @@ Developer Information
 Change Log
 ====================
 
-* Release 0.6.0-rc1 on 2016-05-04
-  * Adds `get-by-id` and `find-by-keys` convenience functions (these were easy to add after the API changes in 0.6.0 and we rely very heavily on them at World Singles so putting them in the core for everyone seemed reasonable).
-  * REMINDER: ALL DEPRECATED FUNCTIONALITY HAS BEEN REMOVED! [JDBC-118](http://dev.clojure.org/jira/browse/JDBC-118).
-    - See alpha2 / alpha1 below for more details.
-
-* Release 0.6.0-alpha2 on 2016-04-18 -- BREAKING RELEASE!
-  * ALL DEPRECATED FUNCTIONALITY HAS BEEN REMOVED! [JDBC-118](http://dev.clojure.org/jira/browse/JDBC-118).
-    - This removes deprecated functionality from db-do-commands and db-do-prepared* which should have been removed in Alpha 1.
-  * Ensures SQL / params are actually vectors prior to destructuring (this addresses an interop edge case from other languages) [JDBC-124](http://dev.clojure.org/jira/browse/JDBC-124).
-  * Fix typo in `insert-multi!` argument validation exception [JDBC-123](http://dev.clojure.org/jira/browse/JDBC-123).
-
-* Release 0.6.0-alpha1 on 2016-04-13 -- BREAKING RELEASE!
-  * (ALMOST) ALL DEPRECATED FUNCTIONALITY HAS BEEN REMOVED! [JDBC-118](http://dev.clojure.org/jira/browse/JDBC-118).
+* Release 0.6.0-rc2 on 2016-05-07 -- **BREAKING RELEASE! DEPRECATED FUNCTIONALITY REMOVED!**
+  * `db-query-with-resultset` now accepts an options map and passes it to `prepare-statement` [JDBC-125](http://dev.clojure.org/jira/browse/JDBC-125). 0.6.0-rc2 / 2016-05-07.
+    - Passing the `prepare-statement` options map as the first element of the `[sql & params]` vector is no longer supported and will throw an `IllegalArgumentException`. It was always very poorly documented and almost never used, as far as I can tell.
+  * `db-query-with-resultset` no longer requires the `sql-params` argument to be a vector: a sequence is acceptable. This is in line with other functions that accept a sequence. 0.6.0-rc2 / 2016-05-07.
+  * `db-query-with-resultset` now accepts a bare SQL string or `PreparedStatement` as the `sql-params` argument, when there are no parameters needed. This is in line with other functions that accept SQL or a `PreparedStatement`. 0.6.0-rc2 / 2016-05-07.
+  * `query`'s options map now is passed to `db-query-with-resultset` and thus can contain options to be used to construct the `PreparedStatement` [JDBC-125](http://dev.clojure.org/jira/browse/JDBC-125). 0.6.0-rc2 / 2016-05-07.
+  * Adds `get-by-id` and `find-by-keys` convenience functions (these were easy to add after the API changes in 0.6.0 and we rely very heavily on them at World Singles so putting them in the core for everyone seemed reasonable). 0.6.0-rc1 / 2016-05-04.
+    - `find-by-keys` accepts an `:order-by` option that expects a sequence of orderings; an ordering is a column name (keyword) or a map from column name (keyword) to direction (`:asc` or `:desc`). 0.6.0-rc2 / 2016-05-07.
+  * Ensures SQL / params are actually vectors prior to destructuring (this addresses an interop edge case from other languages) [JDBC-124](http://dev.clojure.org/jira/browse/JDBC-124). 0.6.0-alpha2 / 2016-04-18.
+  * Fix typo in `insert-multi!` argument validation exception [JDBC-123](http://dev.clojure.org/jira/browse/JDBC-123). 0.6.0-alpha2 / 2016-04-18.
+  * ALL DEPRECATED FUNCTIONALITY HAS BEEN REMOVED! [JDBC-118](http://dev.clojure.org/jira/browse/JDBC-118). 0.6.0-alpha1 / 2016-04-13
     - See changes described in versions 0.5.5 through 0.5.8 for what was deprecated
     - Use version 0.5.8 as a bridge to identify any deprecated API calls on which your code relies!
     - `db-transaction` (deprecated in version 0.3.0) has been removed
