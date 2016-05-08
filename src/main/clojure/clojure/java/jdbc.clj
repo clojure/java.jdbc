@@ -822,9 +822,6 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
                       (the PreparedStatement already contains the SQL query)
   The opts map is passed to prepare-statement.
   Uses executeQuery. This may affect what SQL you can run via query."
-  {:arglists '([db-spec [sql-string & params] func]
-               [db-spec [stmt & params] func]
-               [db-spec [options-map sql-string & params] func])}
   ([db sql-params func] (db-query-with-resultset db sql-params func {}))
   ([db sql-params func opts]
    (let [[sql & params] (if (sql-stmt? sql-params) (vector sql-params) (vec sql-params))
@@ -909,7 +906,9 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
 
 (defn find-by-keys
   "Given a database connection, a table name, a map of column name/value
-  pairs, and an optional options map, return any matching rows."
+  pairs, and an optional options map, return any matching rows.
+  An :order-by option may be supplied to sort the rows by a sequence of
+  columns, e.g,. {:order-by [:name {:age :desc]}"
   ([db table columns] (find-by-keys db table columns {}))
   ([db table columns opts]
    (let [entities (:entities opts identity)
