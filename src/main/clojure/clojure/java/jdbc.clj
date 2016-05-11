@@ -918,7 +918,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
      (query db (into [(str "SELECT * FROM " (table-str table entities)
                            " WHERE " (str/join " AND "
                                                (kv-sql ks vs entities))
-                           (when order-by
+                           (when (seq order-by)
                              (str " ORDER BY "
                                   (order-by-sql order-by entities))))]
                      (remove nil? vs))
