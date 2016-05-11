@@ -94,12 +94,13 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
 (defn- kv-sql
   "Given a sequence of column name keys and a matching sequence of column
   values, and an entities mapping function, return a sequence of SQL fragments
-  that can be joined for part of an UPDATE SET or a SELECT WHERE clause."
-  [ks vs entities]
+  that can be joined for part of an UPDATE SET or a SELECT WHERE clause.
+  Note that we pass the appropriate operator for NULL since it is different
+  in each case."
+  [ks vs entities null-op]
   (map (fn [k v]
          (str (as-sql-name entities k)
-              " = "
-              (if (nil? v) "NULL" "?")))
+              (if (nil? v) null-op " = ?")))
        ks vs))
 
 (defn- ^Properties as-properties
@@ -917,7 +918,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
          vs (vals columns)]
      (query db (into [(str "SELECT * FROM " (table-str table entities)
                            " WHERE " (str/join " AND "
-                                               (kv-sql ks vs entities))
+                                               (kv-sql ks vs entities " IS NULL"))
                            (when (seq order-by)
                              (str " ORDER BY "
                                   (order-by-sql order-by entities))))]
@@ -1113,7 +1114,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
     (cons (str "UPDATE " (table-str table entities)
                " SET " (str/join
                         ","
-                        (kv-sql ks vs entities))
+                        (kv-sql ks vs entities " = NULL"))
                (when where " WHERE ")
                where)
           (concat (remove nil? vs) params))))

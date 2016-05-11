@@ -1,3 +1,8 @@
+Changes in 0.6.0
+
+* `find-by-keys` now correctly handles `nil` values [JDBC-126](http://dev.clojure.org/jira/browse/JDBC-126).
+* `find-by-keys` calls `seq` on `:order-by` to treat `[]` as no `ORDER BY` clause.
+
 Changes in 0.6.0-rc2
 
 * `db-query-with-resultset` now accepts an options map and passes it to `prepare-statement` [JDBC-125](http://dev.clojure.org/jira/browse/JDBC-125).

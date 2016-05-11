@@ -16,7 +16,7 @@ Additional documentation can be found in the [java.jdbc section of clojure-doc.o
 Releases and Dependency Information
 ========================================
 
-Latest stable release: 0.6.0-rc2
+Latest stable release: 0.6.0
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22java.jdbc%22)
 
@@ -24,14 +24,14 @@ Latest stable release: 0.6.0-rc2
 
 [Leiningen](https://github.com/technomancy/leiningen) dependency information:
 ```clojure
-[org.clojure/java.jdbc "0.6.0-rc2"]
+[org.clojure/java.jdbc "0.6.0"]
 ```
 [Maven](http://maven.apache.org/) dependency information:
 ```xml
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>java.jdbc</artifactId>
-  <version>0.6.0-rc2</version>
+  <version>0.6.0</version>
 </dependency>
 ```
 You will also need to add dependencies for the JDBC driver you intend to use. Here are links (to Maven Central) for each of the common database drivers that clojure.java.jdbc is known to be used with:
@@ -104,7 +104,9 @@ Developer Information
 Change Log
 ====================
 
-* Release 0.6.0-rc2 on 2016-05-07 -- **BREAKING RELEASE! DEPRECATED FUNCTIONALITY REMOVED!**
+* Release 0.6.0 on 2016-05-07 -- **BREAKING RELEASE! DEPRECATED FUNCTIONALITY REMOVED!**
+  * `find-by-keys` now correctly handles `nil` values [JDBC-126](http://dev.clojure.org/jira/browse/JDBC-126). 0.6.0 / 2016-05-11.
+  * `find-by-keys` calls `seq` on `:order-by` to treat `[]` as no `ORDER BY` clause. 0.6.0 / 2016-05-11.
   * `db-query-with-resultset` now accepts an options map and passes it to `prepare-statement` [JDBC-125](http://dev.clojure.org/jira/browse/JDBC-125). 0.6.0-rc2 / 2016-05-07.
     - Passing the `prepare-statement` options map as the first element of the `[sql & params]` vector is no longer supported and will throw an `IllegalArgumentException`. It was always very poorly documented and almost never used, as far as I can tell.
   * `db-query-with-resultset` no longer requires the `sql-params` argument to be a vector: a sequence is acceptable. This is in line with other functions that accept a sequence. 0.6.0-rc2 / 2016-05-07.
