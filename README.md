@@ -109,7 +109,7 @@ Change Log
   * PostgreSQL support has been improved: java.jdbc is now tested against PostgreSQL locally (as well as SQLite, Apache Derby, HSQLDB, H2, MySQL, MS SQL Server (both MS Type 4 driver and jTDS driver). [JDBC-127](http://dev.clojure.org/jira/browse/JDBC-127) and [JDBC-129](http://dev.clojure.org/jira/browse/JDBC-129).
 
 
-* Release 0.6.0 on 2016-05-07 -- **BREAKING RELEASE! DEPRECATED FUNCTIONALITY REMOVED!**
+* Release 0.6.0 on 2016-05-11 -- **BREAKING RELEASE! DEPRECATED FUNCTIONALITY REMOVED!**
   * `find-by-keys` now correctly handles `nil` values [JDBC-126](http://dev.clojure.org/jira/browse/JDBC-126). 0.6.0 / 2016-05-11.
   * `find-by-keys` calls `seq` on `:order-by` to treat `[]` as no `ORDER BY` clause. 0.6.0 / 2016-05-11.
   * `db-query-with-resultset` now accepts an options map and passes it to `prepare-statement` [JDBC-125](http://dev.clojure.org/jira/browse/JDBC-125). 0.6.0-rc2 / 2016-05-07.
