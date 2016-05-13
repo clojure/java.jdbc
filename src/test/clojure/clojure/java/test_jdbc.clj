@@ -110,13 +110,12 @@
   "Attempt to drop any test tables before we start a test."
   [t]
   (doseq [db (test-specs)]
-    (sql/with-db-transaction [t-conn db]
-      (doseq [table [:fruit :fruit2 :veggies :veggies2]]
-        (try
-          (sql/db-do-commands t-conn (sql/drop-table-ddl table))
-          (catch Exception _
-            ;; ignore
-            )))))
+    (doseq [table [:fruit :fruit2 :veggies :veggies2]]
+      (try
+        (sql/db-do-commands db (sql/drop-table-ddl table))
+        (catch Exception _
+          ;; ignore
+          ))))
   (t))
 
 (use-fixtures
