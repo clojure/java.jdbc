@@ -16,7 +16,7 @@ Additional documentation can be found in the [java.jdbc section of clojure-doc.o
 Releases and Dependency Information
 ========================================
 
-Latest stable release: 0.6.0
+Latest stable release: 0.6.1
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22java.jdbc%22)
 
@@ -24,14 +24,14 @@ Latest stable release: 0.6.0
 
 [Leiningen](https://github.com/technomancy/leiningen) dependency information:
 ```clojure
-[org.clojure/java.jdbc "0.6.0"]
+[org.clojure/java.jdbc "0.6.1"]
 ```
 [Maven](http://maven.apache.org/) dependency information:
 ```xml
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>java.jdbc</artifactId>
-  <version>0.6.0</version>
+  <version>0.6.1</version>
 </dependency>
 ```
 You will also need to add dependencies for the JDBC driver you intend to use. Here are links (to Maven Central) for each of the common database drivers that clojure.java.jdbc is known to be used with:
@@ -103,6 +103,11 @@ Developer Information
 
 Change Log
 ====================
+
+* Release 0.6.1 on 2016-05-12 -- **IMPORTANT BUG FIX!**
+  * `insert!` and `insert-multi!` now default `:transaction?` to `true` (as they should have done in 0.6.0!) [JDBC-128](http://dev.clojure.org/jira/browse/JDBC-128). These two functions also have improved docstrings to clarify the difference in behavior between inserting rows as maps compared to inserting rows as a series of column values.
+  * PostgreSQL support has been improved: java.jdbc is now tested against PostgreSQL locally (as well as SQLite, Apache Derby, HSQLDB, H2, MySQL, MS SQL Server (both MS Type 4 driver and jTDS driver). [JDBC-127](http://dev.clojure.org/jira/browse/JDBC-127) and [JDBC-129](http://dev.clojure.org/jira/browse/JDBC-129).
+
 
 * Release 0.6.0 on 2016-05-07 -- **BREAKING RELEASE! DEPRECATED FUNCTIONALITY REMOVED!**
   * `find-by-keys` now correctly handles `nil` values [JDBC-126](http://dev.clojure.org/jira/browse/JDBC-126). 0.6.0 / 2016-05-11.

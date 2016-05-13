@@ -1,3 +1,8 @@
+Changes in 0.6.1
+
+* `insert!` and `insert-multi!` now default `:transaction?` to `true` (as they should have done in 0.6.0!) [JDBC-128](http://dev.clojure.org/jira/browse/JDBC-128). These two functions also have improved docstrings to clarify the difference in behavior between inserting rows as maps compared to inserting rows as a series of column values.
+* PostgreSQL support has been improved: java.jdbc is now tested against PostgreSQL locally (as well as SQLite, Apache Derby, HSQLDB, H2, MySQL, MS SQL Server (both MS Type 4 driver and jTDS driver). [JDBC-127](http://dev.clojure.org/jira/browse/JDBC-127) and [JDBC-129](http://dev.clojure.org/jira/browse/JDBC-129).
+
 Changes in 0.6.0
 
 * `find-by-keys` now correctly handles `nil` values [JDBC-126](http://dev.clojure.org/jira/browse/JDBC-126).
