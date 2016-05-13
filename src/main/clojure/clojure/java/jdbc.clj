@@ -1047,27 +1047,28 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
 (defn- insert-rows!
   "Given a database connection, a table name, a sequence of rows, and an options
   map, insert the rows into the database."
-  [db table rows opts]
-  (let [entities   (:entities opts identity)
-        sql-params (map (fn [row]
+  [db table rows {:keys [entities transaction?]
+                  :or {entities identity transaction? true}}]
+  (let [sql-params (map (fn [row]
                           (when-not (map? row)
                             (throw (IllegalArgumentException. "insert! / insert-multi! called with a non-map row")))
                           (insert-single-row-sql table row entities)) rows)]
     (if-let [con (db-find-connection db)]
-      (insert-helper db (:transaction? opts) sql-params)
+      (insert-helper db transaction? sql-params)
       (with-open [con (get-connection db)]
-        (insert-helper (add-connection db con) (:transaction? opts) sql-params)))))
+        (insert-helper (add-connection db con) transaction? sql-params)))))
 
 (defn- insert-cols!
   "Given a database connection, a table name, a sequence of columns names, a
   sequence of vectors of column values, one per row, and an options map,
   insert the rows into the database."
-  [db table cols values opts]
-  (let [sql-params (insert-multi-row-sql table cols values (:entities opts identity))]
+  [db table cols values {:keys [entities transaction?]
+                         :or {entities identity transaction? true}}]
+  (let [sql-params (insert-multi-row-sql table cols values entities)]
     (if-let [con (db-find-connection db)]
-      (db-do-prepared db (:transaction? opts) sql-params {:multi? true})
+      (db-do-prepared db transaction? sql-params {:multi? true})
       (with-open [con (get-connection db)]
-        (db-do-prepared (add-connection db con) (:transaction? opts) sql-params {:multi? true})))))
+        (db-do-prepared (add-connection db con) transaction? sql-params {:multi? true})))))
 
 (defn insert!
   "Given a database connection, a table name and either a map representing a rows,
