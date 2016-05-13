@@ -12,3 +12,5 @@ derby.log
 settings.xml
 target
 test-all.sh
+/postgres-down.sh
+/postgres-up.sh

@@ -34,26 +34,20 @@
     [:derby :hsqldb :h2 :sqlite]))
 
 ;; MS SQL Server requires more specialized configuration:
-(def mssql-host
-  (if-let [host (System/getenv "TEST_MSSQL_HOST")] host "127.0.0.1\\SQLEXPRESS"))
-(def mssql-port
-  (if-let [port (System/getenv "TEST_MSSQL_PORT")] port "1433"))
-(def mssql-user
-  (if-let [user (System/getenv "TEST_MSSQL_USER")] user "sa"))
-(def mssql-pass
-  (if-let [pass (System/getenv "TEST_MSSQL_PASS")] pass ""))
-(def mssql-dbname
-  (if-let [name (System/getenv "TEST_MSSQL_NAME")] name "clojure_test"))
-(def jtds-host
-  (if-let [host (System/getenv "TEST_JTDS_HOST")] host mssql-host))
-(def jtds-port
-  (if-let [port (System/getenv "TEST_JTDS_PORT")] port mssql-port))
-(def jtds-user
-  (if-let [user (System/getenv "TEST_JTDS_USER")] user mssql-user))
-(def jtds-pass
-  (if-let [pass (System/getenv "TEST_JTDS_PASS")] pass mssql-pass))
-(def jtds-dbname
-  (if-let [name (System/getenv "TEST_JTDS_NAME")] name mssql-dbname))
+(def mssql-host   (or (System/getenv "TEST_MSSQL_HOST") "127.0.0.1\\SQLEXPRESS"))
+(def mssql-port   (or (System/getenv "TEST_MSSQL_PORT") "1433"))
+(def mssql-user   (or (System/getenv "TEST_MSSQL_USER") "sa"))
+(def mssql-pass   (or (System/getenv "TEST_MSSQL_PASS") ""))
+(def mssql-dbname (or (System/getenv "TEST_MSSQL_NAME") "clojure_test"))
+(def jtds-host    (or (System/getenv "TEST_JTDS_HOST") mssql-host))
+(def jtds-port    (or (System/getenv "TEST_JTDS_PORT") mssql-port))
+(def jtds-user    (or (System/getenv "TEST_JTDS_USER") mssql-user))
+(def jtds-pass    (or (System/getenv "TEST_JTDS_PASS") mssql-pass))
+(def jtds-dbname  (or (System/getenv "TEST_JTDS_NAME") mssql-dbname))
+
+;; PostgreSQL host/port
+(def postgres-host (or (System/getenv "TEST_POSTGRES_HOST") "127.0.0.1"))
+(def postgres-port (or (System/getenv "TEST_POSTGRES_PORT") "5432"))
 
 ;; database connections used for testing:
 
@@ -76,7 +70,7 @@
                 :dbname "clojure_test_sqlite"})
 
 (def postgres-db {:subprotocol "postgresql"
-                  :subname "clojure_test"
+                  :subname (str "//" postgres-host ":" postgres-port "/clojure_test")
                   :user "clojure_test"
                   :password "clojure_test"})
 
@@ -207,6 +201,11 @@
     "sqlite" {(keyword "last_insert_rowid()") k}
     k))
 
+(defn- select-key [db]
+  (condp = (or (:subprotocol db) (:dbtype db))
+    "postgresql" :id
+    identity))
+
 (defn- generated-key [db k]
   (condp = (or (:subprotocol db) (:dbtype db))
     "derby" 0
@@ -294,14 +293,14 @@
   (doseq [db (test-specs)]
     (create-test-table :fruit2 db)
     (is (= (returned-key db 1)
-           (sql/db-do-prepared-return-keys db "INSERT INTO fruit2 ( name, appearance, cost, grade ) VALUES ( 'test', 'test', 1, 1.0 )")))
+           ((select-key db) (sql/db-do-prepared-return-keys db "INSERT INTO fruit2 ( name, appearance, cost, grade ) VALUES ( 'test', 'test', 1, 1.0 )"))))
     (is (= 1 (sql/query db ["SELECT * FROM fruit2"] {:result-set-fn count})))))
 
 (deftest test-do-prepared1cii
   (doseq [db (test-specs)]
     (create-test-table :fruit2 db)
     (is (= (returned-key db 1)
-           (sql/db-do-prepared-return-keys db ["INSERT INTO fruit2 ( name, appearance, cost, grade ) VALUES ( 'test', 'test', 1, 1.0 )"])))
+           ((select-key db) (sql/db-do-prepared-return-keys db ["INSERT INTO fruit2 ( name, appearance, cost, grade ) VALUES ( 'test', 'test', 1, 1.0 )"]))))
     (is (= 1 (sql/query db ["SELECT * FROM fruit2"] {:result-set-fn count})))))
 
 (deftest test-do-prepared1di
@@ -311,7 +310,7 @@
       (let [stmt (sql/prepare-statement con "INSERT INTO fruit ( name, appearance, cost, grade ) VALUES ( 'test', 'test', 1, 1.0 )"
                                         {:return-keys true})]
         (is (= (returned-key db 1)
-               (sql/db-do-prepared-return-keys db [stmt])))))
+               ((select-key db) (sql/db-do-prepared-return-keys db [stmt]))))))
     (is (= 1 (sql/query db ["SELECT * FROM fruit"] {:result-set-fn count})))))
 
 (deftest test-do-prepared1dii
@@ -321,7 +320,7 @@
       (let [stmt (sql/prepare-statement con "INSERT INTO fruit ( name, appearance, cost, grade ) VALUES ( 'test', 'test', 1, 1.0 )"
                                         {:return-keys true})]
         (is (= (returned-key db 1)
-               (sql/db-do-prepared-return-keys db stmt)))))
+               ((select-key db) (sql/db-do-prepared-return-keys db stmt))))))
     (is (= 1 (sql/query db ["SELECT * FROM fruit"] {:result-set-fn count})))))
 
 (deftest test-do-prepared1e
@@ -332,7 +331,7 @@
       (with-open [con (sql/get-connection db)]
         (let [stmt (sql/prepare-statement con "INSERT INTO fruit ( name, appearance, cost, grade ) VALUES ( 'test', 'test', 1, 1.0 )"
                                           {:return-keys ["id"]})]
-          (is (= (returned-key db 1) (sql/db-do-prepared-return-keys db stmt)))))
+          (is (= (returned-key db 1) ((select-key db) (sql/db-do-prepared-return-keys db stmt))))))
       (is (= 1 (sql/query db ["SELECT * FROM fruit"] {:result-set-fn count}))))))
 
 (deftest test-do-prepared2
@@ -401,10 +400,10 @@
 (deftest test-insert-records
   (doseq [db (test-specs)]
     (create-test-table :fruit db)
-    (let [r (sql/insert-multi! db
-                               :fruit
-                               [{:name "Pomegranate" :appearance "fresh" :cost 585}
-                                {:name "Kiwifruit" :grade 93}])]
+    (let [r (map (select-key db) (sql/insert-multi! db
+                                                    :fruit
+                                                    [{:name "Pomegranate" :appearance "fresh" :cost 585}
+                                                     {:name "Kiwifruit" :grade 93}]))]
       (is (= (list (returned-key db 1) (returned-key db 2)) r)))
     (is (= 2 (sql/query db ["SELECT * FROM fruit"] {:result-set-fn count})))
     (is (= "Pomegranate" (sql/query db ["SELECT * FROM fruit WHERE cost = ?" 585] {:row-fn :name :result-set-fn first})))))
@@ -771,36 +770,31 @@
 (deftest insert-one-row
   (doseq [db (test-specs)]
     (create-test-table :fruit db)
-    (let [new-keys (sql/insert! db :fruit {:name "Apple"})
-          new-keys (if (postgres? db) (map :id new-keys) new-keys)]
+    (let [new-keys (map (select-key db) (sql/insert! db :fruit {:name "Apple"}))]
       (is (= [(returned-key db 1)] new-keys)))))
 
 (deftest insert-one-row-opts
   (doseq [db (test-specs)]
     (create-test-table :fruit db)
-    (let [new-keys (sql/insert! db :fruit {:name "Apple"} {})
-          new-keys (if (postgres? db) (map :id new-keys) new-keys)]
+    (let [new-keys (map (select-key db) (sql/insert! db :fruit {:name "Apple"} {}))]
       (is (= [(returned-key db 1)] new-keys)))))
 
 (deftest insert-one-col-val
   (doseq [db (test-specs)]
     (create-test-table :fruit db)
-    (let [new-keys (sql/insert! db :fruit [:name] ["Apple"])
-          new-keys (if (postgres? db) (map :id new-keys) new-keys)]
+    (let [new-keys (sql/insert! db :fruit [:name] ["Apple"])]
       (is (= [1] new-keys)))))
 
 (deftest insert-one-col-val-opts
   (doseq [db (test-specs)]
     (create-test-table :fruit db)
-    (let [new-keys (sql/insert! db :fruit [:name] ["Apple"] {})
-          new-keys (if (postgres? db) (map :id new-keys) new-keys)]
+    (let [new-keys (sql/insert! db :fruit [:name] ["Apple"] {})]
       (is (= [1] new-keys)))))
 
 (deftest insert-query
   (doseq [db (test-specs)]
     (create-test-table :fruit db)
-    (let [new-keys (sql/insert! db :fruit {:name "Apple"})
-          new-keys (if (postgres? db) (map :id new-keys) new-keys)]
+    (let [new-keys (map (select-key db) (sql/insert! db :fruit {:name "Apple"}))]
       (is (= [(returned-key db 1)] new-keys))
       (is (= [{:id (generated-key db 1) :name "Apple" :appearance nil :grade nil :cost nil}]
              (sql/query db "SELECT * FROM fruit")))
@@ -815,8 +809,7 @@
 (deftest insert-two-by-map-and-query
   (doseq [db (test-specs)]
     (create-test-table :fruit db)
-    (let [new-keys (sql/insert-multi! db :fruit [{:name "Apple"} {:name "Pear"}])
-          new-keys (if (postgres? db) (map :id new-keys) new-keys)
+    (let [new-keys (map (select-key db) (sql/insert-multi! db :fruit [{:name "Apple"} {:name "Pear"}]))
           rows (sql/query db ["SELECT * FROM fruit ORDER BY name"])]
       (is (= [(returned-key db 1) (returned-key db 2)] new-keys))
       (is (= [{:id (generated-key db 1) :name "Apple" :appearance nil :grade nil :cost nil}
@@ -825,8 +818,7 @@
 (deftest insert-two-by-map-and-query-as-arrays
   (doseq [db (test-specs)]
     (create-test-table :fruit db)
-    (let [new-keys (sql/insert-multi! db :fruit [{:name "Apple"} {:name "Pear"}])
-          new-keys (if (postgres? db) (map :id new-keys) new-keys)
+    (let [new-keys (map (select-key db) (sql/insert-multi! db :fruit [{:name "Apple"} {:name "Pear"}]))
           rows (sql/query db ["SELECT * FROM fruit ORDER BY name"]
                           {:as-arrays? :cols-as-is})]
       (is (= [(returned-key db 1) (returned-key db 2)] new-keys))
@@ -846,8 +838,7 @@
 (deftest insert-update-and-query
   (doseq [db (test-specs)]
     (create-test-table :fruit db)
-    (let [new-keys (sql/insert! db :fruit {:name "Apple"})
-          new-keys (if (postgres? db) (map :id new-keys) new-keys)
+    (let [new-keys (map (select-key db) (sql/insert! db :fruit {:name "Apple"}))
           update-result (sql/update! db :fruit {:cost 12 :grade 1.2 :appearance "Green"}
                                      ["id = ?" (generated-key db 1)])
           rows (sql/query db ["SELECT * FROM fruit"])]
@@ -861,8 +852,7 @@
 (deftest insert-delete-and-query
   (doseq [db (test-specs)]
     (create-test-table :fruit db)
-    (let [new-keys (sql/insert! db :fruit {:name "Apple"})
-          new-keys (if (postgres? db) (map :id new-keys) new-keys)
+    (let [new-keys (map (select-key db) (sql/insert! db :fruit {:name "Apple"}))
           delete-result (sql/delete! db :fruit
                                      ["id = ?" (generated-key db 1)])
           rows (sql/query db ["SELECT * FROM fruit"])]
@@ -874,8 +864,7 @@
   (doseq [db (test-specs)]
     (sql/with-db-connection [con-db db]
       (create-test-table :fruit con-db)
-      (let [new-keys (sql/insert! con-db :fruit {:name "Apple"})
-            new-keys (if (postgres? con-db) (map :id new-keys) new-keys)
+      (let [new-keys (map (select-key db) (sql/insert! con-db :fruit {:name "Apple"}))
             delete-result (sql/delete! con-db :fruit
                                        ["id = ?" (generated-key con-db 1)])
             rows (sql/query con-db ["SELECT * FROM fruit"])]
