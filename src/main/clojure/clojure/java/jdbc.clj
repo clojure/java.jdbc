@@ -1073,6 +1073,10 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
   "Given a database connection, a table name and either a map representing a rows,
   or a list of column names followed by a list of column values also representing
   a single row, perform an insert.
+  When inserting a row as a map, the result is the database-specific form of the
+  generated keys, if available (note: PostgreSQL returns the whole row).
+  When inserting a row as a list of column values, the result is the count of
+  rows affected (1), if available (from getUpdateCount after executeBatch).
   The row map or column value vector may be followed by a map of options:
   The :transaction? option specifies whether to run in a transaction or not.
   The default is true (use a transaction). The :entities option specifies how
@@ -1090,6 +1094,11 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
   rows) or a sequence of column names, followed by a sequence of vectors (for
   the values in each row), and possibly a map of options, insert that data into
   the database.
+  When inserting rows as a sequence of maps, the result is a sequence of the
+  generated keys, if available (note: PostgreSQL returns the whole rows).
+  When inserting rows as a sequence of lists of column values, the result is
+  a sequence of the counts of rows affected (a sequence of 1's), if available.
+  Yes, that is singularly unhelpful. Thank you getUpdateCount and executeBatch!
   The :transaction? option specifies whether to run in a transaction or not.
   The default is true (use a transaction). The :entities option specifies how
   to convert the table name and column names to SQL entities."
