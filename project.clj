@@ -2,7 +2,7 @@
 ;; develop and test java.jdbc locally. The pom.xml file is the
 ;; "system of record" as far as the project version is concerned.
 
-(defproject org.clojure/java.jdbc "0.6.0"
+(defproject org.clojure/java.jdbc "0.6.2-SNAPSHOT"
   :description "A low-level Clojure wrapper for JDBC-based access to databases."
   :parent [org.clojure/pom.contrib "0.1.2"]
   :url "https://github.com/clojure/java.jdbc"
@@ -17,13 +17,14 @@
                  ;; appropriate for you. Again, note that this project.clj
                  ;; file exists for convenience -- the pom.xml file is the
                  ;; "system of record" as far as dependencies go!
-                 [org.apache.derby/derby "10.11.1.1"]
+                 [org.apache.derby/derby "10.12.1.1"]
                  [org.hsqldb/hsqldb "2.3.3"]
-                 [com.h2database/h2 "1.4.188"]
+                 [com.h2database/h2 "1.4.191"]
                  [net.sourceforge.jtds/jtds "1.3.1"]
-                 [mysql/mysql-connector-java "5.1.36"]
-                 [org.postgresql/postgresql "9.4-1201-jdbc41"]
-                 [org.xerial/sqlite-jdbc "3.8.11.1"]
+                 ;; Tests fail with 6.0.2 driver:
+                 [mysql/mysql-connector-java "5.1.39"]
+                 [org.postgresql/postgresql "9.4.1208.jre7"]
+                 [org.xerial/sqlite-jdbc "3.8.11.2"]
                  ;; if you have the MS driver in your local repo
                  [sqljdbc4 "4.0"]
                  ]
