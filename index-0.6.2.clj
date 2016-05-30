@@ -6,7 +6,14 @@
    :wiki-url
    "http://clojure.github.com/java.jdbc/clojure.java.jdbc-api.html",
    :source-url
-   "https://github.com/clojure/java.jdbc/blob/1d0cadf61920d2b3862f67ac916b7778f2a46ac6/src/main/clojure/clojure/java/jdbc.clj"}),
+   "https://github.com/clojure/java.jdbc/blob/1d0cadf61920d2b3862f67ac916b7778f2a46ac6/src/main/clojure/clojure/java/jdbc.clj"}
+  {:doc "Optional specifications for use with Clojure 1.9 or later.",
+   :author "Sean Corfield",
+   :name "clojure.java.jdbc.spec",
+   :wiki-url
+   "http://clojure.github.com/java.jdbc/clojure.java.jdbc.spec-api.html",
+   :source-url
+   "https://github.com/clojure/java.jdbc/blob/94bc439cb926d7f3d7ace4f86eac5cc5733b382a/src/main/clojure/clojure/java/jdbc/spec.clj"}),
  :vars
  ({:raw-source-url
    "https://github.com/clojure/java.jdbc/raw/1d0cadf61920d2b3862f67ac916b7778f2a46ac6/src/main/clojure/clojure/java/jdbc.clj",

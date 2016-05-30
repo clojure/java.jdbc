@@ -168,6 +168,9 @@ namespace.
       <a href="#clojure.java.jdbc/with-db-transaction" class="toc-entry-anchor">with-db-transaction</a>
       
     </div>
+  </div><div class="toc-section" style="margin-left: 1em;">
+    <a style="margin-top: 3px;" href="#clojure.java.jdbc.spec">clojure.java.jdbc.spec</a>
+    
   </div>
 </div>
 </div>
@@ -222,6 +225,7 @@ but it can be extended to provide custom behavior for special types.</pre>
       <span id="var-type">function</span><br />
       <pre id="var-usage">Usage: (result-set-read-column val rsmeta idx)
 </pre>
+      <pre id="var-specs"></pre>
       <pre id="var-docstr">Function for transforming values after reading them from the database</pre>
       
       
@@ -247,6 +251,7 @@ methods of PreparedStatement to convert and set parameter values.</pre>
       <span id="var-type">function</span><br />
       <pre id="var-usage">Usage: (set-parameter val stmt ix)
 </pre>
+      <pre id="var-specs"></pre>
       <pre id="var-docstr">Convert a Clojure value into a SQL value and store it as the ix'th
 parameter in the given SQL statement object.</pre>
       
@@ -272,6 +277,7 @@ exotic types supported by different databases.</pre>
       <span id="var-type">function</span><br />
       <pre id="var-usage">Usage: (sql-value val)
 </pre>
+      <pre id="var-specs"></pre>
       <pre id="var-docstr">Convert a Clojure value into a SQL value.</pre>
       
       
@@ -294,6 +300,7 @@ exotic types supported by different databases.</pre>
     <pre id="var-usage">Usage: (as-sql-name f)
        (as-sql-name f x)
 </pre>
+    <pre id="var-specs"></pre>
     <pre id="var-docstr">Given a naming strategy function and a keyword or string, return
 a string per that naming strategy.
 A name of the form x.y is treated as multiple names, x, y, etc,
@@ -311,6 +318,7 @@ strategy quotes identifiers with `.</pre>
     <pre id="var-usage">Usage: (create-table-ddl table specs)
        (create-table-ddl table specs opts)
 </pre>
+    <pre id="var-specs"></pre>
     <pre id="var-docstr">Given a table name and a vector of column specs return the DDL string for
 creating that table. An options map may be provided that can contain:
 :table-spec -- a string that is appended to the DDL -- and/or
@@ -325,6 +333,7 @@ creating that table. An options map may be provided that can contain:
     <span id="var-type">function</span><br />
     <pre id="var-usage">Usage: (db-connection db)
 </pre>
+    <pre id="var-specs"></pre>
     <pre id="var-docstr">Returns the current database connection (or throws if there is none)</pre>
     
     
@@ -337,6 +346,7 @@ creating that table. An options map may be provided that can contain:
     <pre id="var-usage">Usage: (db-do-commands db sql-commands)
        (db-do-commands db transaction? sql-commands)
 </pre>
+    <pre id="var-specs"></pre>
     <pre id="var-docstr">Executes SQL commands on the specified database connection. Wraps the commands
 in a transaction if transaction? is true. transaction? can be ommitted and it
 defaults to true. Accepts a single SQL command (string) or a vector of them.
@@ -353,6 +363,7 @@ Uses executeBatch. This may affect what SQL you can run via db-do-commands.</pre
        (db-do-prepared db transaction? sql-params)
        (db-do-prepared db transaction? sql-params opts)
 </pre>
+    <pre id="var-specs"></pre>
     <pre id="var-docstr">Executes an (optionally parameterized) SQL prepared statement on the
 open database connection. Each param-group is a seq of values for all of
 the parameters. transaction? can be omitted and defaults to true.
@@ -370,6 +381,7 @@ Return a seq of update counts (one count for each param-group).</pre>
        (db-do-prepared-return-keys db transaction? sql-params)
        (db-do-prepared-return-keys db transaction? sql-params opts)
 </pre>
+    <pre id="var-specs"></pre>
     <pre id="var-docstr">Executes an (optionally parameterized) SQL prepared statement on the
 open database connection. The param-group is a seq of values for all of
 the parameters. transaction? can be ommitted and will default to true.
@@ -386,6 +398,7 @@ case :return-keys MUST BE SET on that PreparedStatement!</pre>
     <span id="var-type">function</span><br />
     <pre id="var-usage">Usage: (db-find-connection db)
 </pre>
+    <pre id="var-specs"></pre>
     <pre id="var-docstr">Returns the current database connection (or nil if there is none)</pre>
     
     
@@ -397,6 +410,7 @@ case :return-keys MUST BE SET on that PreparedStatement!</pre>
     <span id="var-type">function</span><br />
     <pre id="var-usage">Usage: (db-is-rollback-only db)
 </pre>
+    <pre id="var-specs"></pre>
     <pre id="var-docstr">Returns true if the outermost transaction will rollback rather than
 commit when complete</pre>
     
@@ -410,6 +424,7 @@ commit when complete</pre>
     <pre id="var-usage">Usage: (db-query-with-resultset db sql-params func)
        (db-query-with-resultset db sql-params func opts)
 </pre>
+    <pre id="var-specs"></pre>
     <pre id="var-docstr">Executes a query, then evaluates func passing in the raw ResultSet as an
  argument. The second argument is a vector containing either:
   [sql &amp; params] - a SQL query, followed by any parameters it needs
@@ -427,6 +442,7 @@ Uses executeQuery. This may affect what SQL you can run via query.</pre>
     <span id="var-type">function</span><br />
     <pre id="var-usage">Usage: (db-set-rollback-only! db)
 </pre>
+    <pre id="var-specs"></pre>
     <pre id="var-docstr">Marks the outermost transaction such that it will rollback rather than
 commit when complete</pre>
     
@@ -440,6 +456,7 @@ commit when complete</pre>
     <pre id="var-usage">Usage: (db-transaction* db func)
        (db-transaction* db func {:keys [isolation read-only?], :as opts})
 </pre>
+    <pre id="var-specs"></pre>
     <pre id="var-docstr">Evaluates func as a transaction on the open database connection. Any
 nested transactions are absorbed into the outermost transaction. By
 default, all database updates are committed together as a group after
@@ -462,6 +479,7 @@ The read-only? option puts the transaction in readonly mode (if supported).</pre
     <span id="var-type">function</span><br />
     <pre id="var-usage">Usage: (db-unset-rollback-only! db)
 </pre>
+    <pre id="var-specs"></pre>
     <pre id="var-docstr">Marks the outermost transaction such that it will not rollback when complete</pre>
     
     
@@ -474,6 +492,7 @@ The read-only? option puts the transaction in readonly mode (if supported).</pre
     <pre id="var-usage">Usage: (delete! db table where-clause)
        (delete! db table where-clause {:keys [entities transaction?], :or {entities identity, transaction? true}})
 </pre>
+    <pre id="var-specs"></pre>
     <pre id="var-docstr">Given a database connection, a table name and a where clause of columns to match,
 perform a delete. The options may specify how to transform column names in the
 map (default 'as-is') and whether to run the delete in a transaction (default true).
@@ -492,6 +511,7 @@ is equivalent to:
     <pre id="var-usage">Usage: (drop-table-ddl name)
        (drop-table-ddl name {:keys [entities], :or {entities identity}})
 </pre>
+    <pre id="var-specs"></pre>
     <pre id="var-docstr">Given a table name, return the DDL string for dropping that table.</pre>
     
     
@@ -504,6 +524,7 @@ is equivalent to:
     <pre id="var-usage">Usage: (execute! db sql-params)
        (execute! db sql-params {:keys [transaction? multi?], :or {transaction? true, multi? false}})
 </pre>
+    <pre id="var-specs"></pre>
     <pre id="var-docstr">Given a database connection and a vector containing SQL (or PreparedStatement)
 followed by optional parameters, perform a general (non-select) SQL operation.
 The :transaction? option specifies whether to run the operation in a
@@ -525,6 +546,7 @@ executeBatch will be used. This may affect what SQL you can run via execute!</pr
     <pre id="var-usage">Usage: (find-by-keys db table columns)
        (find-by-keys db table columns opts)
 </pre>
+    <pre id="var-specs"></pre>
     <pre id="var-docstr">Given a database connection, a table name, a map of column name/value
 pairs, and an optional options map, return any matching rows.
 An :order-by option may be supplied to sort the rows by a sequence of
@@ -541,6 +563,7 @@ columns, e.g,. {:order-by [:name {:age :desc]}</pre>
        (get-by-id db table pk-value pk-name-or-opts)
        (get-by-id db table pk-value pk-name opts)
 </pre>
+    <pre id="var-specs"></pre>
     <pre id="var-docstr">Given a database connection, a table name, a primary key value, an
 optional primary key column name, and an optional options map, return
 a single matching row, or nil.
@@ -555,6 +578,7 @@ The primary key column name defaults to :id.</pre>
     <span id="var-type">function</span><br />
     <pre id="var-usage">Usage: (get-connection {:keys [connection factory connection-uri classname subprotocol subname dbtype dbname host port datasource username password user name environment], :as db-spec})
 </pre>
+    <pre id="var-specs"></pre>
     <pre id="var-docstr">Creates a connection to a database. db-spec is usually a map containing connection
 parameters but can also be a URI or a String. The various possibilities are described
 below:
@@ -615,6 +639,7 @@ String:
        (insert! db table cols-or-row values-or-opts)
        (insert! db table cols values opts)
 </pre>
+    <pre id="var-specs"></pre>
     <pre id="var-docstr">Given a database connection, a table name and either a map representing a rows,
 or a list of column names followed by a list of column values also representing
 a single row, perform an insert.
@@ -638,6 +663,7 @@ to convert the table name and column names to SQL entities.</pre>
        (insert-multi! db table cols-or-rows values-or-opts)
        (insert-multi! db table cols values opts)
 </pre>
+    <pre id="var-specs"></pre>
     <pre id="var-docstr">Given a database connection, a table name and either a sequence of maps (for
 rows) or a sequence of column names, followed by a sequence of vectors (for
 the values in each row), and possibly a map of options, insert that data into
@@ -660,6 +686,7 @@ to convert the table name and column names to SQL entities.</pre>
     <span id="var-type">macro</span><br />
     <pre id="var-usage">Usage: (metadata-query meta-query &amp; opt-args)
 </pre>
+    <pre id="var-specs"></pre>
     <pre id="var-docstr">Given a Java expression that extracts metadata (in the context of with-db-metadata),
 and a map of options like metadata-result, manage the connection for a single
 metadata-based query. Example usage:
@@ -678,6 +705,7 @@ metadata-based query. Example usage:
     <pre id="var-usage">Usage: (metadata-result rs-or-value)
        (metadata-result rs-or-value {:keys [identifiers as-arrays? row-fn result-set-fn], :or {identifiers lower-case, row-fn identity}})
 </pre>
+    <pre id="var-specs"></pre>
     <pre id="var-docstr">If the argument is a java.sql.ResultSet, turn it into a result-set-seq,
 else return it as-is. This makes working with metadata easier.
 Also accepts an option map containing :identifiers, :as-arrays?, :row-fn,
@@ -694,6 +722,7 @@ See query for more details.</pre>
     <pre id="var-usage">Usage: (prepare-statement con sql)
        (prepare-statement con sql {:keys [return-keys result-type concurrency cursors fetch-size max-rows timeout]})
 </pre>
+    <pre id="var-specs"></pre>
     <pre id="var-docstr">Create a prepared statement from a connection, a SQL string and a map
 of options:
    :return-keys truthy | nil - default nil
@@ -715,6 +744,7 @@ of options:
     <span id="var-type">function</span><br />
     <pre id="var-usage">Usage: (print-sql-exception exception)
 </pre>
+    <pre id="var-specs"></pre>
     <pre id="var-docstr">Prints the contents of an SQLException to *out*</pre>
     
     
@@ -726,6 +756,7 @@ of options:
     <span id="var-type">function</span><br />
     <pre id="var-usage">Usage: (print-sql-exception-chain exception)
 </pre>
+    <pre id="var-specs"></pre>
     <pre id="var-docstr">Prints a chain of SQLExceptions to *out*</pre>
     
     
@@ -737,6 +768,7 @@ of options:
     <span id="var-type">function</span><br />
     <pre id="var-usage">Usage: (print-update-counts exception)
 </pre>
+    <pre id="var-specs"></pre>
     <pre id="var-docstr">Prints the update counts from a BatchUpdateException to *out*</pre>
     
     
@@ -749,6 +781,7 @@ of options:
     <pre id="var-usage">Usage: (query db sql-params)
        (query db sql-params {:keys [result-set-fn row-fn identifiers as-arrays?], :or {row-fn identity, identifiers lower-case}, :as opts})
 </pre>
+    <pre id="var-specs"></pre>
     <pre id="var-docstr">Given a database connection and a vector containing SQL and optional parameters,
 perform a simple database query. The options specify how to construct the result
 set (and are also passed to prepare-statement as needed):
@@ -772,6 +805,7 @@ See also prepare-statement for additional options.</pre>
     <pre id="var-usage">Usage: (quoted q)
        (quoted q x)
 </pre>
+    <pre id="var-specs"></pre>
     <pre id="var-docstr">With a single argument, returns a naming strategy function that quotes
 names. The single argument can either be a single character or a vector
 pair of characters.
@@ -790,6 +824,7 @@ and returns the fully quoted string:
     <pre id="var-usage">Usage: (result-set-seq rs)
        (result-set-seq rs {:keys [identifiers as-arrays?], :or {identifiers lower-case}})
 </pre>
+    <pre id="var-specs"></pre>
     <pre id="var-docstr">Creates and returns a lazy sequence of maps corresponding to the rows in the
 java.sql.ResultSet rs. Loosely based on clojure.core/resultset-seq but it
 respects the specified naming strategy. Duplicate column names are made unique
@@ -809,6 +844,7 @@ keywords. The default is to convert them to lower case.</pre>
     <pre id="var-usage">Usage: (update! db table set-map where-clause)
        (update! db table set-map where-clause {:keys [entities transaction?], :or {entities identity, transaction? true}})
 </pre>
+    <pre id="var-specs"></pre>
     <pre id="var-docstr">Given a database connection, a table name, a map of column values to set and a
 where clause of columns to match, perform an update. The options may specify
 how column names (in the set / match maps) should be transformed (default
@@ -827,6 +863,7 @@ is equivalent to:
     <span id="var-type">macro</span><br />
     <pre id="var-usage">Usage: (with-db-connection binding &amp; body)
 </pre>
+    <pre id="var-specs"></pre>
     <pre id="var-docstr">Evaluates body in the context of an active connection to the database.
 (with-db-connection [con-db db-spec]
   ... con-db ...)</pre>
@@ -840,6 +877,7 @@ is equivalent to:
     <span id="var-type">macro</span><br />
     <pre id="var-usage">Usage: (with-db-metadata binding &amp; body)
 </pre>
+    <pre id="var-specs"></pre>
     <pre id="var-docstr">Evaluates body in the context of an active connection with metadata bound
 to the specified name. See also metadata-result for dealing with the results
 of operations that retrieve information from the metadata.
@@ -855,6 +893,7 @@ of operations that retrieve information from the metadata.
     <span id="var-type">macro</span><br />
     <pre id="var-usage">Usage: (with-db-transaction binding &amp; body)
 </pre>
+    <pre id="var-specs"></pre>
     <pre id="var-docstr">Evaluates body in the context of a transaction on the specified database connection.
 The binding provides the database connection for the transaction and the name to which
 that is bound for evaluation of the body. The binding may also specify the isolation
@@ -868,6 +907,14 @@ See db-transaction* for more details.</pre>
     <a id="var-source" href="https://github.com/clojure/java.jdbc/blob/1d0cadf61920d2b3862f67ac916b7778f2a46ac6/src/main/clojure/clojure/java/jdbc.clj#L639">Source</a>
   </div>
 </div>
+<br />
+<h2 id="clojure.java.jdbc.spec">clojure.java.jdbc.spec</h2>
+<pre id="namespace-docstr">Optional specifications for use with Clojure 1.9 or later.</pre>
+
+
+<br />
+
+
 
 
 </div>
