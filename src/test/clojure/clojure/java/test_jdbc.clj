@@ -24,6 +24,12 @@
   (:use clojure.test)
   (:require [clojure.java.jdbc :as sql]))
 
+(try
+  (require 'clojure.java.jdbc.spec)
+  ((resolve 'clojure.spec/instrument-ns) 'clojure.java.jdbc)
+  (println "Instrumenting clojure.java.jdbc with clojure.spec")
+  (catch Exception _))
+
 ;; Set test-databases according to whether you have the local database available:
 ;; Possible values so far: [:mysql :postgres :derby :hsqldb :mysql-str :postgres-str]
 ;; Apache Derby and HSQLDB can run without an external setup.
