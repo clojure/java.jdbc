@@ -1,4 +1,5 @@
-;;  Copyright (c) Stephen C. Gilardi. All rights reserved.  The use and
+;;  Copyright (c) 2008-2016 Sean Corfield, Stephen C. Gilardi.
+;;                                       All rights reserved.  The use and
 ;;  distribution terms for this software are covered by the Eclipse Public
 ;;  License 1.0 (http://opensource.org/licenses/eclipse-1.0.php) which can
 ;;  be found in the file epl-v10.html at the root of this distribution.  By
@@ -64,3 +65,25 @@
          (sql/create-table-ddl :thing [[:col1 "int"] ["col2" :int]]
                                {:table-spec "ENGINE=MyISAM"
                                 :entities clojure.string/upper-case}))))
+
+;; since we have clojure.spec instrumentation enabled for Clojure 1.9.0
+;; we need to account for the fact that we'll get different exceptions
+;; for Clojure < 1.9.0 since the spec will trigger first and obscure
+;; our own argument checking on 1.9.0+
+
+(defn argument-exception?
+  "Given a thunk, try to execute it and return true if it throws
+  either an IllegalArgumentException or a Clojure exception from
+  clojure.spec."
+  [thunk]
+  (try
+    (thunk)
+    false
+    (catch IllegalArgumentException _ true)
+    (catch clojure.lang.ExceptionInfo e
+      (re-find #"did not conform to spec" (.getMessage e)))))
+
+(deftest test-invalid-create-table-ddl
+  (is (argument-exception? (fn [] (sql/create-table-ddl :thing [[]]))))
+  (is (argument-exception? (fn [] (sql/create-table-ddl :thing [[:col1 "int"] []]))))
+  (is (argument-exception? (fn [] (sql/create-table-ddl :thing [:col1 "int"])))))
