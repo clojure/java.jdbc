@@ -620,11 +620,21 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
               (throw t))
             (finally
               (db-unset-rollback-only! nested-db)
-              (.setAutoCommit con auto-commit)
+              ;; the following can throw SQLExceptions but we do not
+              ;; want those to replace any exception currently being
+              ;; handled -- and if the connection got closed, we just
+              ;; want to ignore exceptions here anyway
+              (try
+                (.setAutoCommit con auto-commit)
+                (catch Exception _))
               (when isolation
-                (.setTransactionIsolation con old-isolation))
+                (try
+                  (.setTransactionIsolation con old-isolation)
+                  (catch Exception _)))
               (when read-only?
-                (.setReadOnly con old-readonly))))))
+                (try
+                  (.setReadOnly con old-readonly)
+                  (catch Exception _)))))))
        (with-open [con (get-connection db)]
          (db-transaction* (add-connection db con) func opts)))
      (do
