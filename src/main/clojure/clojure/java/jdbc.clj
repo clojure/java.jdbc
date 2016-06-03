@@ -1156,8 +1156,16 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
              {:transaction? transaction?})))
 
 (defn create-table-ddl
-  "Given a table name and a vector of column specs return the DDL string for
-  creating that table. An options map may be provided that can contain:
+  "Given a table name and a vector of column specs, return the DDL string for
+  creating that table. Each column spec is, in turn, a vector of keywords or
+  strings that is converted to strings and concatenated with spaces to form
+  a single column description in DDL, e.g.,
+    [:cost :int \"not null\"]
+    [:name \"varchar(32)\"]
+  The first element of a column spec is treated as a SQL entity (so if you
+  provide the :entities option, that will be used to transform it). The
+  remaining elements are left as-is when converting them to strings.
+  An options map may be provided that can contain:
   :table-spec -- a string that is appended to the DDL -- and/or
   :entities -- a function to specify how column names are transformed."
   ([table specs] (create-table-ddl table specs {}))
