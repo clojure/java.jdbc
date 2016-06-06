@@ -3,15 +3,14 @@
    "A Clojure interface to SQL databases via JDBC\n\nclojure.java.jdbc provides a simple abstraction for CRUD (create, read,\nupdate, delete) operations on a SQL database, along with basic transaction\nsupport. Basic DDL operations are also supported (create table, drop table,\naccess to table metadata).\n\nMaps are used to represent records, making it easy to store and retrieve\ndata. Results can be processed using any standard sequence operations.\n\nFor most operations, Java's PreparedStatement is used so your SQL and\nparameters can be represented as simple vectors where the first element\nis the SQL string, with ? for each parameter, and the remaining elements\nare the parameter values to be substituted. In general, operations return\nthe number of rows affected, except for a single record insert where any\ngenerated keys are returned (as a map).\n\nFor more documentation, see:\n\nhttp://clojure-doc.org/articles/ecosystem/java_jdbc/home.html",
    :author "Stephen C. Gilardi, Sean Corfield",
    :name "clojure.java.jdbc",
-   :wiki-url
-   "http://clojure.github.io/java.jdbc/clojure.java.jdbc-api.html",
+   :wiki-url "http://clojure.github.io/java.jdbc/index.html",
    :source-url
    "https://github.com/clojure/java.jdbc/blob/96850554e51a358df13c11a8b2056051df9cae44/src/main/clojure/clojure/java/jdbc.clj"}
   {:doc "Optional specifications for use with Clojure 1.9 or later.",
    :author "Sean Corfield",
    :name "clojure.java.jdbc.spec",
    :wiki-url
-   "http://clojure.github.io/java.jdbc/clojure.java.jdbc-api.html#clojure.java.jdbc.spec",
+   "http://clojure.github.io/java.jdbc/index.html#clojure.java.jdbc.spec",
    :source-url
    "https://github.com/clojure/java.jdbc/blob/94bc439cb926d7f3d7ace4f86eac5cc5733b382a/src/main/clojure/clojure/java/jdbc/spec.clj"}),
  :vars
