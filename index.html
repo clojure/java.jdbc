@@ -426,7 +426,7 @@ An options map may be provided that can contain:
 </pre>
     <pre id="var-docstr">Returns the current database connection (or throws if there is none)</pre>
     <pre id="var-specs">Specs:
-  Args: (cat:db-spec :clojure.java.jdbc.spec/db-spec)
+  Args: (cat :db-spec :clojure.java.jdbc.spec/db-spec)
   Ret:  (instance? java.sql.Connection %)</pre>
     
     
@@ -493,7 +493,7 @@ case :return-keys MUST BE SET on that PreparedStatement!</pre>
 </pre>
     <pre id="var-docstr">Returns the current database connection (or nil if there is none)</pre>
     <pre id="var-specs">Specs:
-  Args: (cat:db-spec :clojure.java.jdbc.spec/db-spec)
+  Args: (cat :db-spec :clojure.java.jdbc.spec/db-spec)
   Ret:  (and
           (or
            :clojure.spec/nil nil?
@@ -752,7 +752,7 @@ String:
   subprotocol://user:password@host:post/subname
                An optional prefix of jdbc: is allowed.</pre>
     <pre id="var-specs">Specs:
-  Args: (cat:db-spec :clojure.java.jdbc.spec/db-spec)
+  Args: (cat :db-spec :clojure.java.jdbc.spec/db-spec)
   Ret:  (instance? java.sql.Connection %)</pre>
     
     
@@ -1071,7 +1071,7 @@ See db-transaction* for more details.</pre>
     <hr />
     <h2 id=":clojure.java.jdbc.spec/column-spec">::column-spec</h2>
     <span id="spec-type">spec</span><br />
-    <pre id="spec-description">(cat:col ::identifier :spec (* (or:kw keyword? :str string?)))</pre>
+    <pre id="spec-description">(cat :col ::identifier :spec (* (or :kw keyword? :str string?)))</pre>
   </div><div id="spec-entry">
     <br />
     <hr />
@@ -1083,7 +1083,7 @@ See db-transaction* for more details.</pre>
     <hr />
     <h2 id=":clojure.java.jdbc.spec/create-options">::create-options</h2>
     <span id="spec-type">spec</span><br />
-    <pre id="spec-description">(keys:req-un [] :opt-un [::table-spec ::entities])</pre>
+    <pre id="spec-description">(keys :req-un [] :opt-un [::table-spec ::entities])</pre>
   </div><div id="spec-entry">
     <br />
     <hr />
@@ -1103,43 +1103,43 @@ See db-transaction* for more details.</pre>
     <hr />
     <h2 id=":clojure.java.jdbc.spec/db-spec-connection">::db-spec-connection</h2>
     <span id="spec-type">spec</span><br />
-    <pre id="spec-description">(keys:req-un [::connection])</pre>
+    <pre id="spec-description">(keys :req-un [::connection])</pre>
   </div><div id="spec-entry">
     <br />
     <hr />
     <h2 id=":clojure.java.jdbc.spec/db-spec-data-source">::db-spec-data-source</h2>
     <span id="spec-type">spec</span><br />
-    <pre id="spec-description">(keys:req-un [::datasource] :opt-un [::username ::user ::password])</pre>
+    <pre id="spec-description">(keys :req-un [::datasource] :opt-un [::username ::user ::password])</pre>
   </div><div id="spec-entry">
     <br />
     <hr />
     <h2 id=":clojure.java.jdbc.spec/db-spec-driver-manager">::db-spec-driver-manager</h2>
     <span id="spec-type">spec</span><br />
-    <pre id="spec-description">(keys:req-un [::subprotocol ::subname] :opt-un [::classname])</pre>
+    <pre id="spec-description">(keys :req-un [::subprotocol ::subname] :opt-un [::classname])</pre>
   </div><div id="spec-entry">
     <br />
     <hr />
     <h2 id=":clojure.java.jdbc.spec/db-spec-driver-manager-alt">::db-spec-driver-manager-alt</h2>
     <span id="spec-type">spec</span><br />
-    <pre id="spec-description">(keys:req-un [::dbtype ::dbname] :opt-un [::host ::port])</pre>
+    <pre id="spec-description">(keys :req-un [::dbtype ::dbname] :opt-un [::host ::port])</pre>
   </div><div id="spec-entry">
     <br />
     <hr />
     <h2 id=":clojure.java.jdbc.spec/db-spec-factory">::db-spec-factory</h2>
     <span id="spec-type">spec</span><br />
-    <pre id="spec-description">(keys:req-un [::factory])</pre>
+    <pre id="spec-description">(keys :req-un [::factory])</pre>
   </div><div id="spec-entry">
     <br />
     <hr />
     <h2 id=":clojure.java.jdbc.spec/db-spec-jndi">::db-spec-jndi</h2>
     <span id="spec-type">spec</span><br />
-    <pre id="spec-description">(keys:req-un [::name] :opt-un [::environment])</pre>
+    <pre id="spec-description">(keys :req-un [::name] :opt-un [::environment])</pre>
   </div><div id="spec-entry">
     <br />
     <hr />
     <h2 id=":clojure.java.jdbc.spec/db-spec-raw">::db-spec-raw</h2>
     <span id="spec-type">spec</span><br />
-    <pre id="spec-description">(keys:req-un [::connection-uri])</pre>
+    <pre id="spec-description">(keys :req-un [::connection-uri])</pre>
   </div><div id="spec-entry">
     <br />
     <hr />
@@ -1157,13 +1157,13 @@ See db-transaction* for more details.</pre>
     <hr />
     <h2 id=":clojure.java.jdbc.spec/exec-sql-options">::exec-sql-options</h2>
     <span id="spec-type">spec</span><br />
-    <pre id="spec-description">(keys:req-un [] :opt-un [::entities ::transaction?])</pre>
+    <pre id="spec-description">(keys :req-un [] :opt-un [::entities ::transaction?])</pre>
   </div><div id="spec-entry">
     <br />
     <hr />
     <h2 id=":clojure.java.jdbc.spec/execute-options">::execute-options</h2>
     <span id="spec-type">spec</span><br />
-    <pre id="spec-description">(keys:req-un [] :opt-un [::transaction? ::multi?])</pre>
+    <pre id="spec-description">(keys :req-un [] :opt-un [::transaction? ::multi?])</pre>
   </div><div id="spec-entry">
     <br />
     <hr />
@@ -1188,7 +1188,7 @@ See db-transaction* for more details.</pre>
     <hr />
     <h2 id=":clojure.java.jdbc.spec/identifier">::identifier</h2>
     <span id="spec-type">spec</span><br />
-    <pre id="spec-description">(or:kw keyword? :str string?)</pre>
+    <pre id="spec-description">(or :kw keyword? :str string?)</pre>
   </div><div id="spec-entry">
     <br />
     <hr />
@@ -1224,13 +1224,13 @@ See db-transaction* for more details.</pre>
     <span id="spec-type">spec</span><br />
     <pre id="spec-description">(or
  :sql ::sql-stmt
- :sql-params (cat:sql ::sql-stmt :params (* ::sql-value)))</pre>
+ :sql-params (cat :sql ::sql-stmt :params (* ::sql-value)))</pre>
   </div><div id="spec-entry">
     <br />
     <hr />
     <h2 id=":clojure.java.jdbc.spec/sql-stmt">::sql-stmt</h2>
     <span id="spec-type">spec</span><br />
-    <pre id="spec-description">(or:sql string? :stmt ::prepared-statement)</pre>
+    <pre id="spec-description">(or :sql string? :stmt ::prepared-statement)</pre>
   </div><div id="spec-entry">
     <br />
     <hr />
@@ -1242,7 +1242,7 @@ See db-transaction* for more details.</pre>
     <hr />
     <h2 id=":clojure.java.jdbc.spec/where-clause">::where-clause</h2>
     <span id="spec-type">spec</span><br />
-    <pre id="spec-description">(cat:where string? :params (* ::sql-value))</pre>
+    <pre id="spec-description">(cat :where string? :params (* ::sql-value))</pre>
   </div>
 </div>
 
