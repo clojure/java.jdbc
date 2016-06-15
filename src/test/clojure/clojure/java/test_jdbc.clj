@@ -21,8 +21,9 @@
 ;;  Migrated from clojure.contrib.test-sql 17 April 2011
 
 (ns clojure.java.test-jdbc
-  (:use clojure.test)
-  (:require [clojure.java.jdbc :as sql]))
+  (:require [clojure.test :refer :all]
+            [clojure.java.jdbc :as sql]
+            [clojure.string :as str]))
 
 (try
   (require 'clojure.java.jdbc.spec)
@@ -806,6 +807,11 @@
              (sql/query db "SELECT * FROM fruit")))
       (is (= [{:id (generated-key db 1) :name "Apple" :appearance nil :grade nil :cost nil}]
              (sql/query db ["SELECT * FROM fruit"])))
+      (is (= [{:ID (generated-key db 1) :NAME "Apple" :APPEARANCE nil :GRADE nil :COST nil}]
+             (sql/query db ["SELECT * FROM fruit"] {:identifiers str/upper-case})))
+      (is (= [{:fruit/id (generated-key db 1) :fruit/name "Apple" :fruit/appearance nil
+               :fruit/grade nil :fruit/cost nil}]
+             (sql/query db ["SELECT * FROM fruit"] {:qualifier "fruit"})))
       (is (= [{:id (generated-key db 1) :name "Apple" :appearance nil :grade nil :cost nil}]
              (with-open [con (sql/get-connection db)]
                (sql/query db [(sql/prepare-statement con "SELECT * FROM fruit")]))))

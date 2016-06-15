@@ -387,9 +387,10 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
   unless the :as-arrays? option is :cols-as-is, in which case the column names
   are untouched (the result set maintains column name/value order).
   The :identifiers option specifies how SQL column names are converted to Clojure
-  keywords. The default is to convert them to lower case."
+  keywords. The default is to convert them to lower case.
+  The :qualifier option specifies the namespace qualifier for those identifiers."
   ([rs] (result-set-seq rs {}))
-  ([^ResultSet rs {:keys [identifiers as-arrays?]
+  ([^ResultSet rs {:keys [as-arrays? identifiers qualifier]
                    :or {identifiers str/lower-case}}]
    (let [rsmeta (.getMetaData rs)
          idxs (range 1 (inc (.getColumnCount rsmeta)))
@@ -397,7 +398,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
          keys (->> idxs
                    (map (fn [^Integer i] (.getColumnLabel rsmeta i)))
                    col-name-fn
-                   (map (comp keyword identifiers)))
+                   (map (comp (partial keyword qualifier) identifiers)))
          row-values (fn [] (map (fn [^Integer i] (result-set-read-column (.getObject rs i) rsmeta i)) idxs))
          ;; This used to use create-struct (on keys) and then struct to populate each row.
          ;; That had the side effect of preserving the order of columns in each row. As
@@ -684,11 +685,11 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
 (defn metadata-result
   "If the argument is a java.sql.ResultSet, turn it into a result-set-seq,
   else return it as-is. This makes working with metadata easier.
-  Also accepts an option map containing :identifiers, :as-arrays?, :row-fn,
-  and :result-set-fn to control how the ResultSet is transformed and returned.
-  See query for more details."
+  Also accepts an option map containing :identifiers, :qualifier, :as-arrays?,
+  :row-fn,and :result-set-fn to control how the ResultSet is transformed and
+  returned. See query for more details."
   ([rs-or-value] (metadata-result rs-or-value {}))
-  ([rs-or-value {:keys [identifiers as-arrays? row-fn result-set-fn]
+  ([rs-or-value {:keys [as-arrays? identifiers qualifier result-set-fn row-fn]
                  :or {identifiers str/lower-case row-fn identity}}]
    (let [result-set-fn (or result-set-fn (if as-arrays? vec doall))]
      (if (instance? java.sql.ResultSet rs-or-value)
@@ -697,7 +698,9 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
                           (cons (first rs)
                                 (map row-fn (rest rs)))
                           (map row-fn rs))))
-        (result-set-seq rs-or-value {:identifiers identifiers :as-arrays? as-arrays?}))
+        (result-set-seq rs-or-value {:as-arrays? as-arrays?
+                                     :identifiers identifiers
+                                     :qualifier qualifier}))
        rs-or-value))))
 
 (defmacro metadata-query
@@ -865,19 +868,21 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
   "Given a database connection and a vector containing SQL and optional parameters,
   perform a simple database query. The options specify how to construct the result
   set (and are also passed to prepare-statement as needed):
+    :as-arrays? - return the results as a set of arrays, default false.
+    :identifiers - applied to each column name in the result set, default lower-case
+    :qualifier - optionally provides the namespace qualifier for identifiers
     :result-set-fn - applied to the entire result set, default doall / vec
         if :as-arrays? true, :result-set-fn will default to vec
         if :as-arrays? false, :result-set-fn will default to doall
     :row-fn - applied to each row as the result set is constructed, default identity
-    :identifiers - applied to each column name in the result set, default lower-case
-    :as-arrays? - return the results as a set of arrays, default false.
   The second argument is a vector containing a SQL string or PreparedStatement, followed
   by any parameters it needs.
   See also prepare-statement for additional options."
   ([db sql-params] (query db sql-params {}))
-  ([db sql-params {:keys [result-set-fn row-fn identifiers as-arrays?]
-                   :or {row-fn identity
-                        identifiers str/lower-case}
+  ([db sql-params {:keys [as-arrays? identifiers qualifier
+                          result-set-fn row-fn]
+                   :or {identifiers str/lower-case
+                        row-fn identity}
                    :as opts}]
    (let [result-set-fn (or result-set-fn (if as-arrays? vec doall))
          sql-params-vector (if (sql-stmt? sql-params) (vector sql-params) (vec sql-params))]
@@ -888,7 +893,9 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
                                                   (cons (first rs)
                                                         (map row-fn (rest rs)))
                                                   (map row-fn rs))))
-                                (result-set-seq rset {:identifiers identifiers :as-arrays? as-arrays?})))
+                                (result-set-seq rset {:as-arrays? as-arrays?
+                                                      :identifiers identifiers
+                                                      :qualifier qualifier})))
                               opts))))
 
 (defn- direction

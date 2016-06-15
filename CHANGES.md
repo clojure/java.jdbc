@@ -1,3 +1,7 @@
+Changes coming in 0.6.2
+
+* In addition to the `:identifiers` option, you can now use `:qualifier` to specify a namespace qualifier (string) to be used when constructing keywords from SQL column names [JDBC-133](http://dev.clojure.org/jira/browse/JDBC-133).
+
 Changes in 0.6.1
 
 * `insert!` and `insert-multi!` now default `:transaction?` to `true` (as they should have done in 0.6.0!) [JDBC-128](http://dev.clojure.org/jira/browse/JDBC-128). These two functions also have improved docstrings to clarify the difference in behavior between inserting rows as maps compared to inserting rows as a series of column values.
