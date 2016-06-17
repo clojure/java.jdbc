@@ -15,31 +15,59 @@
       :doc "Optional specifications for use with Clojure 1.9 or later."}
   clojure.java.jdbc.spec
   (:require [clojure.spec :as s]
+            [clojure.spec.gen :as g]
             [clojure.java.jdbc :refer :all]))
 
 ;; basic java.sql types
 
-(s/def ::connection #(instance? java.sql.Connection %))
-(s/def ::prepared-statement #(instance? java.sql.PreparedStatement %))
+(def gen-db-spec (s/gen #{{:dbtype "derby" :dbname "gen_test_derby" :create true}
+                          {:dbtype "hsqldb" :dbname "gen_test_hsqldb"}
+                          {:dbtype "h2" :dbname "./gen_test_h2"}}))
+
+(def gen-connection (g/fmap get-connection gen-db-spec))
+
+(def gen-prepared-statement (g/fmap #(.prepareStatement % "VALUES 42")
+                                    gen-connection))
+
+(s/def ::connection (s/with-gen #(instance? java.sql.Connection %)
+                      (fn [] gen-connection)))
+(s/def ::prepared-statement (s/with-gen #(instance? java.sql.PreparedStatement %)
+                              (fn [] gen-prepared-statement)))
 
 ;; database specification (connection description)
 
 (s/def ::db-spec-connection (s/keys :req-un [::connection]))
+;; no spec for ::factory
 (s/def ::db-spec-factory (s/keys :req-un [::factory]))
+(s/def ::subprotocol string?)
+(s/def ::subname string?)
+(s/def ::classname string?)
 (s/def ::db-spec-driver-manager (s/keys :req-un [::subprotocol ::subname] :opt-un [::classname]))
+(s/def ::dbtype string?)
+(s/def ::dbname string?)
+(s/def ::host string?)
+(s/def ::port string?)
 (s/def ::db-spec-driver-manager-alt (s/keys :req-un [::dbtype ::dbname] :opt-un [::host ::port]))
+;; no spec for ::datasource
+(s/def ::username string?)
+(s/def ::user string?)
+(s/def ::password string?)
 (s/def ::db-spec-data-source (s/keys :req-un [::datasource] :opt-un [::username ::user ::password]))
+(s/def ::name string?)
+(s/def ::environment (s/map-of string? string?))
 (s/def ::db-spec-jndi (s/keys :req-un [::name] :opt-un [::environment]))
+(s/def ::connection-uri uri?)
 (s/def ::db-spec-raw (s/keys :req-un [::connection-uri]))
 (s/def ::db-spec-string string?)
-(s/def ::db-spec (s/or :connection ::db-spec-connection
-                       :factory    ::db-spec-factory
-                       :driver-mgr ::db-spec-driver-manager
-                       :friendly   ::db-spec-driver-manager-alt
-                       :datasource ::db-spec-data-source
-                       :jndi       ::db-spec-jndi
-                       :raw        ::db-spec-raw
-                       :uri        ::db-spec-string))
+(s/def ::db-spec (s/with-gen (s/or :connection ::db-spec-connection
+                                   :factory    ::db-spec-factory
+                                   :driver-mgr ::db-spec-driver-manager
+                                   :friendly   ::db-spec-driver-manager-alt
+                                   :datasource ::db-spec-data-source
+                                   :jndi       ::db-spec-jndi
+                                   :raw        ::db-spec-raw
+                                   :uri        ::db-spec-string)
+                   (fn [] gen-db-spec)))
 
 ;; naming
 
@@ -64,14 +92,31 @@
 
 ;; various types of options
 
+(s/def ::table-spec ident?)
+;; no spec for ::entities
+(s/def ::entities (s/fspec :args (s/cat :s string?) :ret string?))
 (s/def ::create-options (s/keys :req-un [] :opt-un [::table-spec ::entities]))
 
+(s/def ::transaction? boolean?)
 (s/def ::exec-sql-options (s/keys :req-un [] :opt-un [::entities ::transaction?]))
 
+(s/def ::multi? boolean?)
 (s/def ::execute-options (s/keys :req-un [] :opt-un [::transaction? ::multi?]))
 
+;; no spec for ::order-by
+;; no spec for ::result-set-fn
+;; no spec for ::row-fn
+;; no spec for ::identifiers
+(s/def ::as-arrays? boolean?)
 (s/def ::find-by-keys-options (s/keys :req-un [] :opt-un [::entities ::order-by ::result-set-fn ::row-fn ::identifiers ::as-arrays?]))
 
+;; no spec for ::return-keys
+(s/def ::result-type #{:forward-only :scroll-insensitive :scroll-sensitive})
+(s/def ::concurrency #{:read-only :updatable})
+;; no spec for ::cursors
+(s/def ::fetch-size int?)
+(s/def ::max-rows int?)
+(s/def ::timeout int?)
 (s/def ::prepare-options (s/keys :req-un [] :opt-un [::return-keys ::result-type ::concurrency ::cursors ::fetch-size ::max-rows ::timeout]))
 
 (s/def ::query-options (s/keys :req-un [] :opt-un [::result-set-fn ::row-fn ::identifiers ::as-arrays?]))

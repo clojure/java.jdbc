@@ -14,3 +14,4 @@ target
 test-all.sh
 /postgres-down.sh
 /postgres-up.sh
+gen_test_*
