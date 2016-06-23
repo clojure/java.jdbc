@@ -1,5 +1,6 @@
 Changes coming in 0.6.2
 
+* `insert!` and `insert-multi!` now respect `:identifiers` and `:qualifier` because inserting rows on PostgreSQL returns full rows, not just the newly inserted keys [JDBC-134](http://dev.clojure.org/jira/browse/JDBC-134).
 * In addition to the `:identifiers` option, you can now use `:qualifier` to specify a namespace qualifier (string) to be used when constructing keywords from SQL column names [JDBC-133](http://dev.clojure.org/jira/browse/JDBC-133).
 
 Changes in 0.6.1

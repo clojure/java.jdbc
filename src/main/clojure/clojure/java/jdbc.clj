@@ -739,14 +739,14 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
 (defn- db-do-execute-prepared-return-keys
   "Executes a PreparedStatement, optionally in a transaction, and (attempts to)
   return any generated keys."
-  [db ^PreparedStatement stmt param-group transaction?]
+  [db ^PreparedStatement stmt param-group {:keys [transaction?] :as opts}]
   ((or (:set-parameters db) set-parameters) stmt param-group)
   (let [exec-and-return-keys
         (^{:once true} fn* []
          (let [counts (.executeUpdate stmt)]
            (try
              (let [rs (.getGeneratedKeys stmt)
-                   result (first (result-set-seq rs))]
+                   result (first (result-set-seq rs opts))]
                ;; sqlite (and maybe others?) requires
                ;; record set to be closed
                (.close rs)
@@ -782,15 +782,15 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
    (if-let [con (db-find-connection db)]
      (let [[sql & params] (if (sql-stmt? sql-params) (vector sql-params) (vec sql-params))]
        (if (instance? PreparedStatement sql)
-         (db-do-execute-prepared-return-keys db sql params transaction?)
+         (db-do-execute-prepared-return-keys db sql params (assoc opts :transaction? transaction?))
          (with-open [^PreparedStatement stmt (prepare-statement con sql (assoc opts :return-keys true))]
-           (db-do-execute-prepared-return-keys db stmt params transaction?))))
+           (db-do-execute-prepared-return-keys db stmt params (assoc opts :transaction? transaction?)))))
      (with-open [con (get-connection db)]
        (db-do-prepared-return-keys (add-connection db con) transaction? sql-params opts)))))
 
 (defn- db-do-execute-prepared-statement
   "Execute a PreparedStatement, optionally in a transaction."
-  [db ^PreparedStatement stmt param-groups transaction?]
+  [db ^PreparedStatement stmt param-groups {:keys [transaction?]}]
   (if (empty? param-groups)
     (if transaction?
       (with-db-transaction [t-db (add-connection db (.getConnection stmt))]
@@ -822,9 +822,9 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
      (let [[sql & params] (if (sql-stmt? sql-params) (vector sql-params) (vec sql-params))
            params         (if (or (:multi? opts) (empty? params)) params [params])]
        (if (instance? PreparedStatement sql)
-         (db-do-execute-prepared-statement db sql params transaction?)
+         (db-do-execute-prepared-statement db sql params (assoc opts :transaction? transaction?))
          (with-open [^PreparedStatement stmt (prepare-statement con sql opts)]
-           (db-do-execute-prepared-statement db stmt params transaction?))))
+           (db-do-execute-prepared-statement db stmt params (assoc opts :transaction? transaction?)))))
      (with-open [con (get-connection db)]
        (db-do-prepared (add-connection db con) transaction? sql-params opts)))))
 
@@ -1009,16 +1009,16 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
   "Given a (connected) database connection and some SQL statements (for multiple
    inserts), run a prepared statement on each and return any generated keys.
    Note: we are eager so an unrealized lazy-seq cannot escape from the connection."
-  [db stmts]
-  (doall (map (fn [row] (db-do-prepared-return-keys db false row {})) stmts)))
+  [db stmts opts]
+  (doall (map (fn [row] (db-do-prepared-return-keys db false row opts)) stmts)))
 
 (defn- insert-helper
   "Given a (connected) database connection, a transaction flag and some SQL statements
    (for one or more inserts), run a prepared statement or a sequence of them."
-  [db transaction? stmts]
+  [db transaction? stmts opts]
   (if transaction?
-    (with-db-transaction [t-db db] (multi-insert-helper t-db stmts))
-    (multi-insert-helper db stmts)))
+    (with-db-transaction [t-db db] (multi-insert-helper t-db stmts opts))
+    (multi-insert-helper db stmts opts)))
 
 (defn- col-str
   "Transform a column spec to an entity name for SQL. The column spec may be a
@@ -1064,16 +1064,20 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
 (defn- insert-rows!
   "Given a database connection, a table name, a sequence of rows, and an options
   map, insert the rows into the database."
-  [db table rows {:keys [entities transaction?]
-                  :or {entities identity transaction? true}}]
+  [db table rows {:keys [entities identifiers qualifier transaction?]
+                  :or {entities identity
+                       identifiers str/lower-case
+                       transaction? true}}]
   (let [sql-params (map (fn [row]
                           (when-not (map? row)
                             (throw (IllegalArgumentException. "insert! / insert-multi! called with a non-map row")))
                           (insert-single-row-sql table row entities)) rows)]
     (if-let [con (db-find-connection db)]
-      (insert-helper db transaction? sql-params)
+      (insert-helper db transaction? sql-params
+                     {:identifiers identifiers :qualifier qualifier})
       (with-open [con (get-connection db)]
-        (insert-helper (add-connection db con) transaction? sql-params)))))
+        (insert-helper (add-connection db con) transaction? sql-params
+                       {:identifiers identifiers :qualifier qualifier})))))
 
 (defn- insert-cols!
   "Given a database connection, a table name, a sequence of columns names, a
