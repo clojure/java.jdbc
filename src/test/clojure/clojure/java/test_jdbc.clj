@@ -827,6 +827,30 @@
       (is (= [{:id (generated-key db 1) :name "Apple" :appearance nil :grade nil :cost nil}
               {:id (generated-key db 2) :name "Pear" :appearance nil :grade nil :cost nil}] rows)))))
 
+(deftest insert-identifiers-respected-1
+  (doseq [db (filter postgres? (test-specs))]
+    (create-test-table :fruit db)
+    (let [inserted (sql/insert! db
+                                :fruit
+                                {:name "Apple"}
+                                {:identifiers clojure.string/upper-case
+                                 :qualifier "foo"})
+          rows     (sql/query db ["SELECT * FROM fruit ORDER BY name"]
+                              {:identifiers clojure.string/upper-case
+                               :qualifier "foo"})]
+      (is (= rows inserted)))))
+
+(deftest insert-identifiers-respected-2
+  (doseq [db (filter postgres? (test-specs))]
+    (create-test-table :fruit db)
+    (let [inserted (sql/insert-multi! db
+                                      :fruit
+                                      [{:name "Apple"} {:name "Pear"}]
+                                      {:identifiers clojure.string/upper-case})
+          rows     (sql/query db ["SELECT * FROM fruit ORDER BY name"]
+                              {:identifiers clojure.string/upper-case})]
+      (is (= rows inserted)))))
+
 (deftest insert-two-by-map-and-query-as-arrays
   (doseq [db (test-specs)]
     (create-test-table :fruit db)
