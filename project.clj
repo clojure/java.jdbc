@@ -10,8 +10,7 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :source-paths ["src/main/clojure"]
   :test-paths ["src/test/clojure"]
-  :repositories {"sonatype-oss-public" "https://oss.sonatype.org/content/groups/public/"}
-  :dependencies [[org.clojure/clojure "1.9.0-alpha7"]
+  :dependencies [[org.clojure/clojure "1.9.0-alpha8"]
                  ;; These are just the versions most recently test against
                  ;; for your own projects, use whatever version is most
                  ;; appropriate for you. Again, note that this project.clj
@@ -36,6 +35,7 @@
              :1.9 {:dependencies [[org.clojure/clojure "1.9.0-master-SNAPSHOT"]]}
              :dev {:dependencies [[org.clojure/test.check "0.9.0"]]}
              }
+  :repositories {"sonatype-oss-public" "https://oss.sonatype.org/content/groups/public/"}
   :aliases {"test-all" ["with-profile" "test,1.4:test,1.5:test,1.6:test,1.7:test,1.8:test,1.9" "test"]
             "check-all" ["with-profile" "1.4:1.5:1.6:1.7:1.8:1.9" "check"]}
   :min-lein-version "2.0.0")

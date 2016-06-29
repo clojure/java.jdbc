@@ -27,7 +27,8 @@
 
 (try
   (require 'clojure.java.jdbc.spec)
-  ((resolve 'clojure.spec/instrument-ns) 'clojure.java.jdbc)
+  (require 'clojure.spec.test)
+  ((resolve 'clojure.spec.test/instrument) 'clojure.java.jdbc)
   (println "Instrumenting clojure.java.jdbc with clojure.spec")
   (catch Exception _))
 
