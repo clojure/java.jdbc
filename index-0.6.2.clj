@@ -12,7 +12,7 @@
    :wiki-url
    "http://clojure.github.io/java.jdbc/index.html#clojure.java.jdbc.spec",
    :source-url
-   "https://github.com/clojure/java.jdbc/blob/94bc439cb926d7f3d7ace4f86eac5cc5733b382a/src/main/clojure/clojure/java/jdbc/spec.clj"}),
+   "https://github.com/clojure/java.jdbc/blob/ab12a9dd77611700924aae67b99e2b8d7185ced0/src/main/clojure/clojure/java/jdbc/spec.clj"}),
  :vars
  ({:raw-source-url
    "https://github.com/clojure/java.jdbc/raw/c4b49957556120665afaef43763cf1ec33abe73b/src/main/clojure/clojure/java/jdbc.clj",

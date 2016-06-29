@@ -408,12 +408,7 @@ remaining elements are left as-is when converting them to strings.
 An options map may be provided that can contain:
 :table-spec -- a string that is appended to the DDL -- and/or
 :entities -- a function to specify how column names are transformed.</pre>
-    <pre id="var-specs">Specs:
-  Args: (cat
-         :table :clojure.java.jdbc.spec/identifier
-         :specs (coll-of :clojure.java.jdbc.spec/column-spec ())
-         :opts (? :clojure.java.jdbc.spec/create-options))
-  Ret:  string?</pre>
+    <pre id="var-specs"></pre>
     
     
     <a id="var-source" href="https://github.com/clojure/java.jdbc/blob/c4b49957556120665afaef43763cf1ec33abe73b/src/main/clojure/clojure/java/jdbc.clj#L1169">Source</a>
@@ -617,14 +612,7 @@ is equivalent to:
        (drop-table-ddl name {:keys [entities], :or {entities identity}})
 </pre>
     <pre id="var-docstr">Given a table name, return the DDL string for dropping that table.</pre>
-    <pre id="var-specs">Specs:
-  Args: (cat
-         :table :clojure.java.jdbc.spec/identifier
-         :opts (?
-                 (keys
-                  :req-un []
-                  :opt-un [:clojure.java.jdbc.spec/entities])))
-  Ret:  string?</pre>
+    <pre id="var-specs"></pre>
     
     
     <a id="var-source" href="https://github.com/clojure/java.jdbc/blob/c4b49957556120665afaef43763cf1ec33abe73b/src/main/clojure/clojure/java/jdbc.clj#L1199">Source</a>
