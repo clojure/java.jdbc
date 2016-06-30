@@ -420,9 +420,7 @@ An options map may be provided that can contain:
     <pre id="var-usage">Usage: (db-connection db)
 </pre>
     <pre id="var-docstr">Returns the current database connection (or throws if there is none)</pre>
-    <pre id="var-specs">Specs:
-  Args: (cat :db-spec :clojure.java.jdbc.spec/db-spec)
-  Ret:  (instance? java.sql.Connection %)</pre>
+    <pre id="var-specs"></pre>
     
     
     <a id="var-source" href="https://github.com/clojure/java.jdbc/blob/c4b49957556120665afaef43763cf1ec33abe73b/src/main/clojure/clojure/java/jdbc.clj#L555">Source</a>
@@ -487,13 +485,7 @@ case :return-keys MUST BE SET on that PreparedStatement!</pre>
     <pre id="var-usage">Usage: (db-find-connection db)
 </pre>
     <pre id="var-docstr">Returns the current database connection (or nil if there is none)</pre>
-    <pre id="var-specs">Specs:
-  Args: (cat :db-spec :clojure.java.jdbc.spec/db-spec)
-  Ret:  (and
-          (or
-           :clojure.spec/nil nil?
-           :clojure.spec/pred :clojure.java.jdbc.spec/connection)
-          (conformer second))</pre>
+    <pre id="var-specs"></pre>
     
     
     <a id="var-source" href="https://github.com/clojure/java.jdbc/blob/c4b49957556120665afaef43763cf1ec33abe73b/src/main/clojure/clojure/java/jdbc.clj#L549">Source</a>
@@ -593,13 +585,7 @@ Example:
   (delete! db :person ["zip = ?" 94546])
 is equivalent to:
   (execute! db ["DELETE FROM person WHERE zip = ?" 94546])</pre>
-    <pre id="var-specs">Specs:
-  Args: (cat
-         :db :clojure.java.jdbc.spec/db-spec
-         :table :clojure.java.jdbc.spec/identifier
-         :where-clause (spec :clojure.java.jdbc.spec/where-clause)
-         :opts (? :clojure.java.jdbc.spec/exec-sql-options))
-  Ret:  (* integer?)</pre>
+    <pre id="var-specs"></pre>
     
     
     <a id="var-source" href="https://github.com/clojure/java.jdbc/blob/c4b49957556120665afaef43763cf1ec33abe73b/src/main/clojure/clojure/java/jdbc.clj#L993">Source</a>
@@ -634,12 +620,7 @@ If the :multi? option is true, the SQL statement should be followed by one or
 more vectors of parameters, one for each application of the SQL statement.
 If there are no parameters specified, executeUpdate will be used, otherwise
 executeBatch will be used. This may affect what SQL you can run via execute!</pre>
-    <pre id="var-specs">Specs:
-  Args: (cat
-         :db :clojure.java.jdbc.spec/db-spec
-         :sql-params :clojure.java.jdbc.spec/sql-params
-         :opts (? :clojure.java.jdbc.spec/execute-options))
-  Ret:  (* integer?)</pre>
+    <pre id="var-specs"></pre>
     
     
     <a id="var-source" href="https://github.com/clojure/java.jdbc/blob/c4b49957556120665afaef43763cf1ec33abe73b/src/main/clojure/clojure/java/jdbc.clj#L960">Source</a>
@@ -655,15 +636,7 @@ executeBatch will be used. This may affect what SQL you can run via execute!</pr
 pairs, and an optional options map, return any matching rows.
 An :order-by option may be supplied to sort the rows by a sequence of
 columns, e.g,. {:order-by [:name {:age :desc]}</pre>
-    <pre id="var-specs">Specs:
-  Args: (cat
-         :db :clojure.java.jdbc.spec/db-spec
-         :table :clojure.java.jdbc.spec/identifier
-         :columns (map-of
-                    :clojure.java.jdbc.spec/identifier
-                    :clojure.java.jdbc.spec/sql-value)
-         :opts (? :clojure.java.jdbc.spec/find-by-keys-options))
-  Ret:  (constantly true)</pre>
+    <pre id="var-specs"></pre>
     
     
     <a id="var-source" href="https://github.com/clojure/java.jdbc/blob/c4b49957556120665afaef43763cf1ec33abe73b/src/main/clojure/clojure/java/jdbc.clj#L925">Source</a>
@@ -739,9 +712,7 @@ URI:
 String:
   subprotocol://user:password@host:post/subname
                An optional prefix of jdbc: is allowed.</pre>
-    <pre id="var-specs">Specs:
-  Args: (cat :db-spec :clojure.java.jdbc.spec/db-spec)
-  Ret:  (instance? java.sql.Connection %)</pre>
+    <pre id="var-specs"></pre>
     
     
     <a id="var-source" href="https://github.com/clojure/java.jdbc/blob/c4b49957556120665afaef43763cf1ec33abe73b/src/main/clojure/clojure/java/jdbc.clj#L193">Source</a>
@@ -848,12 +819,7 @@ of options:
    :fetch-size n
    :max-rows n
    :timeout n</pre>
-    <pre id="var-specs">Specs:
-  Args: (cat
-         :con :clojure.java.jdbc.spec/connection
-         :sql string?
-         :opts (? :clojure.java.jdbc.spec/prepare-options))
-  Ret:  (instance? java.sql.PreparedStatement %)</pre>
+    <pre id="var-specs"></pre>
     
     
     <a id="var-source" href="https://github.com/clojure/java.jdbc/blob/c4b49957556120665afaef43763cf1ec33abe73b/src/main/clojure/clojure/java/jdbc.clj#L455">Source</a>
@@ -914,12 +880,7 @@ set (and are also passed to prepare-statement as needed):
 The second argument is a vector containing a SQL string or PreparedStatement, followed
 by any parameters it needs.
 See also prepare-statement for additional options.</pre>
-    <pre id="var-specs">Specs:
-  Args: (cat
-         :db :clojure.java.jdbc.spec/db-spec
-         :sql-params :clojure.java.jdbc.spec/sql-params
-         :opts (? :clojure.java.jdbc.spec/query-options))
-  Ret:  (constantly true)</pre>
+    <pre id="var-specs"></pre>
     
     
     <a id="var-source" href="https://github.com/clojure/java.jdbc/blob/c4b49957556120665afaef43763cf1ec33abe73b/src/main/clojure/clojure/java/jdbc.clj#L867">Source</a>
@@ -979,16 +940,7 @@ Example:
   (update! db :person {:zip 94540} ["zip = ?" 94546])
 is equivalent to:
   (execute! db ["UPDATE person SET zip = ? WHERE zip = ?" 94540 94546])</pre>
-    <pre id="var-specs">Specs:
-  Args: (cat
-         :db :clojure.java.jdbc.spec/db-spec
-         :table :clojure.java.jdbc.spec/identifier
-         :set-map (map-of
-                    :clojure.java.jdbc.spec/identifier
-                    :clojure.java.jdbc.spec/sql-value)
-         :where-clause (spec :clojure.java.jdbc.spec/where-clause)
-         :opts (? :clojure.java.jdbc.spec/exec-sql-options))
-  Ret:  (* integer?)</pre>
+    <pre id="var-specs"></pre>
     
     
     <a id="var-source" href="https://github.com/clojure/java.jdbc/blob/c4b49957556120665afaef43763cf1ec33abe73b/src/main/clojure/clojure/java/jdbc.clj#L1153">Source</a>
