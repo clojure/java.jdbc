@@ -1,6 +1,7 @@
 Changes coming in 0.6.2
 
 * Experimental support for `clojure.spec` via the new `clojure.java.jdbc.spec` namespace. Requires Clojure 1.9.0 Alpha 8 (or later).
+* All options to all functions can now have defaults within the `db-spec` itself [JDBC-136](http://dev.clojure.org/jira/browse/JDBC-136).
 * `insert!` and `insert-multi!` now respect `:identifiers` and `:qualifier` because inserting rows on PostgreSQL returns full rows, not just the newly inserted keys [JDBC-134](http://dev.clojure.org/jira/browse/JDBC-134).
 * In addition to the `:identifiers` option, you can now use `:qualifier` to specify a namespace qualifier (string) to be used when constructing keywords from SQL column names [JDBC-133](http://dev.clojure.org/jira/browse/JDBC-133).
 
@@ -43,7 +44,7 @@ Changes in 0.6.0-alpha1
   - Use version 0.5.8 as a bridge to identify any deprecated API calls on which your code relies!
   - `db-transaction` (deprecated in version 0.3.0) has been removed
   - The `java.jdbc.deprecated` namespace has been removed
-  
+
 Changes in 0.5.8
 
 * `db-do-commands` now expects multiple commands to be be wrapped in a vector [JDBC-122](http://dev.clojure.org/jira/browse/JDBC-123). The single command form is unchanged (but may be wrapped in a vector). Calling `db-do-commands` with multiple commands (not wrapped in a single vector) will produce a "DEPRECATED" warning printed to the console.
@@ -279,7 +280,7 @@ Changes in 0.1.2:
 
 Changes in 0.1.1:
 
-* Fix JDBC-21 by adding support for db-spec as URI (Phil Hagelberg). 
+* Fix JDBC-21 by adding support for db-spec as URI (Phil Hagelberg).
 * Fix JDBC-22 by deducing driver class name from subprotocol (Phil Hagelberg).
 * Add Postgres dependency so tests can be automcated (Phil Hagelberg).
 * Add ability to specify test databases via TEST_DBS environment variable (Phil Hagelberg).
@@ -319,7 +320,7 @@ Changes in 0.0.5:
 * Add support for databases that cannot return generated keys (e.g., HSQLDB)
   - insert operations silently return the insert counts instead of generated keys
   - it is the user's responsibility to handle this if you're using such a database!
- 
+
 Changes in 0.0.4:
 
 * Fix JDBC-2 by allowing :table-spec {string} at the end of create-table arguments:
