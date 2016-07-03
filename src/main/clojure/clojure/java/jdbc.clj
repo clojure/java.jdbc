@@ -885,12 +885,21 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
   See also prepare-statement for additional options."
   ([db sql-params] (query db sql-params {}))
   ([db sql-params opts]
-   (let [{:keys [as-arrays? identifiers qualifier result-set-fn row-fn] :as opts}
-         (merge {:identifiers str/lower-case :row-fn identity}
+   (let [{:keys [as-arrays? explain? explain-fn identifiers qualifier
+                 result-set-fn row-fn] :as opts}
+         (merge {:explain-fn println :identifiers str/lower-case :row-fn identity}
                 (when (map? db) db)
                 opts)
          result-set-fn (or result-set-fn (if as-arrays? vec doall))
          sql-params-vector (if (sql-stmt? sql-params) (vector sql-params) (vec sql-params))]
+     (when (and explain? (string? (first sql-params-vector)))
+       (query db (into [(str (if (string? explain?) explain? "EXPLAIN")
+                             " "
+                             (first sql-params-vector))]
+                       (rest sql-params-vector))
+              (-> opts
+                  (dissoc :explain? :result-set-fn :row-fn)
+                  (assoc :result-set-fn explain-fn))))
      (db-query-with-resultset db sql-params-vector
                               (^{:once true} fn* [rset]
                                ((^{:once true} fn* [rs]

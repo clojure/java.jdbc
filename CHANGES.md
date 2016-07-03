@@ -2,6 +2,7 @@ Changes coming in 0.6.2
 
 * Experimental support for `clojure.spec` via the new `clojure.java.jdbc.spec` namespace. Requires Clojure 1.9.0 Alpha 8 (or later).
 * All options to all functions can now have defaults within the `db-spec` itself [JDBC-136](http://dev.clojure.org/jira/browse/JDBC-136).
+* `query` (and by extension `find-by-keys` and `get-by-id`) now support `:explain?` and `:explain-fn` options to help support basic performance analysis [JDBC-135](http://dev.clojure.org/jira/browse/JDBC-135).
 * `insert!` and `insert-multi!` now respect `:identifiers` and `:qualifier` because inserting rows on PostgreSQL returns full rows, not just the newly inserted keys [JDBC-134](http://dev.clojure.org/jira/browse/JDBC-134).
 * In addition to the `:identifiers` option, you can now use `:qualifier` to specify a namespace qualifier (string) to be used when constructing keywords from SQL column names [JDBC-133](http://dev.clojure.org/jira/browse/JDBC-133).
 
