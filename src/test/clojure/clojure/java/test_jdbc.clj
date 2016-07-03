@@ -27,7 +27,8 @@
 
 (try
   (require 'clojure.java.jdbc.spec)
-  ((resolve 'clojure.spec/instrument-ns) 'clojure.java.jdbc)
+  (require 'clojure.spec.test)
+  ((resolve 'clojure.spec.test/instrument) 'clojure.java.jdbc)
   (println "Instrumenting clojure.java.jdbc with clojure.spec")
   (catch Exception _))
 
@@ -124,6 +125,21 @@
 
 ;; We start with all tables dropped and each test has to create the tables
 ;; necessary for it to do its job, and populate it as needed...
+
+(defn- derby? [db]
+  (if (string? db)
+    (re-find #"derby:" db)
+    (= "derby" (or (:subprotocol db) (:dbtype db)))))
+
+(defn- hsqldb? [db]
+  (if (string? db)
+    (re-find #"hsqldb:" db)
+    (= "hsqldb" (or (:subprotocol db) (:dbtype db)))))
+
+(defn- mssql? [db]
+  (if (string? db)
+    (re-find #"sqlserver" db)
+    (re-find #"sqlserver" (or (:subprotocol db) (:dbtype db)))))
 
 (defn- mysql? [db]
   (if (string? db)
@@ -262,9 +278,9 @@
   (doseq [db (test-specs)]
     (sql/db-do-commands db
                         [(sql/create-table-ddl :fruit3
-                                                [[:name       "VARCHAR(32)"]
-                                                 [:appearance "VARCHAR(32)"]
-                                                 [:cost       :int]])
+                                               [[:name       "VARCHAR(32)"]
+                                                [:appearance "VARCHAR(32)"]
+                                                [:cost       :int]])
                          "DROP TABLE fruit3"])
     (is (thrown? java.sql.SQLException
                  (sql/query db ["SELECT * FROM fruit2"] {:result-set-fn count})))))
@@ -273,9 +289,9 @@
   (doseq [db (test-specs)]
     (sql/db-do-commands db true
                         [(sql/create-table-ddl :fruit3
-                                                [[:name       "VARCHAR(32)"]
-                                                 [:appearance "VARCHAR(32)"]
-                                                 [:cost       :int]])
+                                               [[:name       "VARCHAR(32)"]
+                                                [:appearance "VARCHAR(32)"]
+                                                [:cost       :int]])
                          "DROP TABLE fruit3"])
     (is (thrown? java.sql.SQLException
                  (sql/query db ["SELECT * FROM fruit2"] {:result-set-fn count})))))
@@ -809,14 +825,27 @@
              (sql/query db ["SELECT * FROM fruit"])))
       (is (= [{:ID (generated-key db 1) :NAME "Apple" :APPEARANCE nil :GRADE nil :COST nil}]
              (sql/query db ["SELECT * FROM fruit"] {:identifiers str/upper-case})))
+      (is (= [{:ID (generated-key db 1) :NAME "Apple" :APPEARANCE nil :GRADE nil :COST nil}]
+             (sql/query (assoc db :identifiers str/upper-case) ["SELECT * FROM fruit"])))
       (is (= [{:fruit/id (generated-key db 1) :fruit/name "Apple" :fruit/appearance nil
                :fruit/grade nil :fruit/cost nil}]
              (sql/query db ["SELECT * FROM fruit"] {:qualifier "fruit"})))
+      (is (= [{:fruit/id (generated-key db 1) :fruit/name "Apple" :fruit/appearance nil
+               :fruit/grade nil :fruit/cost nil}]
+             (sql/query (assoc db :qualifier "fruit") ["SELECT * FROM fruit"])))
       (is (= [{:id (generated-key db 1) :name "Apple" :appearance nil :grade nil :cost nil}]
              (with-open [con (sql/get-connection db)]
                (sql/query db [(sql/prepare-statement con "SELECT * FROM fruit")]))))
       (is (= [{:id (generated-key db 1) :name "Apple" :appearance nil :grade nil :cost nil}]
-             (sql/query db ["SELECT * FROM fruit"] {:max-rows 1}))))))
+             (sql/query db ["SELECT * FROM fruit"] {:max-rows 1})))
+      (cond (derby? db) nil
+            (hsqldb? db) (is (seq (with-out-str
+                                    (sql/query db ["SELECT * FROM fruit"]
+                                               {:explain? "EXPLAIN PLAN FOR"}))))
+            (mssql? db) nil
+            :else (is (seq (with-out-str
+                             (sql/query db ["SELECT * FROM fruit"]
+                                        {:explain? true}))))))))
 
 (deftest insert-two-by-map-and-query
   (doseq [db (test-specs)]

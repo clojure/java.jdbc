@@ -204,7 +204,7 @@
 
 (s/fdef create-table-ddl
         :args (s/cat :table ::identifier
-                     :specs (s/coll-of ::column-spec ())
+                     :specs (s/coll-of ::column-spec)
                      :opts  (s/? ::create-options))
         :ret  string?)
 

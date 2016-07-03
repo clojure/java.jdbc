@@ -597,55 +597,57 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
   substitute another isolation level.
   The read-only? option puts the transaction in readonly mode (if supported)."
   ([db func] (db-transaction* db func {}))
-  ([db func {:keys [isolation read-only?] :as opts}]
-   (if (zero? (get-level db))
-     (if-let [con (db-find-connection db)]
-       (let [nested-db (inc-level db)
-             auto-commit (.getAutoCommit con)
-             old-isolation (.getTransactionIsolation con)
-             old-readonly  (.isReadOnly con)]
-         (io!
-          (when isolation
-            (.setTransactionIsolation con (isolation isolation-levels)))
-          (when read-only?
-            (.setReadOnly con true))
-          (.setAutoCommit con false)
-          (try
-            (let [result (func nested-db)]
-              (if (db-is-rollback-only nested-db)
+  ([db func opts]
+   (let [{:keys [isolation read-only?] :as opts}
+         (merge (when (map? db) db) opts)]
+     (if (zero? (get-level db))
+       (if-let [con (db-find-connection db)]
+         (let [nested-db (inc-level db)
+               auto-commit (.getAutoCommit con)
+               old-isolation (.getTransactionIsolation con)
+               old-readonly  (.isReadOnly con)]
+           (io!
+            (when isolation
+              (.setTransactionIsolation con (isolation isolation-levels)))
+            (when read-only?
+              (.setReadOnly con true))
+            (.setAutoCommit con false)
+            (try
+              (let [result (func nested-db)]
+                (if (db-is-rollback-only nested-db)
+                  (.rollback con)
+                  (.commit con))
+                result)
+              (catch Throwable t
                 (.rollback con)
-                (.commit con))
-              result)
-            (catch Throwable t
-              (.rollback con)
-              (throw t))
-            (finally
-              (db-unset-rollback-only! nested-db)
-              ;; the following can throw SQLExceptions but we do not
-              ;; want those to replace any exception currently being
-              ;; handled -- and if the connection got closed, we just
-              ;; want to ignore exceptions here anyway
-              (try
-                (.setAutoCommit con auto-commit)
-                (catch Exception _))
-              (when isolation
+                (throw t))
+              (finally
+                (db-unset-rollback-only! nested-db)
+                ;; the following can throw SQLExceptions but we do not
+                ;; want those to replace any exception currently being
+                ;; handled -- and if the connection got closed, we just
+                ;; want to ignore exceptions here anyway
                 (try
-                  (.setTransactionIsolation con old-isolation)
-                  (catch Exception _)))
-              (when read-only?
-                (try
-                  (.setReadOnly con old-readonly)
-                  (catch Exception _)))))))
-       (with-open [con (get-connection db)]
-         (db-transaction* (add-connection db con) func opts)))
-     (do
-       (when (and isolation
-                  (let [con (db-find-connection db)]
-                    (not= (isolation isolation-levels)
-                          (.getTransactionIsolation con))))
-         (let [msg "Nested transactions may not have different isolation levels"]
-           (throw (IllegalStateException. msg))))
-       (func (inc-level db))))))
+                  (.setAutoCommit con auto-commit)
+                  (catch Exception _))
+                (when isolation
+                  (try
+                    (.setTransactionIsolation con old-isolation)
+                    (catch Exception _)))
+                (when read-only?
+                  (try
+                    (.setReadOnly con old-readonly)
+                    (catch Exception _)))))))
+         (with-open [con (get-connection db)]
+           (db-transaction* (add-connection db con) func opts)))
+       (do
+         (when (and isolation
+                    (let [con (db-find-connection db)]
+                      (not= (isolation isolation-levels)
+                            (.getTransactionIsolation con))))
+           (let [msg "Nested transactions may not have different isolation levels"]
+             (throw (IllegalStateException. msg))))
+         (func (inc-level db)))))))
 
 (defmacro with-db-transaction
   "Evaluates body in the context of a transaction on the specified database connection.
@@ -779,14 +781,15 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
      (db-do-prepared-return-keys db true transaction? sql-params)
      (db-do-prepared-return-keys db transaction? sql-params {})))
   ([db transaction? sql-params opts]
-   (if-let [con (db-find-connection db)]
-     (let [[sql & params] (if (sql-stmt? sql-params) (vector sql-params) (vec sql-params))]
-       (if (instance? PreparedStatement sql)
-         (db-do-execute-prepared-return-keys db sql params (assoc opts :transaction? transaction?))
-         (with-open [^PreparedStatement stmt (prepare-statement con sql (assoc opts :return-keys true))]
-           (db-do-execute-prepared-return-keys db stmt params (assoc opts :transaction? transaction?)))))
-     (with-open [con (get-connection db)]
-       (db-do-prepared-return-keys (add-connection db con) transaction? sql-params opts)))))
+   (let [opts (merge (when (map? db) db) opts)]
+     (if-let [con (db-find-connection db)]
+       (let [[sql & params] (if (sql-stmt? sql-params) (vector sql-params) (vec sql-params))]
+         (if (instance? PreparedStatement sql)
+           (db-do-execute-prepared-return-keys db sql params (assoc opts :transaction? transaction?))
+           (with-open [^PreparedStatement stmt (prepare-statement con sql (assoc opts :return-keys true))]
+             (db-do-execute-prepared-return-keys db stmt params (assoc opts :transaction? transaction?)))))
+       (with-open [con (get-connection db)]
+         (db-do-prepared-return-keys (add-connection db con) transaction? sql-params opts))))))
 
 (defn- db-do-execute-prepared-statement
   "Execute a PreparedStatement, optionally in a transaction."
@@ -818,15 +821,16 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
      (db-do-prepared db true transaction? sql-params)
      (db-do-prepared db transaction? sql-params {})))
   ([db transaction? sql-params opts]
-   (if-let [con (db-find-connection db)]
-     (let [[sql & params] (if (sql-stmt? sql-params) (vector sql-params) (vec sql-params))
-           params         (if (or (:multi? opts) (empty? params)) params [params])]
-       (if (instance? PreparedStatement sql)
-         (db-do-execute-prepared-statement db sql params (assoc opts :transaction? transaction?))
-         (with-open [^PreparedStatement stmt (prepare-statement con sql opts)]
-           (db-do-execute-prepared-statement db stmt params (assoc opts :transaction? transaction?)))))
-     (with-open [con (get-connection db)]
-       (db-do-prepared (add-connection db con) transaction? sql-params opts)))))
+   (let [opts (merge (when (map? db) db) opts)]
+     (if-let [con (db-find-connection db)]
+       (let [[sql & params] (if (sql-stmt? sql-params) (vector sql-params) (vec sql-params))
+             params         (if (or (:multi? opts) (empty? params)) params [params])]
+         (if (instance? PreparedStatement sql)
+           (db-do-execute-prepared-statement db sql params (assoc opts :transaction? transaction?))
+           (with-open [^PreparedStatement stmt (prepare-statement con sql opts)]
+             (db-do-execute-prepared-statement db stmt params (assoc opts :transaction? transaction?)))))
+       (with-open [con (get-connection db)]
+         (db-do-prepared (add-connection db con) transaction? sql-params opts))))))
 
 (defn db-query-with-resultset
   "Executes a query, then evaluates func passing in the raw ResultSet as an
@@ -838,7 +842,8 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
   Uses executeQuery. This may affect what SQL you can run via query."
   ([db sql-params func] (db-query-with-resultset db sql-params func {}))
   ([db sql-params func opts]
-   (let [[sql & params] (if (sql-stmt? sql-params) (vector sql-params) (vec sql-params))
+   (let [opts (merge (when (map? db) db) opts)
+         [sql & params] (if (sql-stmt? sql-params) (vector sql-params) (vec sql-params))
          run-query-with-params (^{:once true} fn* [^PreparedStatement stmt]
                                 ((or (:set-parameters db) set-parameters) stmt params)
                                 (with-open [rset (.executeQuery stmt)]
@@ -879,13 +884,22 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
   by any parameters it needs.
   See also prepare-statement for additional options."
   ([db sql-params] (query db sql-params {}))
-  ([db sql-params {:keys [as-arrays? identifiers qualifier
-                          result-set-fn row-fn]
-                   :or {identifiers str/lower-case
-                        row-fn identity}
-                   :as opts}]
-   (let [result-set-fn (or result-set-fn (if as-arrays? vec doall))
+  ([db sql-params opts]
+   (let [{:keys [as-arrays? explain? explain-fn identifiers qualifier
+                 result-set-fn row-fn] :as opts}
+         (merge {:explain-fn println :identifiers str/lower-case :row-fn identity}
+                (when (map? db) db)
+                opts)
+         result-set-fn (or result-set-fn (if as-arrays? vec doall))
          sql-params-vector (if (sql-stmt? sql-params) (vector sql-params) (vec sql-params))]
+     (when (and explain? (string? (first sql-params-vector)))
+       (query db (into [(str (if (string? explain?) explain? "EXPLAIN")
+                             " "
+                             (first sql-params-vector))]
+                       (rest sql-params-vector))
+              (-> opts
+                  (dissoc :explain? :result-set-fn :row-fn)
+                  (assoc :result-set-fn explain-fn))))
      (db-query-with-resultset db sql-params-vector
                               (^{:once true} fn* [rset]
                                ((^{:once true} fn* [rs]
@@ -929,8 +943,10 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
   columns, e.g,. {:order-by [:name {:age :desc]}"
   ([db table columns] (find-by-keys db table columns {}))
   ([db table columns opts]
-   (let [entities (:entities opts identity)
-         order-by (:order-by opts)
+   (let [{:keys [entities order-by] :as opts}
+         (merge {:entities identity}
+                (when (map? db) db)
+                opts)
          ks (keys columns)
          vs (vals columns)]
      (query db (into [(str "SELECT * FROM " (table-str table entities)
@@ -953,7 +969,8 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
      (get-by-id db table pk-value :id pk-name-or-opts)
      (get-by-id db table pk-value pk-name-or-opts {})))
   ([db table pk-value pk-name opts]
-   (let [r-s-fn (or (:result-set-fn opts) identity)]
+   (let [opts (merge (when (map? db) db) opts)
+         r-s-fn (or (:result-set-fn opts) identity)]
      (find-by-keys db table {pk-name pk-value}
                    (assoc opts :result-set-fn (comp first r-s-fn))))))
 
@@ -969,9 +986,10 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
   If there are no parameters specified, executeUpdate will be used, otherwise
   executeBatch will be used. This may affect what SQL you can run via execute!"
   ([db sql-params] (execute! db sql-params {}))
-  ([db sql-params {:keys [transaction? multi?]
-                   :or {transaction? true multi? false}}]
-   (let [execute-helper
+  ([db sql-params opts]
+   (let [{:keys [transaction? multi?]}
+         (merge {:transaction? true :multi? false} (when (map? db) db) opts)
+         execute-helper
          (^{:once true} fn* [db]
           (if multi?
             (db-do-prepared db transaction? sql-params {:multi? true})
@@ -999,11 +1017,12 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
   is equivalent to:
     (execute! db [\"DELETE FROM person WHERE zip = ?\" 94546])"
   ([db table where-clause] (delete! db table where-clause {}))
-  ([db table where-clause {:keys [entities transaction?]
-                           :or {entities identity transaction? true}}]
-   (execute! db
-             (delete-sql table where-clause entities)
-             {:transaction? transaction?})))
+  ([db table where-clause opts]
+   (let [{:keys [entities transaction?]}
+         (merge {:entities identity :transaction? true} (when (map? db) db) opts)]
+     (execute! db
+               (delete-sql table where-clause entities)
+               {:transaction? transaction?}))))
 
 (defn- multi-insert-helper
   "Given a (connected) database connection and some SQL statements (for multiple
@@ -1064,11 +1083,12 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
 (defn- insert-rows!
   "Given a database connection, a table name, a sequence of rows, and an options
   map, insert the rows into the database."
-  [db table rows {:keys [entities identifiers qualifier transaction?]
-                  :or {entities identity
-                       identifiers str/lower-case
-                       transaction? true}}]
-  (let [sql-params (map (fn [row]
+  [db table rows opts]
+  (let [{:keys [entities identifiers qualifier transaction?]}
+        (merge {:entities identity :identifiers str/lower-case :transaction? true}
+               (when (map? db) db)
+               opts)
+        sql-params (map (fn [row]
                           (when-not (map? row)
                             (throw (IllegalArgumentException. "insert! / insert-multi! called with a non-map row")))
                           (insert-single-row-sql table row entities)) rows)]
@@ -1083,9 +1103,10 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
   "Given a database connection, a table name, a sequence of columns names, a
   sequence of vectors of column values, one per row, and an options map,
   insert the rows into the database."
-  [db table cols values {:keys [entities transaction?]
-                         :or {entities identity transaction? true}}]
-  (let [sql-params (insert-multi-row-sql table cols values entities)]
+  [db table cols values opts]
+  (let [{:keys [entities transaction?]}
+        (merge {:entities identity :transaction? true} (when (map? db) db) opts)
+        sql-params (insert-multi-row-sql table cols values entities)]
     (if-let [con (db-find-connection db)]
       (db-do-prepared db transaction? sql-params {:multi? true})
       (with-open [con (get-connection db)]
@@ -1160,11 +1181,12 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
   is equivalent to:
     (execute! db [\"UPDATE person SET zip = ? WHERE zip = ?\" 94540 94546])"
   ([db table set-map where-clause] (update! db table set-map where-clause {}))
-  ([db table set-map where-clause {:keys [entities transaction?]
-                                   :or {entities identity transaction? true}}]
-   (execute! db
-             (update-sql table set-map where-clause entities)
-             {:transaction? transaction?})))
+  ([db table set-map where-clause opts]
+   (let [{:keys [entities transaction?]}
+         (merge {:entities identity :transaction? true} (when (map? db) db) opts)]
+     (execute! db
+               (update-sql table set-map where-clause entities)
+               {:transaction? transaction?}))))
 
 (defn create-table-ddl
   "Given a table name and a vector of column specs, return the DDL string for
