@@ -16,7 +16,7 @@ Additional documentation can be found in the [java.jdbc section of clojure-doc.o
 Releases and Dependency Information
 ========================================
 
-Latest stable release: 0.6.1
+Latest stable release: 0.6.2-alpha1
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22java.jdbc%22)
 
@@ -24,14 +24,14 @@ Latest stable release: 0.6.1
 
 [Leiningen](https://github.com/technomancy/leiningen) dependency information:
 ```clojure
-[org.clojure/java.jdbc "0.6.1"]
+[org.clojure/java.jdbc "0.6.2-alpha1"]
 ```
 [Maven](http://maven.apache.org/) dependency information:
 ```xml
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>java.jdbc</artifactId>
-  <version>0.6.1</version>
+  <version>0.6.2-alpha1</version>
 </dependency>
 ```
 You will also need to add dependencies for the JDBC driver you intend to use. Here are links (to Maven Central) for each of the common database drivers that clojure.java.jdbc is known to be used with:
@@ -103,6 +103,13 @@ Developer Information
 
 Change Log
 ====================
+
+* Release 0.6.2-alpha1 on 2016-07-05
+  * Experimental support for `clojure.spec` via the new `clojure.java.jdbc.spec` namespace. Requires Clojure 1.9.0 Alpha 8 (or later).
+  * All options to all functions can now have defaults within the `db-spec` itself [JDBC-136](http://dev.clojure.org/jira/browse/JDBC-136).
+  * `query` (and by extension `find-by-keys` and `get-by-id`) now support `:explain?` and `:explain-fn` options to help support basic performance analysis [JDBC-135](http://dev.clojure.org/jira/browse/JDBC-135).
+  * `insert!` and `insert-multi!` now respect `:identifiers` and `:qualifier` because inserting rows on PostgreSQL returns full rows, not just the newly inserted keys [JDBC-134](http://dev.clojure.org/jira/browse/JDBC-134).
+  * In addition to the `:identifiers` option, you can now use `:qualifier` to specify a namespace qualifier (string) to be used when constructing keywords from SQL column names [JDBC-133](http://dev.clojure.org/jira/browse/JDBC-133).
 
 * Release 0.6.1 on 2016-05-12 -- **IMPORTANT BUG FIX!**
   * `insert!` and `insert-multi!` now default `:transaction?` to `true` (as they should have done in 0.6.0!) [JDBC-128](http://dev.clojure.org/jira/browse/JDBC-128). These two functions also have improved docstrings to clarify the difference in behavior between inserting rows as maps compared to inserting rows as a series of column values.

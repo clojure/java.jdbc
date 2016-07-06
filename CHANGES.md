@@ -1,4 +1,4 @@
-Changes coming in 0.6.2
+Changes in 0.6.2-alpha1
 
 * Experimental support for `clojure.spec` via the new `clojure.java.jdbc.spec` namespace. Requires Clojure 1.9.0 Alpha 8 (or later).
 * All options to all functions can now have defaults within the `db-spec` itself [JDBC-136](http://dev.clojure.org/jira/browse/JDBC-136).
