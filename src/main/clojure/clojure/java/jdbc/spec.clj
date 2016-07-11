@@ -51,7 +51,7 @@
 
 (s/def ::sql-stmt (s/or :sql string? :stmt ::prepared-statement))
 
-(s/def ::sql-value ::s/any) ;; for now
+(s/def ::sql-value any?) ;; for now
 
 (s/def ::sql-params (s/or :sql        ::sql-stmt
                           :sql-params (s/cat :sql ::sql-stmt :params (s/* ::sql-value))))
@@ -119,14 +119,14 @@
                      :sql-params ::sql-params
                      :opts       (s/? ::query-options))
         ;; because result-set-fn can return anything:
-        :ret  ::s/any)
+        :ret  any?)
 
 (s/fdef find-by-keys
         :args (s/cat :db      ::db-spec
                      :table   ::identifier
                      :columns (s/map-of ::identifier ::sql-value)
                      :opts    (s/? ::find-by-keys-options))
-        :ret  ::s/any)
+        :ret  any?)
 
 ;; get-by-id
 
