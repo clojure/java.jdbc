@@ -12,7 +12,7 @@
    :wiki-url
    "http://clojure.github.io/java.jdbc/index.html#clojure.java.jdbc.spec",
    :source-url
-   "https://github.com/clojure/java.jdbc/blob/ab12a9dd77611700924aae67b99e2b8d7185ced0/src/main/clojure/clojure/java/jdbc/spec.clj"}),
+   "https://github.com/clojure/java.jdbc/blob/11b7cbef6734e8ba75306394ff72d7b449472e94/src/main/clojure/clojure/java/jdbc/spec.clj"}),
  :vars
  ({:raw-source-url
    "https://github.com/clojure/java.jdbc/raw/f9fe3dde5b4bc5f1a5b5a79ffb5374fad3377b0b/src/main/clojure/clojure/java/jdbc.clj",
@@ -603,35 +603,12 @@
    :source-url nil,
    :raw-source-url nil,
    :file nil}
-  {:keyword :clojure.java.jdbc.spec/column-spec,
-   :spec
-   (cat
-    :col
-    :clojure.java.jdbc.spec/identifier
-    :spec
-    (* (or :kw keyword? :str string?))),
-   :var-type "spec",
-   :namespace "clojure.java.jdbc.spec",
-   :wiki-url
-   "http://clojure.github.io/java.jdbc//index.html#:clojure.java.jdbc.spec/column-spec"}
   {:keyword :clojure.java.jdbc.spec/connection,
    :spec (instance? java.sql.Connection %),
    :var-type "spec",
    :namespace "clojure.java.jdbc.spec",
    :wiki-url
    "http://clojure.github.io/java.jdbc//index.html#:clojure.java.jdbc.spec/connection"}
-  {:keyword :clojure.java.jdbc.spec/create-options,
-   :spec
-   (keys
-    :req-un
-    []
-    :opt-un
-    [:clojure.java.jdbc.spec/table-spec
-     :clojure.java.jdbc.spec/entities]),
-   :var-type "spec",
-   :namespace "clojure.java.jdbc.spec",
-   :wiki-url
-   "http://clojure.github.io/java.jdbc//index.html#:clojure.java.jdbc.spec/create-options"}
   {:keyword :clojure.java.jdbc.spec/db-spec,
    :spec
    (or
@@ -732,127 +709,22 @@
    :namespace "clojure.java.jdbc.spec",
    :wiki-url
    "http://clojure.github.io/java.jdbc//index.html#:clojure.java.jdbc.spec/entity"}
-  {:keyword :clojure.java.jdbc.spec/exec-sql-options,
-   :spec
-   (keys
-    :req-un
-    []
-    :opt-un
-    [:clojure.java.jdbc.spec/entities
-     :clojure.java.jdbc.spec/transaction?]),
-   :var-type "spec",
-   :namespace "clojure.java.jdbc.spec",
-   :wiki-url
-   "http://clojure.github.io/java.jdbc//index.html#:clojure.java.jdbc.spec/exec-sql-options"}
-  {:keyword :clojure.java.jdbc.spec/execute-options,
-   :spec
-   (keys
-    :req-un
-    []
-    :opt-un
-    [:clojure.java.jdbc.spec/transaction?
-     :clojure.java.jdbc.spec/multi?]),
-   :var-type "spec",
-   :namespace "clojure.java.jdbc.spec",
-   :wiki-url
-   "http://clojure.github.io/java.jdbc//index.html#:clojure.java.jdbc.spec/execute-options"}
-  {:keyword :clojure.java.jdbc.spec/execute-result,
-   :spec (* integer?),
-   :var-type "spec",
-   :namespace "clojure.java.jdbc.spec",
-   :wiki-url
-   "http://clojure.github.io/java.jdbc//index.html#:clojure.java.jdbc.spec/execute-result"}
-  {:keyword :clojure.java.jdbc.spec/find-by-keys-options,
-   :spec
-   (keys
-    :req-un
-    []
-    :opt-un
-    [:clojure.java.jdbc.spec/entities
-     :clojure.java.jdbc.spec/order-by
-     :clojure.java.jdbc.spec/result-set-fn
-     :clojure.java.jdbc.spec/row-fn
-     :clojure.java.jdbc.spec/identifiers
-     :clojure.java.jdbc.spec/as-arrays?]),
-   :var-type "spec",
-   :namespace "clojure.java.jdbc.spec",
-   :wiki-url
-   "http://clojure.github.io/java.jdbc//index.html#:clojure.java.jdbc.spec/find-by-keys-options"}
   {:keyword :clojure.java.jdbc.spec/identifier,
    :spec (or :kw keyword? :str string?),
    :var-type "spec",
    :namespace "clojure.java.jdbc.spec",
    :wiki-url
    "http://clojure.github.io/java.jdbc//index.html#:clojure.java.jdbc.spec/identifier"}
-  {:keyword :clojure.java.jdbc.spec/prepare-options,
-   :spec
-   (keys
-    :req-un
-    []
-    :opt-un
-    [:clojure.java.jdbc.spec/return-keys
-     :clojure.java.jdbc.spec/result-type
-     :clojure.java.jdbc.spec/concurrency
-     :clojure.java.jdbc.spec/cursors
-     :clojure.java.jdbc.spec/fetch-size
-     :clojure.java.jdbc.spec/max-rows
-     :clojure.java.jdbc.spec/timeout]),
-   :var-type "spec",
-   :namespace "clojure.java.jdbc.spec",
-   :wiki-url
-   "http://clojure.github.io/java.jdbc//index.html#:clojure.java.jdbc.spec/prepare-options"}
   {:keyword :clojure.java.jdbc.spec/prepared-statement,
    :spec (instance? java.sql.PreparedStatement %),
    :var-type "spec",
    :namespace "clojure.java.jdbc.spec",
    :wiki-url
    "http://clojure.github.io/java.jdbc//index.html#:clojure.java.jdbc.spec/prepared-statement"}
-  {:keyword :clojure.java.jdbc.spec/query-options,
-   :spec
-   (keys
-    :req-un
-    []
-    :opt-un
-    [:clojure.java.jdbc.spec/result-set-fn
-     :clojure.java.jdbc.spec/row-fn
-     :clojure.java.jdbc.spec/identifiers
-     :clojure.java.jdbc.spec/as-arrays?]),
-   :var-type "spec",
-   :namespace "clojure.java.jdbc.spec",
-   :wiki-url
-   "http://clojure.github.io/java.jdbc//index.html#:clojure.java.jdbc.spec/query-options"}
-  {:keyword :clojure.java.jdbc.spec/sql-params,
-   :spec
-   (or
-    :sql
-    :clojure.java.jdbc.spec/sql-stmt
-    :sql-params
-    (cat
-     :sql
-     :clojure.java.jdbc.spec/sql-stmt
-     :params
-     (* :clojure.java.jdbc.spec/sql-value))),
-   :var-type "spec",
-   :namespace "clojure.java.jdbc.spec",
-   :wiki-url
-   "http://clojure.github.io/java.jdbc//index.html#:clojure.java.jdbc.spec/sql-params"}
   {:keyword :clojure.java.jdbc.spec/sql-stmt,
    :spec
    (or :sql string? :stmt :clojure.java.jdbc.spec/prepared-statement),
    :var-type "spec",
    :namespace "clojure.java.jdbc.spec",
    :wiki-url
-   "http://clojure.github.io/java.jdbc//index.html#:clojure.java.jdbc.spec/sql-stmt"}
-  {:keyword :clojure.java.jdbc.spec/sql-value,
-   :spec (constantly true),
-   :var-type "spec",
-   :namespace "clojure.java.jdbc.spec",
-   :wiki-url
-   "http://clojure.github.io/java.jdbc//index.html#:clojure.java.jdbc.spec/sql-value"}
-  {:keyword :clojure.java.jdbc.spec/where-clause,
-   :spec
-   (cat :where string? :params (* :clojure.java.jdbc.spec/sql-value)),
-   :var-type "spec",
-   :namespace "clojure.java.jdbc.spec",
-   :wiki-url
-   "http://clojure.github.io/java.jdbc//index.html#:clojure.java.jdbc.spec/where-clause"})}
+   "http://clojure.github.io/java.jdbc//index.html#:clojure.java.jdbc.spec/sql-stmt"})}

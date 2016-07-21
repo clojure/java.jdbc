@@ -174,13 +174,7 @@ namespace.
   </div><div class="toc-section" style="margin-left: 1em;">
     <a style="margin-top: 3px;" href="#clojure.java.jdbc.spec">clojure.java.jdbc.spec</a>
     <div class="toc-entry" style="margin-left: 1em;">
-      <a href="#:clojure.java.jdbc.spec/column-spec" class="toc-entry-anchor">::column-spec</a>
-      
-    </div><div class="toc-entry" style="margin-left: 1em;">
       <a href="#:clojure.java.jdbc.spec/connection" class="toc-entry-anchor">::connection</a>
-      
-    </div><div class="toc-entry" style="margin-left: 1em;">
-      <a href="#:clojure.java.jdbc.spec/create-options" class="toc-entry-anchor">::create-options</a>
       
     </div><div class="toc-entry" style="margin-left: 1em;">
       <a href="#:clojure.java.jdbc.spec/db-spec" class="toc-entry-anchor">::db-spec</a>
@@ -213,40 +207,13 @@ namespace.
       <a href="#:clojure.java.jdbc.spec/entity" class="toc-entry-anchor">::entity</a>
       
     </div><div class="toc-entry" style="margin-left: 1em;">
-      <a href="#:clojure.java.jdbc.spec/exec-sql-options" class="toc-entry-anchor">::exec-sql-options</a>
-      
-    </div><div class="toc-entry" style="margin-left: 1em;">
-      <a href="#:clojure.java.jdbc.spec/execute-options" class="toc-entry-anchor">::execute-options</a>
-      
-    </div><div class="toc-entry" style="margin-left: 1em;">
-      <a href="#:clojure.java.jdbc.spec/execute-result" class="toc-entry-anchor">::execute-result</a>
-      
-    </div><div class="toc-entry" style="margin-left: 1em;">
-      <a href="#:clojure.java.jdbc.spec/find-by-keys-options" class="toc-entry-anchor">::find-by-keys-options</a>
-      
-    </div><div class="toc-entry" style="margin-left: 1em;">
       <a href="#:clojure.java.jdbc.spec/identifier" class="toc-entry-anchor">::identifier</a>
-      
-    </div><div class="toc-entry" style="margin-left: 1em;">
-      <a href="#:clojure.java.jdbc.spec/prepare-options" class="toc-entry-anchor">::prepare-options</a>
       
     </div><div class="toc-entry" style="margin-left: 1em;">
       <a href="#:clojure.java.jdbc.spec/prepared-statement" class="toc-entry-anchor">::prepared-statement</a>
       
     </div><div class="toc-entry" style="margin-left: 1em;">
-      <a href="#:clojure.java.jdbc.spec/query-options" class="toc-entry-anchor">::query-options</a>
-      
-    </div><div class="toc-entry" style="margin-left: 1em;">
-      <a href="#:clojure.java.jdbc.spec/sql-params" class="toc-entry-anchor">::sql-params</a>
-      
-    </div><div class="toc-entry" style="margin-left: 1em;">
       <a href="#:clojure.java.jdbc.spec/sql-stmt" class="toc-entry-anchor">::sql-stmt</a>
-      
-    </div><div class="toc-entry" style="margin-left: 1em;">
-      <a href="#:clojure.java.jdbc.spec/sql-value" class="toc-entry-anchor">::sql-value</a>
-      
-    </div><div class="toc-entry" style="margin-left: 1em;">
-      <a href="#:clojure.java.jdbc.spec/where-clause" class="toc-entry-anchor">::where-clause</a>
       
     </div>
   </div>
@@ -1011,21 +978,9 @@ See db-transaction* for more details.</pre>
   <div id="spec-entry">
     <br />
     <hr />
-    <h2 id=":clojure.java.jdbc.spec/column-spec">::column-spec</h2>
-    <span id="spec-type">spec</span><br />
-    <pre id="spec-description">(cat :col ::identifier :spec (* (or :kw keyword? :str string?)))</pre>
-  </div><div id="spec-entry">
-    <br />
-    <hr />
     <h2 id=":clojure.java.jdbc.spec/connection">::connection</h2>
     <span id="spec-type">spec</span><br />
     <pre id="spec-description">(instance? java.sql.Connection %)</pre>
-  </div><div id="spec-entry">
-    <br />
-    <hr />
-    <h2 id=":clojure.java.jdbc.spec/create-options">::create-options</h2>
-    <span id="spec-type">spec</span><br />
-    <pre id="spec-description">(keys :req-un [] :opt-un [::table-spec ::entities])</pre>
   </div><div id="spec-entry">
     <br />
     <hr />
@@ -1097,54 +1052,9 @@ See db-transaction* for more details.</pre>
   </div><div id="spec-entry">
     <br />
     <hr />
-    <h2 id=":clojure.java.jdbc.spec/exec-sql-options">::exec-sql-options</h2>
-    <span id="spec-type">spec</span><br />
-    <pre id="spec-description">(keys :req-un [] :opt-un [::entities ::transaction?])</pre>
-  </div><div id="spec-entry">
-    <br />
-    <hr />
-    <h2 id=":clojure.java.jdbc.spec/execute-options">::execute-options</h2>
-    <span id="spec-type">spec</span><br />
-    <pre id="spec-description">(keys :req-un [] :opt-un [::transaction? ::multi?])</pre>
-  </div><div id="spec-entry">
-    <br />
-    <hr />
-    <h2 id=":clojure.java.jdbc.spec/execute-result">::execute-result</h2>
-    <span id="spec-type">spec</span><br />
-    <pre id="spec-description">(* integer?)</pre>
-  </div><div id="spec-entry">
-    <br />
-    <hr />
-    <h2 id=":clojure.java.jdbc.spec/find-by-keys-options">::find-by-keys-options</h2>
-    <span id="spec-type">spec</span><br />
-    <pre id="spec-description">(keys
- :req-un []
- :opt-un [::entities
-          ::order-by
-          ::result-set-fn
-          ::row-fn
-          ::identifiers
-          ::as-arrays?])</pre>
-  </div><div id="spec-entry">
-    <br />
-    <hr />
     <h2 id=":clojure.java.jdbc.spec/identifier">::identifier</h2>
     <span id="spec-type">spec</span><br />
     <pre id="spec-description">(or :kw keyword? :str string?)</pre>
-  </div><div id="spec-entry">
-    <br />
-    <hr />
-    <h2 id=":clojure.java.jdbc.spec/prepare-options">::prepare-options</h2>
-    <span id="spec-type">spec</span><br />
-    <pre id="spec-description">(keys
- :req-un []
- :opt-un [::return-keys
-          ::result-type
-          ::concurrency
-          ::cursors
-          ::fetch-size
-          ::max-rows
-          ::timeout])</pre>
   </div><div id="spec-entry">
     <br />
     <hr />
@@ -1154,37 +1064,9 @@ See db-transaction* for more details.</pre>
   </div><div id="spec-entry">
     <br />
     <hr />
-    <h2 id=":clojure.java.jdbc.spec/query-options">::query-options</h2>
-    <span id="spec-type">spec</span><br />
-    <pre id="spec-description">(keys
- :req-un []
- :opt-un [::result-set-fn ::row-fn ::identifiers ::as-arrays?])</pre>
-  </div><div id="spec-entry">
-    <br />
-    <hr />
-    <h2 id=":clojure.java.jdbc.spec/sql-params">::sql-params</h2>
-    <span id="spec-type">spec</span><br />
-    <pre id="spec-description">(or
- :sql ::sql-stmt
- :sql-params (cat :sql ::sql-stmt :params (* ::sql-value)))</pre>
-  </div><div id="spec-entry">
-    <br />
-    <hr />
     <h2 id=":clojure.java.jdbc.spec/sql-stmt">::sql-stmt</h2>
     <span id="spec-type">spec</span><br />
     <pre id="spec-description">(or :sql string? :stmt ::prepared-statement)</pre>
-  </div><div id="spec-entry">
-    <br />
-    <hr />
-    <h2 id=":clojure.java.jdbc.spec/sql-value">::sql-value</h2>
-    <span id="spec-type">spec</span><br />
-    <pre id="spec-description">(constantly true)</pre>
-  </div><div id="spec-entry">
-    <br />
-    <hr />
-    <h2 id=":clojure.java.jdbc.spec/where-clause">::where-clause</h2>
-    <span id="spec-type">spec</span><br />
-    <pre id="spec-description">(cat :where string? :params (* ::sql-value))</pre>
   </div>
 </div>
 
