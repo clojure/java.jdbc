@@ -28,7 +28,8 @@
 (try
   (require 'clojure.java.jdbc.spec)
   (require 'clojure.spec.test)
-  ((resolve 'clojure.spec.test/instrument) 'clojure.java.jdbc)
+  (let [syms ((resolve 'clojure.spec.test/enumerate-namespace) 'clojure.java.jdbc)]
+    ((resolve 'clojure.spec.test/instrument) syms))
   (println "Instrumenting clojure.java.jdbc with clojure.spec")
   (catch Exception _))
 
@@ -115,7 +116,7 @@
     (doseq [table [:fruit :fruit2 :veggies :veggies2]]
       (try
         (sql/db-do-commands db (sql/drop-table-ddl table))
-        (catch Exception _
+        (catch java.sql.SQLException _
           ;; ignore
           ))))
   (t))
@@ -195,6 +196,9 @@
         [:cost :int]
         [:grade :real]]
        {:table-spec ""})))
+
+(deftest test-drop-table-ddl
+  (is (= "DROP TABLE something" (sql/drop-table-ddl :something))))
 
 (deftest test-uri-spec-parsing
   (is (= {:advanced "false" :ssl "required" :password "clojure_test"

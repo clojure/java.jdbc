@@ -15,7 +15,7 @@
       :doc "Optional specifications for use with Clojure 1.9 or later."}
   clojure.java.jdbc.spec
   (:require [clojure.spec :as s]
-            [clojure.java.jdbc :refer :all]))
+            [clojure.java.jdbc :as sql]))
 
 ;; basic java.sql types
 
@@ -82,23 +82,23 @@
 
 ;; quoted
 
-(s/fdef get-connection
+(s/fdef sql/get-connection
         :args (s/cat :db-spec ::db-spec)
         :ret  ::connection)
 
 ;; result-set-seq
 
-(s/fdef prepare-statement
+(s/fdef sql/prepare-statement
         :args (s/cat :con  ::connection
                      :sql  string?
                      :opts (s/? ::prepare-options))
         :ret  ::prepared-statement)
 
-(s/fdef db-find-connection
+(s/fdef sql/db-find-connection
         :args (s/cat :db-spec ::db-spec)
         :ret  (s/nilable ::connection))
 
-(s/fdef db-connection
+(s/fdef sql/db-connection
         :args (s/cat :db-spec ::db-spec)
         :ret  ::connection)
 
@@ -114,14 +114,14 @@
 
 ;; db-query-with-resultset
 
-(s/fdef query
+(s/fdef sql/query
         :args (s/cat :db         ::db-spec
                      :sql-params ::sql-params
                      :opts       (s/? ::query-options))
         ;; because result-set-fn can return anything:
         :ret  any?)
 
-(s/fdef find-by-keys
+(s/fdef sql/find-by-keys
         :args (s/cat :db      ::db-spec
                      :table   ::identifier
                      :columns (s/map-of ::identifier ::sql-value)
@@ -130,13 +130,13 @@
 
 ;; get-by-id
 
-(s/fdef execute!
+(s/fdef sql/execute!
         :args (s/cat :db         ::db-spec
                      :sql-params ::sql-params
                      :opts       (s/? ::execute-options))
         :ret  ::execute-result)
 
-(s/fdef delete!
+(s/fdef sql/delete!
         :args (s/cat :db           ::db-spec
                      :table        ::identifier
                      :where-clause (s/spec ::where-clause)
@@ -147,7 +147,7 @@
 
 ;; insert-multi!
 
-(s/fdef update!
+(s/fdef sql/update!
         :args (s/cat :db           ::db-spec
                      :table        ::identifier
                      :set-map      (s/map-of ::identifier ::sql-value)
@@ -157,13 +157,13 @@
 
 (s/def ::column-spec (s/cat :col ::identifier :spec (s/* (s/or :kw keyword? :str string?))))
 
-(s/fdef create-table-ddl
+(s/fdef sql/create-table-ddl
         :args (s/cat :table ::identifier
                      :specs (s/coll-of ::column-spec)
                      :opts  (s/? ::create-options))
         :ret  string?)
 
-(s/fdef drop-table-ddl
+(s/fdef sql/drop-table-ddl
         :args (s/cat :table ::identifier
                      :opts  (s/? (s/keys :req-un [] :opt-un [::entities])))
         :ret  string?)

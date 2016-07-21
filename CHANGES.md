@@ -1,3 +1,7 @@
+Changes in 0.6.2-alpha2
+
+* Updates to `clojure.spec` support to work properly with Clojure 1.9.0 Alpha 10.
+
 Changes in 0.6.2-alpha1
 
 * Experimental support for `clojure.spec` via the new `clojure.java.jdbc.spec` namespace. Requires Clojure 1.9.0 Alpha 8 (or later).

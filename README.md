@@ -16,7 +16,7 @@ Additional documentation can be found in the [java.jdbc section of clojure-doc.o
 Releases and Dependency Information
 ========================================
 
-Latest stable release: 0.6.2-alpha1
+Latest stable release: 0.6.2-alpha2
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22java.jdbc%22)
 
@@ -24,14 +24,14 @@ Latest stable release: 0.6.2-alpha1
 
 [Leiningen](https://github.com/technomancy/leiningen) dependency information:
 ```clojure
-[org.clojure/java.jdbc "0.6.2-alpha1"]
+[org.clojure/java.jdbc "0.6.2-alpha2"]
 ```
 [Maven](http://maven.apache.org/) dependency information:
 ```xml
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>java.jdbc</artifactId>
-  <version>0.6.2-alpha1</version>
+  <version>0.6.2-alpha2</version>
 </dependency>
 ```
 You will also need to add dependencies for the JDBC driver you intend to use. Here are links (to Maven Central) for each of the common database drivers that clojure.java.jdbc is known to be used with:
@@ -103,6 +103,9 @@ Developer Information
 
 Change Log
 ====================
+
+* Release 0.6.2-alpha2 on 2016-07-21
+  * Update `clojure.spec` support to work with Clojure 1.9.0 Alpha 10.
 
 * Release 0.6.2-alpha1 on 2016-07-05
   * Experimental support for `clojure.spec` via the new `clojure.java.jdbc.spec` namespace. Requires Clojure 1.9.0 Alpha 8 (or later).
