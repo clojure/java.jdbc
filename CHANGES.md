@@ -1,3 +1,8 @@
+Changes coming in 0.6.2-alpha3
+
+* Fixed postgres / postgresql alias support [JDBC-138](http://dev.clojure.org/jira/browse/JDBC-138).
+  This also adds aliases for mssql (sqlserver), jtds (jtds:sqlserver), oracle (oracle:thin), and hsql (hsqldb).
+
 Changes in 0.6.2-alpha2
 
 * Updates to `clojure.spec` support to work properly with Clojure 1.9.0 Alpha 10.

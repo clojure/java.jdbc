@@ -155,7 +155,11 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
    "sqlite"         "org.sqlite.JDBC"})
 
 (def ^{:private true :doc "Map of schemes to subprotocols"} subprotocols
-  {"postgres" "postgresql"})
+  {"postgres" "postgresql"
+   "mssql"    "sqlserver"
+   "jtds"     "jtds:sqlserver"
+   "oracle"   "oracle:thin"
+   "hsql"     "hsqldb"})
 
 (defn- parse-properties-uri [^URI uri]
   (let [host (.getHost uri)
@@ -265,14 +269,17 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
     (DriverManager/getConnection connection-uri)
 
     (and subprotocol subname)
-    (let [url (format "jdbc:%s:%s" subprotocol subname)
+    (let [;; allow aliases for subprotocols
+          subprotocol (subprotocols subprotocol subprotocol)
+          url (format "jdbc:%s:%s" subprotocol subname)
           etc (dissoc db-spec :classname :subprotocol :subname)
           classname (or classname (classnames subprotocol))]
       (clojure.lang.RT/loadClassForName classname)
       (DriverManager/getConnection url (as-properties etc)))
 
     (and dbtype dbname)
-    (let [subprotocol dbtype
+    (let [;; alias aliases for dbtype
+          subprotocol (subprotocols dbtype dbtype)
           host (or host "127.0.0.1")
           port (or port (condp = subprotocol
                           "mysql" 3306
