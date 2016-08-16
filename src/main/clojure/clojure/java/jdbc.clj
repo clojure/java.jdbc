@@ -199,21 +199,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
   parameters but can also be a URI or a String. The various possibilities are described
   below:
 
-  Existing Connection:
-    :connection  (required) an existing open connection that can be used
-                 but cannot be closed (only the parent connection can be closed)
-
-  Factory:
-    :factory     (required) a function of one argument, a map of params
-    (others)     (optional) passed to the factory function in a map
-
-  DriverManager:
-    :subprotocol (required) a String, the jdbc subprotocol
-    :subname     (required) a String, the jdbc subname
-    :classname   (optional) a String, the jdbc driver class name
-    (others)     (optional) passed to the driver as properties.
-
-  DriverManager (alternative):
+  DriverManager (preferred):
     :dbtype      (required) a String, the type of the database (the jdbc subprotocol)
     :dbname      (required) a String, the name of the database
     :host        (optional) a String, the host name/IP of the database
@@ -221,6 +207,26 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
     :port        (optional) a Long, the port of the database
                             (defaults to 3306 for mysql, 1433 for mssql/jtds, else nil)
     (others)     (optional) passed to the driver as properties.
+
+  Raw:
+    :connection-uri (required) a String
+                 Passed directly to DriverManager/getConnection
+
+  Other formats accepted:
+
+  Existing Connection:
+    :connection  (required) an existing open connection that can be used
+                 but cannot be closed (only the parent connection can be closed)
+
+  DriverManager (alternative / legacy style):
+    :subprotocol (required) a String, the jdbc subprotocol
+    :subname     (required) a String, the jdbc subname
+    :classname   (optional) a String, the jdbc driver class name
+    (others)     (optional) passed to the driver as properties.
+
+  Factory:
+    :factory     (required) a function of one argument, a map of params
+    (others)     (optional) passed to the factory function in a map
 
   DataSource:
     :datasource  (required) a javax.sql.DataSource
@@ -233,14 +239,10 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
     :name        (required) a String or javax.naming.Name
     :environment (optional) a java.util.Map
 
-  Raw:
-    :connection-uri (required) a String
-                 Passed directly to DriverManager/getConnection
+  java.net.URI:
+    Parsed JDBC connection string (see java.lang.String format next)
 
-  URI:
-    Parsed JDBC connection string - see below
-
-  String:
+  java.lang.String:
     subprotocol://user:password@host:post/subname
                  An optional prefix of jdbc: is allowed."
   ^java.sql.Connection
