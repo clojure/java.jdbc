@@ -404,10 +404,13 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
    (let [rsmeta (.getMetaData rs)
          idxs (range 1 (inc (.getColumnCount rsmeta)))
          col-name-fn (if (= :cols-as-is as-arrays?) identity make-cols-unique)
+         identifier-fn (if qualifier
+                         (comp (partial keyword qualifier) identifiers)
+                         (comp keyword identifiers))
          keys (->> idxs
                    (map (fn [^Integer i] (.getColumnLabel rsmeta i)))
                    col-name-fn
-                   (map (comp (partial keyword qualifier) identifiers)))
+                   (map identifier-fn))
          row-values (fn [] (map (fn [^Integer i] (result-set-read-column (.getObject rs i) rsmeta i)) idxs))
          ;; This used to use create-struct (on keys) and then struct to populate each row.
          ;; That had the side effect of preserving the order of columns in each row. As

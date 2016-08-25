@@ -834,6 +834,12 @@
       (is (= [{:fruit/id (generated-key db 1) :fruit/name "Apple" :fruit/appearance nil
                :fruit/grade nil :fruit/cost nil}]
              (sql/query db ["SELECT * FROM fruit"] {:qualifier "fruit"})))
+      (is (= [{:fruit/name "Apple"}]
+             (sql/query db ["SELECT name FROM fruit"]
+                        {:identifiers (comp (partial str "fruit/") str/lower-case)})))
+      (is (= [{:name "Apple"}]
+             (sql/query db ["SELECT name FROM fruit"]
+                        {:identifiers (comp keyword str/lower-case)})))
       (is (= [{:fruit/id (generated-key db 1) :fruit/name "Apple" :fruit/appearance nil
                :fruit/grade nil :fruit/cost nil}]
              (sql/query (assoc db :qualifier "fruit") ["SELECT * FROM fruit"])))

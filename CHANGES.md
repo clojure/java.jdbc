@@ -1,5 +1,6 @@
-Changes coming in 0.6.2-alpha3
+Changes in 0.6.2-alpha3
 
+* Fixed bad interaction between `:qualifier` and existing `:identifiers` functionality [JDBC-140](http://dev.clojure.org/jira/browse/JDBC-140).
 * Updated the README and docstrings to reflect that `:dbtype` is the easiest / preferred way to write `db-spec` maps [JDBC-139](http://dev.clojure.org/jira/browse/JDBC-139).
 * Fixed postgres / postgresql alias support [JDBC-138](http://dev.clojure.org/jira/browse/JDBC-138).
   This also adds aliases for mssql (sqlserver), jtds (jtds:sqlserver), oracle (oracle:thin), and hsql (hsqldb).
