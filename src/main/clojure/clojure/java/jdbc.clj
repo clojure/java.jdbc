@@ -40,13 +40,14 @@ For more documentation, see:
 
 http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
   clojure.java.jdbc
-  (:import [java.net URI]
-           [java.sql BatchUpdateException DriverManager
-            PreparedStatement ResultSet SQLException Statement Types]
-           [java.util Hashtable Map Properties]
-           [javax.sql DataSource])
-  (:require [clojure.string :as str]
-            [clojure.walk :as walk]))
+  (:require [clojure.set :as set]
+            [clojure.string :as str]
+            [clojure.walk :as walk])
+  (:import (java.net URI)
+           (java.sql BatchUpdateException DriverManager
+                     PreparedStatement ResultSet SQLException Statement Types)
+           (java.util Hashtable Map Properties)
+           (javax.sql DataSource)))
 
 (defn as-sql-name
   "Given a naming strategy function and a keyword or string, return
@@ -598,7 +599,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
 
 (def ^:private isolation-kws
   "Map transaction isolation constants to our keywords."
-  (clojure.set/map-invert isolation-levels))
+  (set/map-invert isolation-levels))
 
 (defn get-isolation-level
   "Given a db-spec (with an optional connection), return the current
