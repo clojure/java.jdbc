@@ -587,13 +587,27 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
   [db]
   (deref (:rollback db)))
 
-(def ^{:private true :doc "Transaction isolation levels."}
+(def ^:private
   isolation-levels
+  "Transaction isolation levels."
   {:none             java.sql.Connection/TRANSACTION_NONE
    :read-committed   java.sql.Connection/TRANSACTION_READ_COMMITTED
    :read-uncommitted java.sql.Connection/TRANSACTION_READ_UNCOMMITTED
    :repeatable-read  java.sql.Connection/TRANSACTION_REPEATABLE_READ
    :serializable     java.sql.Connection/TRANSACTION_SERIALIZABLE})
+
+(def ^:private isolation-kws
+  "Map transaction isolation constants to our keywords."
+  (clojure.set/map-invert isolation-levels))
+
+(defn get-isolation-level
+  "Given a db-spec (with an optional connection), return the current
+  transaction isolation level, if known. Return nil if there is no
+  active connection in the db-spec. Return :unknown if we do not
+  recognize the isolation level."
+  [db]
+  (when-let [con (db-find-connection db)]
+    (isolation-kws (.getTransactionIsolation con) :unknown)))
 
 (defn db-transaction*
   "Evaluates func as a transaction on the open database connection. Any

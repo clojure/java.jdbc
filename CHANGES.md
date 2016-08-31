@@ -1,3 +1,7 @@
+Changes coming in 0.6.2-alpha4
+
+* Added `get-isolation-level` to return the current transaction's isolation level, if any [JDBC-141](http://dev.clojure.org/jira/browse/JDBC-141).
+
 Changes in 0.6.2-alpha3
 
 * Fixed bad interaction between `:qualifier` and existing `:identifiers` functionality [JDBC-140](http://dev.clojure.org/jira/browse/JDBC-140).

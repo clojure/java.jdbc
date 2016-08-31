@@ -104,6 +104,10 @@
 
 ;; transaction functions
 
+(s/fdef sql/get-isolation-level
+        :args (s/cat :db ::db-spec)
+        :ret  (s/nilable keyword?))
+
 ;; metadata-result
 
 ;; db-do-commands
