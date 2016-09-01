@@ -97,20 +97,19 @@
                                               :rsmeta ::result-set-metadata
                                               :idxs   (s/coll-of pos-int?))
                                  :ret  (s/coll-of any?)))
+(s/def ::read-columns fn?)
 ;; there's not much we can say about result-set-fn -- it accepts a collection of
 ;; transformed rows (from row-fn), and it produces whatever it wants
 (s/def ::result-set-fn (s/fspec :args (s/cat :rs (s/coll-of any?))
                                 :ret  any?))
 (s/def ::result-type (set (keys @#'sql/result-set-type)))
 ;; there's not much we can say about row-fn -- it accepts a row from a ResultSet
-;; which is a map of keywords to any values, and it produces whatever it wants
-;; (comp clojure.string/lower-case :table_name) does not satisfy this
-#_(s/def ::row-fn (s/fspec :args (s/cat :row (s/map-of keyword? any?))
-                           :ret  any?))
-(s/def ::row-fn ifn?)
+;; which is a map of keywords to SQL values, and it produces whatever it wants
+(s/def ::row-fn (s/fspec :args (s/cat :row (s/map-of keyword? ::sql-value))
+                         :ret  any?))
 (s/def ::return-keys (s/or :columns (s/coll-of ::entity :kind vector?)
                            :boolean boolean?))
-;; ::table-spec
+(s/def ::table-spec string?)
 (s/def ::timeout nat-int?)
 (s/def ::transaction? boolean?)
 
@@ -126,7 +125,7 @@
                                       :opt-un [::entities ::order-by
                                                ::result-set-fn ::row-fn
                                                ::identifiers ::qualifier
-                                               ::as-arrays?]))
+                                               ::as-arrays? ::read-columns]))
 
 (s/def ::prepare-options (s/keys :req-un []
                                  :opt-un [::return-keys ::result-type
@@ -200,7 +199,7 @@
 
 ;; db-do-commands
 
-;; db-do-prepared-return-keys
+;; db-do-prepared-return-keys -- can have both execute options and query options!
 
 ;; db-do-prepared
 
@@ -235,9 +234,9 @@
                      :opts         (s/? ::exec-sql-options))
         :ret  ::execute-result)
 
-;; insert!
+;; insert! -- can have both execute options and query options!
 
-;; insert-multi!
+;; insert-multi! -- can have both execute options and query options!
 
 (s/fdef sql/update!
         :args (s/cat :db           ::db-spec

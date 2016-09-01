@@ -766,7 +766,7 @@
              (sql/metadata-query (.getTables metadata
                                              nil nil nil
                                              (into-array ["TABLE" "VIEW"]))
-                                 {:row-fn (comp clojure.string/lower-case :table_name)
+                                 {:row-fn (comp clojure.string/lower-case str :table_name)
                                   :result-set-fn first}))))))
 
 (deftest test-metadata
