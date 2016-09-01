@@ -209,7 +209,6 @@
         :args (s/cat :db         ::db-spec
                      :sql-params ::sql-params
                      :opts       (s/? ::query-options))
-        ;; because result-set-fn can return anything:
         :ret  any?)
 
 (s/fdef sql/find-by-keys
@@ -219,7 +218,13 @@
                      :opts    (s/? ::find-by-keys-options))
         :ret  any?)
 
-;; get-by-id
+(s/fdef sql/get-by-id
+        :args (s/cat :db       ::db-spec
+                     :table    ::identifier
+                     :pk-value ::sql-value
+                     :opt-args (s/cat :pk-name (s/? ::identifier)
+                                      :opts    (s/? ::find-by-keys-options)))
+        :ret  any?)
 
 (s/fdef sql/execute!
         :args (s/cat :db         ::db-spec
