@@ -21,31 +21,33 @@
 
 (s/def ::connection #(instance? java.sql.Connection %))
 (s/def ::prepared-statement #(instance? java.sql.PreparedStatement %))
+(s/def ::result-set #(instance? java.sql.ResultSet %))
+(s/def ::result-set-metadata #(instance? java.sql.ResultSetMetaData %))
 
 ;; database specification (connection description)
 
 (s/def ::db-spec-connection (s/keys :req-un [::connection]))
-(s/def ::db-spec-factory (s/keys :req-un [::factory]))
+(s/def ::db-spec-friendly (s/keys :req-un [::dbtype ::dbname] :opt-un [::host ::port]))
+(s/def ::db-spec-raw (s/keys :req-un [::connection-uri]))
 (s/def ::db-spec-driver-manager (s/keys :req-un [::subprotocol ::subname] :opt-un [::classname]))
-(s/def ::db-spec-driver-manager-alt (s/keys :req-un [::dbtype ::dbname] :opt-un [::host ::port]))
+(s/def ::db-spec-factory (s/keys :req-un [::factory]))
 (s/def ::db-spec-data-source (s/keys :req-un [::datasource] :opt-un [::username ::user ::password]))
 (s/def ::db-spec-jndi (s/keys :req-un [::name] :opt-un [::environment]))
-(s/def ::db-spec-raw (s/keys :req-un [::connection-uri]))
 (s/def ::db-spec-string string?)
 (s/def ::db-spec (s/or :connection ::db-spec-connection
-                       :factory    ::db-spec-factory
+                       :friendly   ::db-spec-friendly
+                       :raw        ::db-spec-raw
                        :driver-mgr ::db-spec-driver-manager
-                       :friendly   ::db-spec-driver-manager-alt
+                       :factory    ::db-spec-factory
                        :datasource ::db-spec-data-source
                        :jndi       ::db-spec-jndi
-                       :raw        ::db-spec-raw
                        :uri        ::db-spec-string))
 
 ;; naming
 
 (s/def ::entity string?)
 
-(s/def ::identifier (s/or :kw keyword? :str string?))
+(s/def ::identifier (s/or :kw keyword? :s string?))
 
 ;; SQL and parameters
 
@@ -62,6 +64,56 @@
 
 (s/def ::execute-result (s/* integer?))
 
+;; specific options that can be passed
+;; a few of them are nilable, where the functions either pass a possibly nil
+;; version of the option to a called function, but most are not nilable because
+;; the corresponding options must either be omitted or given valid values
+
+(s/def ::as-arrays? (s/nilable #{:cols-as-is true false}))
+(s/def ::concurrency (set (keys @#'sql/result-set-concurrency)))
+(s/def ::cursors (set (keys @#'sql/result-set-holdability)))
+(s/def ::fetch-size nat-int?)
+;; note the asymmetry here: the identifiers function converts a SQL entity to
+;; an identifier (a symbol or a string), whereas the entities function converts
+;; a string (not an identifier) to a SQL entity; SQL entities are always strings
+;; but whilst java.jdbc lets you produce a keyword from identifiers, it does not
+;; assume that entities can accept keywords!
+(s/def ::identifiers (s/fspec :args (s/cat :s ::entity)
+                              :ret  ::identifier))
+(s/def ::entities (s/fspec :args (s/cat :s string?)
+                           :ret  ::entity))
+(s/def ::max-size nat-int?)
+(s/def ::multi? boolean?)
+;; strictly speaking we accept any keyword or string whose upper case name
+;; is either ASC or DESC so this spec is overly restrictive; the :id-dir
+;; can actually be an empty map although that is not very useful
+(s/def ::direction #{:asc :desc "asc" "desc" "ASC" "DESC"})
+(s/def ::column-direction (s/or :id ::identifier
+                                :id-dir (s/map-of ::identifier ::direction)))
+(s/def ::order-by (s/coll-of ::column-direction))
+(s/def ::qualifier (s/nilable string?))
+;; cannot generate a result set so we can't specify this yet
+#_(s/def ::read-columns (s/fspec :args (s/cat :rs     ::result-set
+                                              :rsmeta ::result-set-metadata
+                                              :idxs   (s/coll-of pos-int?))
+                                 :ret  (s/coll-of any?)))
+;; there's not much we can say about result-set-fn -- it accepts a collection of
+;; transformed rows (from row-fn), and it produces whatever it wants
+(s/def ::result-set-fn (s/fspec :args (s/cat :rs (s/coll-of any?))
+                                :ret  any?))
+(s/def ::result-type (set (keys @#'sql/result-set-type)))
+;; there's not much we can say about row-fn -- it accepts a row from a ResultSet
+;; which is a map of keywords to any values, and it produces whatever it wants
+;; (comp clojure.string/lower-case :table_name) does not satisfy this
+#_(s/def ::row-fn (s/fspec :args (s/cat :row (s/map-of keyword? any?))
+                           :ret  any?))
+(s/def ::row-fn ifn?)
+(s/def ::return-keys (s/or :columns (s/coll-of ::entity :kind vector?)
+                           :boolean boolean?))
+;; ::table-spec
+(s/def ::timeout nat-int?)
+(s/def ::transaction? boolean?)
+
 ;; various types of options
 
 (s/def ::create-options (s/keys :req-un [] :opt-un [::table-spec ::entities]))
@@ -70,11 +122,21 @@
 
 (s/def ::execute-options (s/keys :req-un [] :opt-un [::transaction? ::multi?]))
 
-(s/def ::find-by-keys-options (s/keys :req-un [] :opt-un [::entities ::order-by ::result-set-fn ::row-fn ::identifiers ::as-arrays?]))
+(s/def ::find-by-keys-options (s/keys :req-un []
+                                      :opt-un [::entities ::order-by
+                                               ::result-set-fn ::row-fn
+                                               ::identifiers ::qualifier
+                                               ::as-arrays?]))
 
-(s/def ::prepare-options (s/keys :req-un [] :opt-un [::return-keys ::result-type ::concurrency ::cursors ::fetch-size ::max-rows ::timeout]))
+(s/def ::prepare-options (s/keys :req-un []
+                                 :opt-un [::return-keys ::result-type
+                                          ::concurrency ::cursors ::fetch-size
+                                          ::max-rows ::timeout]))
 
-(s/def ::query-options (s/keys :req-un [] :opt-un [::result-set-fn ::row-fn ::identifiers ::as-arrays?]))
+(s/def ::query-options (s/keys :req-un []
+                               :opt-un [::result-set-fn ::row-fn
+                                        ::identifiers ::qualifier
+                                        ::as-arrays? ::read-columns]))
 
 ;; the function API
 
@@ -86,7 +148,10 @@
         :args (s/cat :db-spec ::db-spec)
         :ret  ::connection)
 
-;; result-set-seq
+(s/fdef sql/result-set-seq
+        :args (s/cat :rs   ::result-set
+                     :opts (s/? ::query-options))
+        :ret  any?)
 
 (s/fdef sql/prepare-statement
         :args (s/cat :con  ::connection
@@ -104,11 +169,34 @@
 
 ;; transaction functions
 
+(s/fdef sql/db-set-rollback-only!
+        :args (s/cat :db ::db-spec))
+
+(s/fdef sql/db-unset-rollback-only!
+        :args (s/cat :db ::db-spec))
+
+(s/fdef sql/db-is-rollback-only
+        :args (s/cat :db ::db-spec)
+        :ret  boolean?)
+
 (s/fdef sql/get-isolation-level
         :args (s/cat :db ::db-spec)
         :ret  (s/nilable keyword?))
 
-;; metadata-result
+;; db-transaction*
+
+;; with-db-transaction macro
+
+;; with-db-connection macro
+
+;; with-db-metadata macro
+
+(s/fdef sql/metadata-result
+        :args (s/cat :rs-or-value any?
+                     :opts        (s/? ::query-options))
+        :ret  any?)
+
+;; metadata-query macro
 
 ;; db-do-commands
 
