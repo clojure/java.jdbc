@@ -1,6 +1,7 @@
 Changes coming in 0.6.2-alpha4
 
 * Added `get-isolation-level` to return the current transaction's isolation level, if any [JDBC-141](http://dev.clojure.org/jira/browse/JDBC-141).
+* Added support for `read-columns` option to allow more flexible customization of reading column values from a result set (particularly in a multi-database application). Also expands `set-parameters` support to options (previously it was just part of the db-spec) [JDBC-137](http://dev.clojure.org/jira/browse/JDBC-137).
 
 Changes in 0.6.2-alpha3
 

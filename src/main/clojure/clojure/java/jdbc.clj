@@ -371,6 +371,13 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
   (set-parameter [_ ^PreparedStatement s ^long i]
     (.setObject s i (sql-value nil))))
 
+(defn- dft-set-parameters
+  "Default implementation of parameter setting for the given statement."
+  [stmt params]
+  (dorun (map-indexed (fn [ix value]
+                        (set-parameter value stmt (inc ix)))
+                      params)))
+
 (defprotocol IResultSetReadColumn
   "Protocol for reading objects from the java.sql.ResultSet. Default
    implementations (for Object and nil) return the argument, and the
@@ -389,6 +396,12 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
   nil
   (result-set-read-column [_1 _2 _3] nil))
 
+(defn- dft-read-columns
+  "Default implementation of reading row values from result set, given the
+  result set metadata and the indices."
+  [rs rsmeta idxs]
+  (mapv (fn [^Integer i] (result-set-read-column (.getObject rs i) rsmeta i)) idxs))
+
 (defn result-set-seq
   "Creates and returns a lazy sequence of maps corresponding to the rows in the
   java.sql.ResultSet rs. Loosely based on clojure.core/resultset-seq but it
@@ -400,8 +413,9 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
   keywords. The default is to convert them to lower case.
   The :qualifier option specifies the namespace qualifier for those identifiers."
   ([rs] (result-set-seq rs {}))
-  ([^ResultSet rs {:keys [as-arrays? identifiers qualifier]
-                   :or {identifiers str/lower-case}}]
+  ([^ResultSet rs {:keys [as-arrays? identifiers qualifier read-columns]
+                   :or {identifiers str/lower-case
+                        read-columns dft-read-columns}}]
    (let [rsmeta (.getMetaData rs)
          idxs (range 1 (inc (.getColumnCount rsmeta)))
          col-name-fn (if (= :cols-as-is as-arrays?) identity make-cols-unique)
@@ -409,10 +423,10 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
                          (comp (partial keyword qualifier) identifiers)
                          (comp keyword identifiers))
          keys (->> idxs
-                   (map (fn [^Integer i] (.getColumnLabel rsmeta i)))
+                   (mapv (fn [^Integer i] (.getColumnLabel rsmeta i)))
                    col-name-fn
-                   (map identifier-fn))
-         row-values (fn [] (map (fn [^Integer i] (result-set-read-column (.getObject rs i) rsmeta i)) idxs))
+                   (mapv identifier-fn))
+         row-values (fn [] (read-columns rs rsmeta idxs))
          ;; This used to use create-struct (on keys) and then struct to populate each row.
          ;; That had the side effect of preserving the order of columns in each row. As
          ;; part of JDBC-15, this was changed because structmaps are deprecated. We don't
@@ -511,13 +525,6 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
      (when max-rows (.setMaxRows stmt max-rows))
      (when timeout (.setQueryTimeout stmt timeout))
      stmt)))
-
-(defn- set-parameters
-  "Add the parameters to the given statement."
-  [stmt params]
-  (dorun (map-indexed (fn [ix value]
-                        (set-parameter value stmt (inc ix)))
-                      params)))
 
 (defn print-sql-exception
   "Prints the contents of an SQLException to *out*"
@@ -718,8 +725,11 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
   :row-fn,and :result-set-fn to control how the ResultSet is transformed and
   returned. See query for more details."
   ([rs-or-value] (metadata-result rs-or-value {}))
-  ([rs-or-value {:keys [as-arrays? identifiers qualifier result-set-fn row-fn]
-                 :or {identifiers str/lower-case row-fn identity}}]
+  ([rs-or-value {:keys [as-arrays? identifiers qualifier read-columns
+                        result-set-fn row-fn]
+                 :or {identifiers str/lower-case
+                      read-columns dft-read-columns
+                      row-fn identity}}]
    (let [result-set-fn (or result-set-fn (if as-arrays? vec doall))]
      (if (instance? java.sql.ResultSet rs-or-value)
        ((^{:once true} fn* [rs]
@@ -729,7 +739,8 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
                           (map row-fn rs))))
         (result-set-seq rs-or-value {:as-arrays? as-arrays?
                                      :identifiers identifiers
-                                     :qualifier qualifier}))
+                                     :qualifier qualifier
+                                     :read-columns read-columns}))
        rs-or-value))))
 
 (defmacro metadata-query
@@ -769,8 +780,8 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
   "Executes a PreparedStatement, optionally in a transaction, and (attempts to)
   return any generated keys."
   [db ^PreparedStatement stmt param-group {:keys [transaction?] :as opts}]
-  ((or (:set-parameters db) set-parameters) stmt param-group)
-  (let [exec-and-return-keys
+  (let [opts (merge (when (map? db) db) opts)
+        exec-and-return-keys
         (^{:once true} fn* []
          (let [counts (.executeUpdate stmt)]
            (try
@@ -783,6 +794,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
              (catch Exception _
                ;; assume generated keys is unsupported and return counts instead:
                counts))))]
+    ((:set-parameters opts dft-set-parameters) stmt param-group)
     (if transaction?
       (with-db-transaction [t-db (add-connection db (.getConnection stmt))]
         (exec-and-return-keys))
@@ -820,20 +832,21 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
 
 (defn- db-do-execute-prepared-statement
   "Execute a PreparedStatement, optionally in a transaction."
-  [db ^PreparedStatement stmt param-groups {:keys [transaction?]}]
-  (if (empty? param-groups)
-    (if transaction?
-      (with-db-transaction [t-db (add-connection db (.getConnection stmt))]
-        (vector (.executeUpdate stmt)))
-      (vector (.executeUpdate stmt)))
-    (do
-      (doseq [param-group param-groups]
-        ((or (:set-parameters db) set-parameters) stmt param-group)
-        (.addBatch stmt))
+  [db ^PreparedStatement stmt param-groups {:keys [transaction?] :as opts}]
+  (let [opts (merge (when (map? db) db) opts)]
+    (if (empty? param-groups)
       (if transaction?
         (with-db-transaction [t-db (add-connection db (.getConnection stmt))]
-          (execute-batch stmt))
-        (execute-batch stmt)))))
+          (vector (.executeUpdate stmt)))
+        (vector (.executeUpdate stmt)))
+      (do
+        (doseq [param-group param-groups]
+          ((:set-parameters opts dft-set-parameters) stmt param-group)
+          (.addBatch stmt))
+        (if transaction?
+          (with-db-transaction [t-db (add-connection db (.getConnection stmt))]
+            (execute-batch stmt))
+          (execute-batch stmt))))))
 
 (defn db-do-prepared
   "Executes an (optionally parameterized) SQL prepared statement on the
@@ -872,7 +885,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
    (let [opts (merge (when (map? db) db) opts)
          [sql & params] (if (sql-stmt? sql-params) (vector sql-params) (vec sql-params))
          run-query-with-params (^{:once true} fn* [^PreparedStatement stmt]
-                                ((or (:set-parameters db) set-parameters) stmt params)
+                                ((:set-parameters opts dft-set-parameters) stmt params)
                                 (with-open [rset (.executeQuery stmt)]
                                   (func rset)))]
      (when-not (sql-stmt? sql)
@@ -913,8 +926,9 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
   ([db sql-params] (query db sql-params {}))
   ([db sql-params opts]
    (let [{:keys [as-arrays? explain? explain-fn identifiers qualifier
-                 result-set-fn row-fn] :as opts}
-         (merge {:explain-fn println :identifiers str/lower-case :row-fn identity}
+                 read-columns result-set-fn row-fn] :as opts}
+         (merge {:explain-fn println :identifiers str/lower-case
+                 :read-columns dft-read-columns :row-fn identity}
                 (when (map? db) db)
                 opts)
          result-set-fn (or result-set-fn (if as-arrays? vec doall))
@@ -936,7 +950,8 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
                                                   (map row-fn rs))))
                                 (result-set-seq rset {:as-arrays? as-arrays?
                                                       :identifiers identifiers
-                                                      :qualifier qualifier})))
+                                                      :qualifier qualifier
+                                                      :read-columns read-columns})))
                               opts))))
 
 (defn- direction
