@@ -69,7 +69,7 @@
 ;; version of the option to a called function, but most are not nilable because
 ;; the corresponding options must either be omitted or given valid values
 
-(s/def ::as-arrays? (s/nilable #{:cols-as-is true false}))
+(s/def ::as-arrays? (s/or :as-is #{:cols-as-is} :truthy (s/nilable boolean?)))
 (s/def ::concurrency (set (keys @#'sql/result-set-concurrency)))
 (s/def ::cursors (set (keys @#'sql/result-set-holdability)))
 (s/def ::fetch-size nat-int?)
