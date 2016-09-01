@@ -399,7 +399,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
 (defn- dft-read-columns
   "Default implementation of reading row values from result set, given the
   result set metadata and the indices."
-  [rs rsmeta idxs]
+  [^ResultSet rs rsmeta idxs]
   (mapv (fn [^Integer i] (result-set-read-column (.getObject rs i) rsmeta i)) idxs))
 
 (defn result-set-seq
