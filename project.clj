@@ -2,7 +2,7 @@
 ;; develop and test java.jdbc locally. The pom.xml file is the
 ;; "system of record" as far as the project version is concerned.
 
-(defproject org.clojure/java.jdbc "0.6.2-SNAPSHOT"
+(defproject org.clojure/java.jdbc "0.7.0-SNAPSHOT"
   :description "A low-level Clojure wrapper for JDBC-based access to databases."
   :parent [org.clojure/pom.contrib "0.1.2"]
   :url "https://github.com/clojure/java.jdbc"
@@ -27,6 +27,7 @@
                  ;; if you have the MS driver in your local repo
                  [sqljdbc4 "4.0"]
                  ]
+  :monkeypatch-clojure-test false
   :profiles {:1.4 {:dependencies [[org.clojure/clojure "1.4.0"]]}
              :1.5 {:dependencies [[org.clojure/clojure "1.5.1"]]}
              :1.6 {:dependencies [[org.clojure/clojure "1.6.0"]]}
