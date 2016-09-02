@@ -48,8 +48,8 @@
 (s/def ::classname string?)
 (s/def ::factory  (s/fspec :args (s/cat :db-spec ::db-spec)
                            :ret  ::connection))
-(s/def ::username string?)
-(s/def ::user     ::username) ; an alias
+(s/def ::user     string?)
+(s/def ::username ::user) ; an alias
 (s/def ::password string?)
 (s/def ::name     string?)
 (s/def ::environment (s/nilable map?))
