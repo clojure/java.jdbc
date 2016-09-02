@@ -25,13 +25,15 @@
             [clojure.java.jdbc :as sql]
             [clojure.string :as str]))
 
-(try
-  (require 'clojure.java.jdbc.spec)
-  (require 'clojure.spec.test)
-  (let [syms ((resolve 'clojure.spec.test/enumerate-namespace) 'clojure.java.jdbc)]
-    ((resolve 'clojure.spec.test/instrument) syms))
-  (println "Instrumenting clojure.java.jdbc with clojure.spec")
-  (catch Exception _))
+(def with-spec? (try
+                  (require 'clojure.java.jdbc.spec)
+                  (require 'clojure.spec.test)
+                  (let [syms ((resolve 'clojure.spec.test/enumerate-namespace) 'clojure.java.jdbc)]
+                    ((resolve 'clojure.spec.test/instrument) syms))
+                  (println "Instrumenting clojure.java.jdbc with clojure.spec")
+                  true
+                  (catch Exception _
+                    false)))
 
 ;; Set test-databases according to whether you have the local database available:
 ;; Possible values so far: [:mysql :postgres :derby :hsqldb :mysql-str :postgres-str]
@@ -953,7 +955,9 @@
     (is (thrown? IllegalArgumentException (sql/insert! db {:name "Apple"} [:name])))
     (is (thrown? IllegalArgumentException (sql/insert! db {:name "Apple"} [:name] {:entities identity})))
     (is (thrown? IllegalArgumentException (sql/insert! db [:name])))
-    (is (thrown? ClassCastException (sql/insert! db [:name] {:entities identity})))))
+    (if with-spec? ; clojure.spec catches this differently
+      (is (thrown? clojure.lang.ExceptionInfo (sql/insert! db [:name] {:entities identity})))
+      (is (thrown? ClassCastException (sql/insert! db [:name] {:entities identity}))))))
 
 (deftest test-execute!-fails-with-multi-param-groups
   (doseq [db (test-specs)]

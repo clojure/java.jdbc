@@ -56,31 +56,26 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
    and each are turned into strings via the naming strategy and then
    joined back together so x.y might become `x`.`y` if the naming
    strategy quotes identifiers with `."
-  ([f]
-   (fn [x]
-     (as-sql-name f x)))
-  ([f x]
-   (let [n (name x)
-         i (.indexOf n (int \.))]
-     (if (= -1 i)
-       (f n)
-       (str/join "." (map f (.split n "\\.")))))))
+  [f x]
+  (let [n (name x)
+        i (.indexOf n (int \.))]
+    (if (= -1 i)
+      (f n)
+      (str/join "." (map f (.split n "\\."))))))
 
 (defn quoted
-  "With a single argument, returns a naming strategy function that quotes
-   names. The single argument can either be a single character or a vector
-   pair of characters.
-   Can also be called with two arguments - a quoting argument and a name -
-   and returns the fully quoted string:
-     (quoted \\` \"foo\") will return \"`foo`\"
-     (quoted [\\[ \\]] \"foo\") will return \"[foo]\""
-  ([q]
-   (fn [x]
-     (quoted q x)))
-  ([q x]
-   (if (vector? q)
-     (str (first q) x (last q))
-     (str q x q))))
+  "Given a (vector) pair of delimiters (characters or strings), return a naming
+  strategy function that will quote SQL entities with them.
+  Given a single delimiter, treat it as a (vector) pair of that delimiter.
+    ((quoted [\\[ \\]]) \"foo\") will return \"[foo]\" -- for MS SQL Server
+    ((quoted \\`') \"foo\") will return \"`foo`\" -- for MySQL
+  Intended to be used with :entities to provide a quoting (naming) strategy that
+  is appropriate for your database."
+  [q]
+  (if (vector? q)
+    (fn [x]
+      (str (first q) x (last q)))
+    (quoted [q q])))
 
 (defn- table-str
   "Transform a table spec to an entity name for SQL. The table spec may be a

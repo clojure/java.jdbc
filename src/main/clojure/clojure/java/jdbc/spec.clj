@@ -139,9 +139,19 @@
 
 ;; the function API
 
-;; as-sql-name
+(s/def ::naming-strategy (s/fspec :args (s/cat :x ::identifier)
+                                  :ret  ::identifier))
 
-;; quoted
+(s/fdef sql/as-sql-name
+        :args (s/cat :f ::naming-strategy :x ::identifier)
+        :ret  ::identifier)
+
+(s/def ::delimiter (s/or :s string? :c char?))
+(s/fdef sql/quoted
+        :args (s/cat :q (s/or :pair      (s/coll-of ::delimiter
+                                                    :kind vector? :count 2)
+                              :delimiter ::delimiter))
+        :ret  ::naming-strategy)
 
 (s/fdef sql/get-connection
         :args (s/cat :db-spec ::db-spec)
