@@ -76,9 +76,9 @@ Example Usage
   {:connection-uri (str "postgresql://myuser:secret@mydb.server.com:5432/mypgdatabase"
                         "?ssl=true&sslfactory=org.postgresql.ssl.NonValidatingFactory")})
 
-(j/insert! mysql-db :fruit
-  {:name "Apple" :appearance "rosy" :cost 24}
-  {:name "Orange" :appearance "round" :cost 49})
+(j/insert-multi! mysql-db :fruit
+  [{:name "Apple" :appearance "rosy" :cost 24}
+   {:name "Orange" :appearance "round" :cost 49}])
 ;; ({:generated_key 1} {:generated_key 2})
 
 (j/query mysql-db
