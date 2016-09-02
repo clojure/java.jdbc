@@ -139,23 +139,23 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
   (get-level [_] 0))
 
 (def ^{:private true :doc "Map of classnames to subprotocols"} classnames
-  {"postgresql"     "org.postgresql.Driver"
-   "mysql"          "com.mysql.jdbc.Driver"
-   "sqlserver"      "com.microsoft.sqlserver.jdbc.SQLServerDriver"
+  {"derby"          "org.apache.derby.jdbc.EmbeddedDriver"
+   "h2"             "org.h2.Driver"
+   "hsqldb"         "org.hsqldb.jdbcDriver"
    "jtds:sqlserver" "net.sourceforge.jtds.jdbc.Driver"
+   "mysql"          "com.mysql.jdbc.Driver"
    "oracle:oci"     "oracle.jdbc.OracleDriver"
    "oracle:thin"    "oracle.jdbc.OracleDriver"
-   "derby"          "org.apache.derby.jdbc.EmbeddedDriver"
-   "hsqldb"         "org.hsqldb.jdbcDriver"
-   "h2"             "org.h2.Driver"
-   "sqlite"         "org.sqlite.JDBC"})
+   "postgresql"     "org.postgresql.Driver"
+   "sqlite"         "org.sqlite.JDBC"
+   "sqlserver"      "com.microsoft.sqlserver.jdbc.SQLServerDriver"})
 
 (def ^{:private true :doc "Map of schemes to subprotocols"} subprotocols
-  {"postgres" "postgresql"
-   "mssql"    "sqlserver"
+  {"hsql"     "hsqldb"
    "jtds"     "jtds:sqlserver"
+   "mssql"    "sqlserver"
    "oracle"   "oracle:thin"
-   "hsql"     "hsqldb"})
+   "postgres" "postgresql"})
 
 (defn- parse-properties-uri [^URI uri]
   (let [host (.getHost uri)
@@ -276,17 +276,17 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
       (DriverManager/getConnection url (as-properties etc)))
 
     (and dbtype dbname)
-    (let [;; alias aliases for dbtype
+    (let [;; allow aliases for dbtype
           subprotocol (subprotocols dbtype dbtype)
           host (or host "127.0.0.1")
           port (or port (condp = subprotocol
-                          "mysql" 3306
-                          "mssql" 1433
-                          "jtds"  1433
-                          "postgresql" 5432
+                          "jtds:sqlserver" 1433
+                          "mysql"          3306
+                          "postgresql"     5432
+                          "sqlserver"      1433
                           nil))
-          db-sep (if (= "mssql" subprotocol) ";DATABASENAME=" "/")
-          url (if (#{"derby" "hsqldb" "h2" "sqlite"} subprotocol)
+          db-sep (if (= "sqlserver" subprotocol) ";DATABASENAME=" "/")
+          url (if (#{"derby" "h2" "hsqldb" "sqlite"} subprotocol)
                 (str "jdbc:" subprotocol ":" dbname)
                 (str "jdbc:" subprotocol "://" host
                      (when port (str ":" port))
