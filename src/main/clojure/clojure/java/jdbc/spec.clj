@@ -17,14 +17,42 @@
   (:require [clojure.spec :as s]
             [clojure.java.jdbc :as sql]))
 
-;; basic java.sql types
+;; basic java.sql types -- cannot be generated!
 
 (s/def ::connection #(instance? java.sql.Connection %))
+(s/def ::connection-uri #(instance? java.net.URI %))
+(s/def ::datasource #(instance? javax.sql.DataSource %))
 (s/def ::prepared-statement #(instance? java.sql.PreparedStatement %))
 (s/def ::result-set #(instance? java.sql.ResultSet %))
 (s/def ::result-set-metadata #(instance? java.sql.ResultSetMetaData %))
 
 ;; database specification (connection description)
+
+(s/def ::subprotocol-base  #{"derby" "h2" "hsqldb" "jtds:sqlserver" "mysql" "oracle:oci" "oracle:thin" "postgresql" "sqlite" "sqlserver"})
+(s/def ::subprotocol-alias #{"hsql" "jtds" "mssql" "oracle" "postgres"})
+;; technically :subprotocol can be any string...
+(s/def ::subprotocol string?)
+;; ...but :dbtype must be a recognizable database type
+(s/def ::dbtype   (s/or :alias ::subprotocol-alias
+                        :name  ::subprotocol-base))
+(s/def ::dbname   string?)
+;; usually IP address or domain name but could be more general string
+;; (e.g., it could be username:password@domain.name)
+(s/def ::host     string?)
+;; usually a numeric port number, but could be an arbitrary string if
+;; the specified database accepts URIs constructed that way
+(s/def ::port     (s/or :port pos-int?
+                        :s    string?))
+(s/def ::subname  string?)
+;; will be a valid Java classname (including package)
+(s/def ::classname string?)
+(s/def ::factory  (s/fspec :args (s/cat :db-spec ::db-spec)
+                           :ret  ::connection))
+(s/def ::username string?)
+(s/def ::user     ::username) ; an alias
+(s/def ::password string?)
+(s/def ::name     string?)
+(s/def ::environment (s/nilable map?))
 
 (s/def ::db-spec-connection (s/keys :req-un [::connection]))
 (s/def ::db-spec-friendly (s/keys :req-un [::dbtype ::dbname] :opt-un [::host ::port]))
