@@ -234,23 +234,33 @@
                      :opts (s/? ::transaction-options))
         :ret  any?)
 
-(s/def ::transaction-binding (s/spec (s/cat :t-con simple-symbol?
-                                            :db    any?
-                                            :opts  (s/? any?))))
+(s/def ::transaction-binding (s/spec (s/cat :t-con   simple-symbol?
+                                            :db-spec any?
+                                            :opts    (s/? any?))))
 
 (s/fdef sql/with-db-transaction
         :args (s/cat :binding ::transaction-binding
                      :body    (s/* any?)))
-;; with-db-connection macro
 
-;; with-db-metadata macro
+(s/def ::simple-binding (s/spec (s/cat :con-db  simple-symbol?
+                                       :db-spec any?)))
+
+(s/fdef sql/with-db-connection
+        :args (s/cat :binding ::simple-binding
+                     :body    (s/* any?)))
+
+(s/fdef sql/with-db-metadata
+        :args (s/cat :binding ::simple-binding
+                     :body    (s/* any?)))
 
 (s/fdef sql/metadata-result
         :args (s/cat :rs-or-value any?
                      :opts        (s/? ::query-options))
         :ret  any?)
 
-;; metadata-query macro
+(s/fdef sql/metadata-query
+        :args (s/cat :meta-query any?
+                     :opt-args   (s/? any?)))
 
 ;; db-do-commands
 
