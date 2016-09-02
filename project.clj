@@ -27,8 +27,6 @@
                  ;; if you have the MS driver in your local repo
                  [sqljdbc4 "4.0"]
                  ]
-  ;; prevent Leiningen from breaking test.check
-  :monkeypatch-clojure-test false
   :profiles {:1.4 {:dependencies [[org.clojure/clojure "1.4.0"]]}
              :1.5 {:dependencies [[org.clojure/clojure "1.5.1"]]}
              :1.6 {:dependencies [[org.clojure/clojure "1.6.0"]]}
