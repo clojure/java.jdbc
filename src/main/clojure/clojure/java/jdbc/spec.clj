@@ -108,6 +108,7 @@
 ;; assume that entities can accept keywords!
 (s/def ::identifiers (s/fspec :args (s/cat :s ::entity)
                               :ret  ::identifier))
+(s/def ::isolation (set (keys @#'sql/isolation-levels)))
 (s/def ::entities (s/fspec :args (s/cat :s string?)
                            :ret  ::entity))
 (s/def ::max-size nat-int?)
@@ -126,6 +127,7 @@
                                               :idxs   (s/coll-of pos-int?))
                                  :ret  (s/coll-of any?)))
 (s/def ::read-columns fn?)
+(s/def ::read-only? boolean?)
 ;; there's not much we can say about result-set-fn -- it accepts a collection of
 ;; transformed rows (from row-fn), and it produces whatever it wants
 (s/def ::result-set-fn (s/fspec :args (s/cat :rs (s/coll-of any?))
@@ -159,6 +161,9 @@
                                  :opt-un [::return-keys ::result-type
                                           ::concurrency ::cursors ::fetch-size
                                           ::max-rows ::timeout]))
+
+(s/def ::transaction-options (s/keys :req-un []
+                                     :opt-un [::isolation ::read-only?]))
 
 (s/def ::query-options (s/keys :req-un []
                                :opt-un [::result-set-fn ::row-fn
@@ -196,6 +201,8 @@
                      :opts (s/? ::prepare-options))
         :ret  ::prepared-statement)
 
+;; print-sql-exception, print-sql-exception-chain, print-update-counts
+
 (s/fdef sql/db-find-connection
         :args (s/cat :db-spec ::db-spec)
         :ret  (s/nilable ::connection))
@@ -218,12 +225,22 @@
 
 (s/fdef sql/get-isolation-level
         :args (s/cat :db ::db-spec)
-        :ret  (s/nilable keyword?))
+        :ret  (s/nilable (s/or :isolation ::isolation
+                               :unknown   #{:unknown})))
 
-;; db-transaction*
+(s/fdef sql/db-transaction*
+        :args (s/cat :db   ::db-spec
+                     :func ifn?
+                     :opts (s/? ::transaction-options))
+        :ret  any?)
 
-;; with-db-transaction macro
+(s/def ::transaction-binding (s/spec (s/cat :t-con simple-symbol?
+                                            :db    any?
+                                            :opts  (s/? any?))))
 
+(s/fdef sql/with-db-transaction
+        :args (s/cat :binding ::transaction-binding
+                     :body    (s/* any?)))
 ;; with-db-connection macro
 
 ;; with-db-metadata macro
