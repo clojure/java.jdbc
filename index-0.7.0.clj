@@ -5,36 +5,36 @@
    :name "clojure.java.jdbc",
    :wiki-url "http://clojure.github.io/java.jdbc/index.html",
    :source-url
-   "https://github.com/clojure/java.jdbc/blob/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj"}
+   "https://github.com/clojure/java.jdbc/blob/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj"}
   {:doc "Optional specifications for use with Clojure 1.9 or later.",
    :author "Sean Corfield",
    :name "clojure.java.jdbc.spec",
    :wiki-url
    "http://clojure.github.io/java.jdbc/index.html#clojure.java.jdbc.spec",
    :source-url
-   "https://github.com/clojure/java.jdbc/blob/6298bbc1c3bd75611fcb4c2da4a3a524082d2322/src/main/clojure/clojure/java/jdbc/spec.clj"}),
+   "https://github.com/clojure/java.jdbc/blob/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc/spec.clj"}),
  :vars
  ({:raw-source-url
-   "https://github.com/clojure/java.jdbc/raw/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj",
+   "https://github.com/clojure/java.jdbc/raw/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj",
    :name "as-sql-name",
    :file "src/main/clojure/clojure/java/jdbc.clj",
    :source-url
-   "https://github.com/clojure/java.jdbc/blob/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj#L52",
+   "https://github.com/clojure/java.jdbc/blob/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj#L52",
    :line 52,
    :var-type "function",
-   :arglists ([f] [f x]),
+   :arglists ([f x]),
    :doc
    "Given a naming strategy function and a keyword or string, return\na string per that naming strategy.\nA name of the form x.y is treated as multiple names, x, y, etc,\nand each are turned into strings via the naming strategy and then\njoined back together so x.y might become `x`.`y` if the naming\nstrategy quotes identifiers with `.",
    :namespace "clojure.java.jdbc",
    :wiki-url
    "http://clojure.github.io/java.jdbc//index.html#clojure.java.jdbc/as-sql-name"}
   {:raw-source-url
-   "https://github.com/clojure/java.jdbc/raw/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj",
+   "https://github.com/clojure/java.jdbc/raw/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj",
    :name "create-table-ddl",
    :file "src/main/clojure/clojure/java/jdbc.clj",
    :source-url
-   "https://github.com/clojure/java.jdbc/blob/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj#L1233",
-   :line 1233,
+   "https://github.com/clojure/java.jdbc/blob/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj#L1228",
+   :line 1228,
    :var-type "function",
    :arglists ([table specs] [table specs opts]),
    :doc
@@ -43,12 +43,12 @@
    :wiki-url
    "http://clojure.github.io/java.jdbc//index.html#clojure.java.jdbc/create-table-ddl"}
   {:raw-source-url
-   "https://github.com/clojure/java.jdbc/raw/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj",
+   "https://github.com/clojure/java.jdbc/raw/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj",
    :name "db-connection",
    :file "src/main/clojure/clojure/java/jdbc.clj",
    :source-url
-   "https://github.com/clojure/java.jdbc/blob/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj#L575",
-   :line 575,
+   "https://github.com/clojure/java.jdbc/blob/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj#L570",
+   :line 570,
    :var-type "function",
    :arglists ([db]),
    :doc
@@ -57,12 +57,12 @@
    :wiki-url
    "http://clojure.github.io/java.jdbc//index.html#clojure.java.jdbc/db-connection"}
   {:raw-source-url
-   "https://github.com/clojure/java.jdbc/raw/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj",
+   "https://github.com/clojure/java.jdbc/raw/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj",
    :name "db-do-commands",
    :file "src/main/clojure/clojure/java/jdbc.clj",
    :source-url
-   "https://github.com/clojure/java.jdbc/blob/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj#L758",
-   :line 758,
+   "https://github.com/clojure/java.jdbc/blob/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj#L753",
+   :line 753,
    :var-type "function",
    :arglists ([db sql-commands] [db transaction? sql-commands]),
    :doc
@@ -71,12 +71,12 @@
    :wiki-url
    "http://clojure.github.io/java.jdbc//index.html#clojure.java.jdbc/db-do-commands"}
   {:raw-source-url
-   "https://github.com/clojure/java.jdbc/raw/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj",
+   "https://github.com/clojure/java.jdbc/raw/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj",
    :name "db-do-prepared",
    :file "src/main/clojure/clojure/java/jdbc.clj",
    :source-url
-   "https://github.com/clojure/java.jdbc/blob/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj#L851",
-   :line 851,
+   "https://github.com/clojure/java.jdbc/blob/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj#L846",
+   :line 846,
    :var-type "function",
    :arglists
    ([db sql-params]
@@ -88,12 +88,12 @@
    :wiki-url
    "http://clojure.github.io/java.jdbc//index.html#clojure.java.jdbc/db-do-prepared"}
   {:raw-source-url
-   "https://github.com/clojure/java.jdbc/raw/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj",
+   "https://github.com/clojure/java.jdbc/raw/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj",
    :name "db-do-prepared-return-keys",
    :file "src/main/clojure/clojure/java/jdbc.clj",
    :source-url
-   "https://github.com/clojure/java.jdbc/blob/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj#L809",
-   :line 809,
+   "https://github.com/clojure/java.jdbc/blob/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj#L804",
+   :line 804,
    :var-type "function",
    :arglists
    ([db sql-params]
@@ -105,12 +105,12 @@
    :wiki-url
    "http://clojure.github.io/java.jdbc//index.html#clojure.java.jdbc/db-do-prepared-return-keys"}
   {:raw-source-url
-   "https://github.com/clojure/java.jdbc/raw/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj",
+   "https://github.com/clojure/java.jdbc/raw/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj",
    :name "db-find-connection",
    :file "src/main/clojure/clojure/java/jdbc.clj",
    :source-url
-   "https://github.com/clojure/java.jdbc/blob/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj#L569",
-   :line 569,
+   "https://github.com/clojure/java.jdbc/blob/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj#L564",
+   :line 564,
    :var-type "function",
    :arglists ([db]),
    :doc
@@ -119,12 +119,12 @@
    :wiki-url
    "http://clojure.github.io/java.jdbc//index.html#clojure.java.jdbc/db-find-connection"}
   {:raw-source-url
-   "https://github.com/clojure/java.jdbc/raw/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj",
+   "https://github.com/clojure/java.jdbc/raw/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj",
    :name "db-is-rollback-only",
    :file "src/main/clojure/clojure/java/jdbc.clj",
    :source-url
-   "https://github.com/clojure/java.jdbc/blob/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj#L592",
-   :line 592,
+   "https://github.com/clojure/java.jdbc/blob/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj#L587",
+   :line 587,
    :var-type "function",
    :arglists ([db]),
    :doc
@@ -133,12 +133,12 @@
    :wiki-url
    "http://clojure.github.io/java.jdbc//index.html#clojure.java.jdbc/db-is-rollback-only"}
   {:raw-source-url
-   "https://github.com/clojure/java.jdbc/raw/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj",
+   "https://github.com/clojure/java.jdbc/raw/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj",
    :name "db-query-with-resultset",
    :file "src/main/clojure/clojure/java/jdbc.clj",
    :source-url
-   "https://github.com/clojure/java.jdbc/blob/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj#L875",
-   :line 875,
+   "https://github.com/clojure/java.jdbc/blob/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj#L870",
+   :line 870,
    :var-type "function",
    :arglists ([db sql-params func] [db sql-params func opts]),
    :doc
@@ -147,12 +147,12 @@
    :wiki-url
    "http://clojure.github.io/java.jdbc//index.html#clojure.java.jdbc/db-query-with-resultset"}
   {:raw-source-url
-   "https://github.com/clojure/java.jdbc/raw/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj",
+   "https://github.com/clojure/java.jdbc/raw/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj",
    :name "db-set-rollback-only!",
    :file "src/main/clojure/clojure/java/jdbc.clj",
    :source-url
-   "https://github.com/clojure/java.jdbc/blob/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj#L581",
-   :line 581,
+   "https://github.com/clojure/java.jdbc/blob/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj#L576",
+   :line 576,
    :var-type "function",
    :arglists ([db]),
    :doc
@@ -161,12 +161,12 @@
    :wiki-url
    "http://clojure.github.io/java.jdbc//index.html#clojure.java.jdbc/db-set-rollback-only!"}
   {:raw-source-url
-   "https://github.com/clojure/java.jdbc/raw/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj",
+   "https://github.com/clojure/java.jdbc/raw/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj",
    :name "db-transaction*",
    :file "src/main/clojure/clojure/java/jdbc.clj",
    :source-url
-   "https://github.com/clojure/java.jdbc/blob/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj#L620",
-   :line 620,
+   "https://github.com/clojure/java.jdbc/blob/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj#L615",
+   :line 615,
    :var-type "function",
    :arglists ([db func] [db func opts]),
    :doc
@@ -175,12 +175,12 @@
    :wiki-url
    "http://clojure.github.io/java.jdbc//index.html#clojure.java.jdbc/db-transaction*"}
   {:raw-source-url
-   "https://github.com/clojure/java.jdbc/raw/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj",
+   "https://github.com/clojure/java.jdbc/raw/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj",
    :name "db-unset-rollback-only!",
    :file "src/main/clojure/clojure/java/jdbc.clj",
    :source-url
-   "https://github.com/clojure/java.jdbc/blob/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj#L587",
-   :line 587,
+   "https://github.com/clojure/java.jdbc/blob/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj#L582",
+   :line 582,
    :var-type "function",
    :arglists ([db]),
    :doc
@@ -189,12 +189,12 @@
    :wiki-url
    "http://clojure.github.io/java.jdbc//index.html#clojure.java.jdbc/db-unset-rollback-only!"}
   {:raw-source-url
-   "https://github.com/clojure/java.jdbc/raw/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj",
+   "https://github.com/clojure/java.jdbc/raw/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj",
    :name "delete!",
    :file "src/main/clojure/clojure/java/jdbc.clj",
    :source-url
-   "https://github.com/clojure/java.jdbc/blob/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj#L1053",
-   :line 1053,
+   "https://github.com/clojure/java.jdbc/blob/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj#L1048",
+   :line 1048,
    :var-type "function",
    :arglists ([db table where-clause] [db table where-clause opts]),
    :doc
@@ -203,12 +203,12 @@
    :wiki-url
    "http://clojure.github.io/java.jdbc//index.html#clojure.java.jdbc/delete!"}
   {:raw-source-url
-   "https://github.com/clojure/java.jdbc/raw/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj",
+   "https://github.com/clojure/java.jdbc/raw/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj",
    :name "drop-table-ddl",
    :file "src/main/clojure/clojure/java/jdbc.clj",
    :source-url
-   "https://github.com/clojure/java.jdbc/blob/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj#L1263",
-   :line 1263,
+   "https://github.com/clojure/java.jdbc/blob/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj#L1258",
+   :line 1258,
    :var-type "function",
    :arglists
    ([name] [name {:keys [entities], :or {entities identity}}]),
@@ -218,12 +218,12 @@
    :wiki-url
    "http://clojure.github.io/java.jdbc//index.html#clojure.java.jdbc/drop-table-ddl"}
   {:raw-source-url
-   "https://github.com/clojure/java.jdbc/raw/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj",
+   "https://github.com/clojure/java.jdbc/raw/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj",
    :name "execute!",
    :file "src/main/clojure/clojure/java/jdbc.clj",
    :source-url
-   "https://github.com/clojure/java.jdbc/blob/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj#L1019",
-   :line 1019,
+   "https://github.com/clojure/java.jdbc/blob/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj#L1014",
+   :line 1014,
    :var-type "function",
    :arglists ([db sql-params] [db sql-params opts]),
    :doc
@@ -232,12 +232,12 @@
    :wiki-url
    "http://clojure.github.io/java.jdbc//index.html#clojure.java.jdbc/execute!"}
   {:raw-source-url
-   "https://github.com/clojure/java.jdbc/raw/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj",
+   "https://github.com/clojure/java.jdbc/raw/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj",
    :name "find-by-keys",
    :file "src/main/clojure/clojure/java/jdbc.clj",
    :source-url
-   "https://github.com/clojure/java.jdbc/blob/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj#L981",
-   :line 981,
+   "https://github.com/clojure/java.jdbc/blob/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj#L976",
+   :line 976,
    :var-type "function",
    :arglists ([db table columns] [db table columns opts]),
    :doc
@@ -246,12 +246,12 @@
    :wiki-url
    "http://clojure.github.io/java.jdbc//index.html#clojure.java.jdbc/find-by-keys"}
   {:raw-source-url
-   "https://github.com/clojure/java.jdbc/raw/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj",
+   "https://github.com/clojure/java.jdbc/raw/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj",
    :name "get-by-id",
    :file "src/main/clojure/clojure/java/jdbc.clj",
    :source-url
-   "https://github.com/clojure/java.jdbc/blob/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj#L1003",
-   :line 1003,
+   "https://github.com/clojure/java.jdbc/blob/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj#L998",
+   :line 998,
    :var-type "function",
    :arglists
    ([db table pk-value]
@@ -263,12 +263,12 @@
    :wiki-url
    "http://clojure.github.io/java.jdbc//index.html#clojure.java.jdbc/get-by-id"}
   {:raw-source-url
-   "https://github.com/clojure/java.jdbc/raw/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj",
+   "https://github.com/clojure/java.jdbc/raw/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj",
    :name "get-connection",
    :file "src/main/clojure/clojure/java/jdbc.clj",
    :source-url
-   "https://github.com/clojure/java.jdbc/blob/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj#L198",
-   :line 198,
+   "https://github.com/clojure/java.jdbc/blob/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj#L193",
+   :line 193,
    :var-type "function",
    :arglists
    ([{:keys
@@ -295,12 +295,12 @@
    :wiki-url
    "http://clojure.github.io/java.jdbc//index.html#clojure.java.jdbc/get-connection"}
   {:raw-source-url
-   "https://github.com/clojure/java.jdbc/raw/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj",
+   "https://github.com/clojure/java.jdbc/raw/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj",
    :name "get-isolation-level",
    :file "src/main/clojure/clojure/java/jdbc.clj",
    :source-url
-   "https://github.com/clojure/java.jdbc/blob/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj#L611",
-   :line 611,
+   "https://github.com/clojure/java.jdbc/blob/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj#L606",
+   :line 606,
    :var-type "function",
    :arglists ([db]),
    :doc
@@ -309,12 +309,12 @@
    :wiki-url
    "http://clojure.github.io/java.jdbc//index.html#clojure.java.jdbc/get-isolation-level"}
   {:raw-source-url
-   "https://github.com/clojure/java.jdbc/raw/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj",
+   "https://github.com/clojure/java.jdbc/raw/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj",
    :name "insert!",
    :file "src/main/clojure/clojure/java/jdbc.clj",
    :source-url
-   "https://github.com/clojure/java.jdbc/blob/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj#L1157",
-   :line 1157,
+   "https://github.com/clojure/java.jdbc/blob/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj#L1152",
+   :line 1152,
    :var-type "function",
    :arglists
    ([db table row]
@@ -326,12 +326,12 @@
    :wiki-url
    "http://clojure.github.io/java.jdbc//index.html#clojure.java.jdbc/insert!"}
   {:raw-source-url
-   "https://github.com/clojure/java.jdbc/raw/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj",
+   "https://github.com/clojure/java.jdbc/raw/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj",
    :name "insert-multi!",
    :file "src/main/clojure/clojure/java/jdbc.clj",
    :source-url
-   "https://github.com/clojure/java.jdbc/blob/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj#L1177",
-   :line 1177,
+   "https://github.com/clojure/java.jdbc/blob/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj#L1172",
+   :line 1172,
    :var-type "function",
    :arglists
    ([db table rows]
@@ -343,12 +343,12 @@
    :wiki-url
    "http://clojure.github.io/java.jdbc//index.html#clojure.java.jdbc/insert-multi!"}
   {:raw-source-url
-   "https://github.com/clojure/java.jdbc/raw/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj",
+   "https://github.com/clojure/java.jdbc/raw/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj",
    :name "metadata-query",
    :file "src/main/clojure/clojure/java/jdbc.clj",
    :source-url
-   "https://github.com/clojure/java.jdbc/blob/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj#L746",
-   :line 746,
+   "https://github.com/clojure/java.jdbc/blob/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj#L741",
+   :line 741,
    :var-type "macro",
    :arglists ([meta-query & opt-args]),
    :doc
@@ -357,12 +357,12 @@
    :wiki-url
    "http://clojure.github.io/java.jdbc//index.html#clojure.java.jdbc/metadata-query"}
   {:raw-source-url
-   "https://github.com/clojure/java.jdbc/raw/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj",
+   "https://github.com/clojure/java.jdbc/raw/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj",
    :name "metadata-result",
    :file "src/main/clojure/clojure/java/jdbc.clj",
    :source-url
-   "https://github.com/clojure/java.jdbc/blob/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj#L721",
-   :line 721,
+   "https://github.com/clojure/java.jdbc/blob/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj#L716",
+   :line 716,
    :var-type "function",
    :arglists
    ([rs-or-value]
@@ -384,12 +384,12 @@
    :wiki-url
    "http://clojure.github.io/java.jdbc//index.html#clojure.java.jdbc/metadata-result"}
   {:raw-source-url
-   "https://github.com/clojure/java.jdbc/raw/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj",
+   "https://github.com/clojure/java.jdbc/raw/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj",
    :name "prepare-statement",
    :file "src/main/clojure/clojure/java/jdbc.clj",
    :source-url
-   "https://github.com/clojure/java.jdbc/blob/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj#L482",
-   :line 482,
+   "https://github.com/clojure/java.jdbc/blob/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj#L477",
+   :line 477,
    :var-type "function",
    :arglists
    ([con sql]
@@ -409,12 +409,12 @@
    :wiki-url
    "http://clojure.github.io/java.jdbc//index.html#clojure.java.jdbc/prepare-statement"}
   {:raw-source-url
-   "https://github.com/clojure/java.jdbc/raw/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj",
+   "https://github.com/clojure/java.jdbc/raw/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj",
    :name "print-sql-exception",
    :file "src/main/clojure/clojure/java/jdbc.clj",
    :source-url
-   "https://github.com/clojure/java.jdbc/blob/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj#L529",
-   :line 529,
+   "https://github.com/clojure/java.jdbc/blob/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj#L524",
+   :line 524,
    :var-type "function",
    :arglists ([exception]),
    :doc "Prints the contents of an SQLException to *out*",
@@ -422,12 +422,12 @@
    :wiki-url
    "http://clojure.github.io/java.jdbc//index.html#clojure.java.jdbc/print-sql-exception"}
   {:raw-source-url
-   "https://github.com/clojure/java.jdbc/raw/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj",
+   "https://github.com/clojure/java.jdbc/raw/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj",
    :name "print-sql-exception-chain",
    :file "src/main/clojure/clojure/java/jdbc.clj",
    :source-url
-   "https://github.com/clojure/java.jdbc/blob/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj#L543",
-   :line 543,
+   "https://github.com/clojure/java.jdbc/blob/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj#L538",
+   :line 538,
    :var-type "function",
    :arglists ([exception]),
    :doc "Prints a chain of SQLExceptions to *out*",
@@ -435,12 +435,12 @@
    :wiki-url
    "http://clojure.github.io/java.jdbc//index.html#clojure.java.jdbc/print-sql-exception-chain"}
   {:raw-source-url
-   "https://github.com/clojure/java.jdbc/raw/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj",
+   "https://github.com/clojure/java.jdbc/raw/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj",
    :name "print-update-counts",
    :file "src/main/clojure/clojure/java/jdbc.clj",
    :source-url
-   "https://github.com/clojure/java.jdbc/blob/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj#L555",
-   :line 555,
+   "https://github.com/clojure/java.jdbc/blob/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj#L550",
+   :line 550,
    :var-type "function",
    :arglists ([exception]),
    :doc
@@ -449,12 +449,12 @@
    :wiki-url
    "http://clojure.github.io/java.jdbc//index.html#clojure.java.jdbc/print-update-counts"}
   {:raw-source-url
-   "https://github.com/clojure/java.jdbc/raw/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj",
+   "https://github.com/clojure/java.jdbc/raw/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj",
    :name "query",
    :file "src/main/clojure/clojure/java/jdbc.clj",
    :source-url
-   "https://github.com/clojure/java.jdbc/blob/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj#L912",
-   :line 912,
+   "https://github.com/clojure/java.jdbc/blob/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj#L907",
+   :line 907,
    :var-type "function",
    :arglists ([db sql-params] [db sql-params opts]),
    :doc
@@ -463,26 +463,26 @@
    :wiki-url
    "http://clojure.github.io/java.jdbc//index.html#clojure.java.jdbc/query"}
   {:raw-source-url
-   "https://github.com/clojure/java.jdbc/raw/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj",
+   "https://github.com/clojure/java.jdbc/raw/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj",
    :name "quoted",
    :file "src/main/clojure/clojure/java/jdbc.clj",
    :source-url
-   "https://github.com/clojure/java.jdbc/blob/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj#L69",
-   :line 69,
+   "https://github.com/clojure/java.jdbc/blob/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj#L66",
+   :line 66,
    :var-type "function",
-   :arglists ([q] [q x]),
+   :arglists ([q]),
    :doc
-   "With a single argument, returns a naming strategy function that quotes\nnames. The single argument can either be a single character or a vector\npair of characters.\nCan also be called with two arguments - a quoting argument and a name -\nand returns the fully quoted string:\n  (quoted \\` \"foo\") will return \"`foo`\"\n  (quoted [\\[ \\]] \"foo\") will return \"[foo]\"",
+   "Given a (vector) pair of delimiters (characters or strings), return a naming\nstrategy function that will quote SQL entities with them.\nGiven a single delimiter, treat it as a (vector) pair of that delimiter.\n  ((quoted [\\[ \\]]) \"foo\") will return \"[foo]\" -- for MS SQL Server\n  ((quoted \\`') \"foo\") will return \"`foo`\" -- for MySQL\nIntended to be used with :entities to provide a quoting (naming) strategy that\nis appropriate for your database.",
    :namespace "clojure.java.jdbc",
    :wiki-url
    "http://clojure.github.io/java.jdbc//index.html#clojure.java.jdbc/quoted"}
   {:raw-source-url
-   "https://github.com/clojure/java.jdbc/raw/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj",
+   "https://github.com/clojure/java.jdbc/raw/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj",
    :name "result-set-seq",
    :file "src/main/clojure/clojure/java/jdbc.clj",
    :source-url
-   "https://github.com/clojure/java.jdbc/blob/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj#L405",
-   :line 405,
+   "https://github.com/clojure/java.jdbc/blob/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj#L400",
+   :line 400,
    :var-type "function",
    :arglists
    ([rs]
@@ -495,12 +495,12 @@
    :wiki-url
    "http://clojure.github.io/java.jdbc//index.html#clojure.java.jdbc/result-set-seq"}
   {:raw-source-url
-   "https://github.com/clojure/java.jdbc/raw/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj",
+   "https://github.com/clojure/java.jdbc/raw/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj",
    :name "update!",
    :file "src/main/clojure/clojure/java/jdbc.clj",
    :source-url
-   "https://github.com/clojure/java.jdbc/blob/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj#L1216",
-   :line 1216,
+   "https://github.com/clojure/java.jdbc/blob/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj#L1211",
+   :line 1211,
    :var-type "function",
    :arglists
    ([db table set-map where-clause]
@@ -511,12 +511,12 @@
    :wiki-url
    "http://clojure.github.io/java.jdbc//index.html#clojure.java.jdbc/update!"}
   {:raw-source-url
-   "https://github.com/clojure/java.jdbc/raw/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj",
+   "https://github.com/clojure/java.jdbc/raw/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj",
    :name "with-db-connection",
    :file "src/main/clojure/clojure/java/jdbc.clj",
    :source-url
-   "https://github.com/clojure/java.jdbc/blob/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj#L700",
-   :line 700,
+   "https://github.com/clojure/java.jdbc/blob/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj#L695",
+   :line 695,
    :var-type "macro",
    :arglists ([binding & body]),
    :doc
@@ -525,12 +525,12 @@
    :wiki-url
    "http://clojure.github.io/java.jdbc//index.html#clojure.java.jdbc/with-db-connection"}
   {:raw-source-url
-   "https://github.com/clojure/java.jdbc/raw/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj",
+   "https://github.com/clojure/java.jdbc/raw/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj",
    :name "with-db-metadata",
    :file "src/main/clojure/clojure/java/jdbc.clj",
    :source-url
-   "https://github.com/clojure/java.jdbc/blob/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj#L710",
-   :line 710,
+   "https://github.com/clojure/java.jdbc/blob/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj#L705",
+   :line 705,
    :var-type "macro",
    :arglists ([binding & body]),
    :doc
@@ -539,12 +539,12 @@
    :wiki-url
    "http://clojure.github.io/java.jdbc//index.html#clojure.java.jdbc/with-db-metadata"}
   {:raw-source-url
-   "https://github.com/clojure/java.jdbc/raw/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj",
+   "https://github.com/clojure/java.jdbc/raw/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj",
    :name "with-db-transaction",
    :file "src/main/clojure/clojure/java/jdbc.clj",
    :source-url
-   "https://github.com/clojure/java.jdbc/blob/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj#L686",
-   :line 686,
+   "https://github.com/clojure/java.jdbc/blob/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj#L681",
+   :line 681,
    :var-type "macro",
    :arglists ([binding & body]),
    :doc
@@ -553,12 +553,12 @@
    :wiki-url
    "http://clojure.github.io/java.jdbc//index.html#clojure.java.jdbc/with-db-transaction"}
   {:raw-source-url
-   "https://github.com/clojure/java.jdbc/raw/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj",
+   "https://github.com/clojure/java.jdbc/raw/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj",
    :name "IResultSetReadColumn",
    :file "src/main/clojure/clojure/java/jdbc.clj",
    :source-url
-   "https://github.com/clojure/java.jdbc/blob/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj#L381",
-   :line 381,
+   "https://github.com/clojure/java.jdbc/blob/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj#L376",
+   :line 376,
    :var-type "protocol",
    :arglists nil,
    :doc
@@ -567,12 +567,12 @@
    :wiki-url
    "http://clojure.github.io/java.jdbc//index.html#clojure.java.jdbc/IResultSetReadColumn"}
   {:raw-source-url
-   "https://github.com/clojure/java.jdbc/raw/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj",
+   "https://github.com/clojure/java.jdbc/raw/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj",
    :name "ISQLParameter",
    :file "src/main/clojure/clojure/java/jdbc.clj",
    :source-url
-   "https://github.com/clojure/java.jdbc/blob/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj#L355",
-   :line 355,
+   "https://github.com/clojure/java.jdbc/blob/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj#L350",
+   :line 350,
    :var-type "protocol",
    :arglists nil,
    :doc
@@ -581,12 +581,12 @@
    :wiki-url
    "http://clojure.github.io/java.jdbc//index.html#clojure.java.jdbc/ISQLParameter"}
   {:raw-source-url
-   "https://github.com/clojure/java.jdbc/raw/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj",
+   "https://github.com/clojure/java.jdbc/raw/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj",
    :name "ISQLValue",
    :file "src/main/clojure/clojure/java/jdbc.clj",
    :source-url
-   "https://github.com/clojure/java.jdbc/blob/78b35e0320f143f7f8118ff63a5d8b73c8cee118/src/main/clojure/clojure/java/jdbc.clj#L341",
-   :line 341,
+   "https://github.com/clojure/java.jdbc/blob/ee7ce8c78e76bc2014733a1a14c74f85505a9780/src/main/clojure/clojure/java/jdbc.clj#L336",
+   :line 336,
    :var-type "protocol",
    :arglists nil,
    :doc
