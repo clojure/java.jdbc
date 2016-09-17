@@ -61,6 +61,9 @@
 ;; PostgreSQL host/port
 (def postgres-host (or (System/getenv "TEST_POSTGRES_HOST") "127.0.0.1"))
 (def postgres-port (or (System/getenv "TEST_POSTGRES_PORT") "5432"))
+(def postgres-dbname (or (System/getenv "TEST_POSTGRES_DBNAME") "clojure_test"))
+(def postgres-user (or (System/getenv "TEST_POSTGRES_USER") "clojure_test"))
+(def postgres-password (or (System/getenv "TEST_POSTGRES_PASSWORD") postgres-user))
 
 ;; database connections used for testing:
 
@@ -83,11 +86,11 @@
                 :dbname "clojure_test_sqlite"})
 
 (def postgres-db {:dbtype   "postgres"
-                  :dbname   "clojure_test"
+                  :dbname   postgres-dbname
                   :host     postgres-host
                   :port     postgres-port
-                  :user     "clojure_test"
-                  :password "clojure_test"})
+                  :user     postgres-user
+                  :password postgres-password})
 
 (def mssql-db {:dbtype   "mssql"
                :dbname   mssql-dbname

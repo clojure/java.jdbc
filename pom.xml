@@ -27,6 +27,10 @@
     <tag>HEAD</tag>
   </scm>
 
+  <properties>
+    <java.jdbc.test.pgjdbc.version>9.4.1208.jre7</java.jdbc.test.pgjdbc.version>
+  </properties>
+
   <build>
     <plugins>
       <plugin>
@@ -86,7 +90,7 @@
     <dependency>
       <groupId>org.postgresql</groupId>
       <artifactId>postgresql</artifactId>
-      <version>9.4.1208.jre7</version>
+      <version>${java.jdbc.test.pgjdbc.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
