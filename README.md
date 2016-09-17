@@ -107,6 +107,8 @@ Developer Information
         $ sudo -u postgres createuser clojure_test -P clojure_test
         $ sudo -u postgres createdb clojure_test -O clojure_test
 
+You can use TEST_POSTGRES_DBNAME, TEST_POSTGRES_USER, TEST_POSTGRES_PASSWORD environment variables to set dbname, user, and password used for tests
+
 * Or similarly with MySQL:
 
         $ mysql -u root
