@@ -22,7 +22,7 @@
                  [net.sourceforge.jtds/jtds "1.3.1"]
                  ;; Tests fail with 6.0.2 driver:
                  [mysql/mysql-connector-java "5.1.39"]
-                 [org.postgresql/postgresql "9.4.1208.jre7"]
+                 [org.postgresql/postgresql "9.4.1210.jre7"]
                  [org.xerial/sqlite-jdbc "3.8.11.2"]
                  ;; if you have the MS driver in your local repo
                  [sqljdbc4 "4.0"]
@@ -35,7 +35,8 @@
              :1.9 {:dependencies [[org.clojure/clojure "1.9.0-master-SNAPSHOT"]]}
              :dev {:dependencies [[org.clojure/test.check "0.9.0"]]}
              }
-  :repositories {"sonatype-oss-public" "https://oss.sonatype.org/content/groups/public/"}
+  :repositories {"sonatype-oss-public" "https://oss.sonatype.org/content/groups/public/"
+                 "ws-archiva" "https://d259tvauhnips9.cloudfront.net/archiva/repository/internal/"}
   ;; include dev profile with 1.9 to pull in test.check
   :aliases {"test-all" ["with-profile" "test,1.4:test,1.5:test,1.6:test,1.7:test,1.8:dev,test,1.9" "test"]
             "check-all" ["with-profile" "1.4:1.5:1.6:1.7:1.8:1.9" "check"]}
