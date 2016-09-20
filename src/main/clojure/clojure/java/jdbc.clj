@@ -1024,13 +1024,12 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
   executeBatch will be used. This may affect what SQL you can run via execute!"
   ([db sql-params] (execute! db sql-params {}))
   ([db sql-params opts]
-   (let [{:keys [transaction? multi?]}
+   (let [{:keys [transaction? multi?]
+          :as opts}
          (merge {:transaction? true :multi? false} (when (map? db) db) opts)
          execute-helper
          (^{:once true} fn* [db]
-          (if multi?
-            (db-do-prepared db transaction? sql-params {:multi? true})
-            (db-do-prepared db transaction? sql-params {})))]
+          (db-do-prepared db transaction? sql-params opts))]
      (if-let [con (db-find-connection db)]
        (execute-helper db)
        (with-open [con (get-connection db)]
@@ -1055,11 +1054,12 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
     (execute! db [\"DELETE FROM person WHERE zip = ?\" 94546])"
   ([db table where-clause] (delete! db table where-clause {}))
   ([db table where-clause opts]
-   (let [{:keys [entities transaction?]}
+   (let [{:keys [entities transaction?]
+          :as   opts}
          (merge {:entities identity :transaction? true} (when (map? db) db) opts)]
      (execute! db
                (delete-sql table where-clause entities)
-               {:transaction? transaction?}))))
+               opts))))
 
 (defn- multi-insert-helper
   "Given a (connected) database connection and some SQL statements (for multiple
@@ -1121,7 +1121,8 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
   "Given a database connection, a table name, a sequence of rows, and an options
   map, insert the rows into the database."
   [db table rows opts]
-  (let [{:keys [entities identifiers qualifier transaction?]}
+  (let [{:keys [entities identifiers qualifier transaction?]
+         :as opts}
         (merge {:entities identity :identifiers str/lower-case :transaction? true}
                (when (map? db) db)
                opts)
@@ -1130,24 +1131,23 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
                             (throw (IllegalArgumentException. "insert! / insert-multi! called with a non-map row")))
                           (insert-single-row-sql table row entities)) rows)]
     (if-let [con (db-find-connection db)]
-      (insert-helper db transaction? sql-params
-                     {:identifiers identifiers :qualifier qualifier})
+      (insert-helper db transaction? sql-params opts)
       (with-open [con (get-connection db)]
-        (insert-helper (add-connection db con) transaction? sql-params
-                       {:identifiers identifiers :qualifier qualifier})))))
+        (insert-helper (add-connection db con) transaction? sql-params opts)))))
 
 (defn- insert-cols!
   "Given a database connection, a table name, a sequence of columns names, a
   sequence of vectors of column values, one per row, and an options map,
   insert the rows into the database."
   [db table cols values opts]
-  (let [{:keys [entities transaction?]}
-        (merge {:entities identity :transaction? true} (when (map? db) db) opts)
+  (let [{:keys [entities transaction?]
+         :as opts}
+        (merge {:entities identity :transaction? true :multi? true} (when (map? db) db) opts)
         sql-params (insert-multi-row-sql table cols values entities)]
     (if-let [con (db-find-connection db)]
-      (db-do-prepared db transaction? sql-params {:multi? true})
+      (db-do-prepared db transaction? sql-params opts)
       (with-open [con (get-connection db)]
-        (db-do-prepared (add-connection db con) transaction? sql-params {:multi? true})))))
+        (db-do-prepared (add-connection db con) transaction? sql-params opts)))))
 
 (defn insert!
   "Given a database connection, a table name and either a map representing a rows,
@@ -1219,11 +1219,12 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
     (execute! db [\"UPDATE person SET zip = ? WHERE zip = ?\" 94540 94546])"
   ([db table set-map where-clause] (update! db table set-map where-clause {}))
   ([db table set-map where-clause opts]
-   (let [{:keys [entities transaction?]}
+   (let [{:keys [entities]
+          :as opts}
          (merge {:entities identity :transaction? true} (when (map? db) db) opts)]
      (execute! db
                (update-sql table set-map where-clause entities)
-               {:transaction? transaction?}))))
+               opts))))
 
 (defn create-table-ddl
   "Given a table name and a vector of column specs, return the DDL string for
