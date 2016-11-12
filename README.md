@@ -16,7 +16,7 @@ Additional documentation can be found in the [java.jdbc section of clojure-doc.o
 Releases and Dependency Information
 ========================================
 
-Latest stable release: 0.6.2-alpha3
+Latest stable release: 0.7.0-alpha1
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22java.jdbc%22)
 
@@ -24,14 +24,14 @@ Latest stable release: 0.6.2-alpha3
 
 [Leiningen](https://github.com/technomancy/leiningen) dependency information:
 ```clojure
-[org.clojure/java.jdbc "0.6.2-alpha3"]
+[org.clojure/java.jdbc "0.7.0-alpha1"]
 ```
 [Maven](http://maven.apache.org/) dependency information:
 ```xml
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>java.jdbc</artifactId>
-  <version>0.6.2-alpha3</version>
+  <version>0.7.0-alpha1</version>
 </dependency>
 ```
 You will also need to add dependencies for the JDBC driver you intend to use. Here are links (to Maven Central) for each of the common database drivers that clojure.java.jdbc is known to be used with:
@@ -119,6 +119,14 @@ Developer Information
 
 Change Log
 ====================
+
+* Release 0.7.0-alpha1 on 2016-11-12 -- potentially breaking changes
+  * The signatures of `as-sql-name` and `quoted` have changed slightly: the former no longer has the curried (single argument) version, and the latter no longer has the two argument version. This change came out of a discussion on Slack which indicated curried functions are non-idiomatic. If you relied on the curried version of `as-sql-name`, you will not need to use `partial`. If you relied on the two argument version of `quoted`, you will need to add an extra `( )` for the one argument call. I'd be fairly surprised if anyone is using `as-sql-name` at all since it is really an implementation detail. I'd also be surprised if anyone was using the two argument version of `quoted` since the natural usage is `:entities (quoted [\[ \]])` to create a naming strategy (that provides SQL entity quoting).
+  * Clarified that `insert-multi!` with a sequence of row maps may be substantially slower than with a sequence of row value vectors (the former performs an insert for each row, the latter performs a single insert for all the data together) [JDBC-147](http://dev.clojure.org/jira/browse/JDBC-147).
+  * All options are passed through all function calls, expanding the range of options you can pass into high-level functions such as `insert!` and `update!` [JDBC-144](http://dev.clojure.org/jira/browse/JDBC-144).
+  * Added `get-isolation-level` to return the current transaction's isolation level, if any [JDBC-141](http://dev.clojure.org/jira/browse/JDBC-141).
+  * Added support for `read-columns` option to allow more flexible customization of reading column values from a result set (particularly in a multi-database application). Also expands `set-parameters` support to options (previously it was just part of the db-spec) [JDBC-137](http://dev.clojure.org/jira/browse/JDBC-137).
+  * Expanded optional `clojure.spec` coverage to almost the whole library API.
 
 * Release 0.6.2-alpha3 on 2016-08-25
   * Fixed bad interaction between `:qualifier` and existing `:identifiers` functionality [JDBC-140](http://dev.clojure.org/jira/browse/JDBC-140).
@@ -307,24 +315,31 @@ Change Log
   * Remove reflection warning from execute-batch
   * Add notes to README about 3rd party database driver dependencies
   * Add optional :identifiers argument to resultset-seq so you can explicitly pass in the naming strategy
+
 * Release 0.2.3 on 2012-06-18
   * as-str now treats a.b as two identifiers separated by . so quoting produces [a].[b] instead of [a.b]
   * Add :connection-uri option [JDBC-34](http://dev.clojure.org/jira/browse/JDBC-34)
+
 * Release 0.2.2 on 2012-06-10
   * Handle Oracle unknown row count affected [JDBC-33](http://dev.clojure.org/jira/browse/JDBC-33)
   * Handle jdbc: prefix in string db-specs [JDBC-32](http://dev.clojure.org/jira/browse/JDBC-32)
   * Handle empty columns in make column unique (Juergen Hoetzel) [JDBC-31](http://dev.clojure.org/jira/browse/JDBC-31)
+
 * Release 0.2.1 on 2012-05-10
   * Result set performance enhancement (Juergen Hoetzel) [JDBC-29](http://dev.clojure.org/jira/browse/JDBC-29)
   * Make do-prepared-return-keys (for Korma team) [JDBC-30](http://dev.clojure.org/jira/browse/JDBC-30)
+
 * Release 0.2.0 on 2012-04-23
   * Merge internal namespace into main jdbc namespace [JDBC-19](http://dev.clojure.org/jira/browse/JDBC-19)
+
 * Release 0.1.4 on 2012-04-15
   * Unwrap RTE for nested transaction exceptions (we already
     unwrapped top-level transaction RTEs).
   * Remove reflection warning unwrapping RunTimeException (Alan Malloy)
+
 * Release 0.1.3 on 2012-02-29
   * Fix generated keys inside transactions for SQLite3 [JDBC-26](http://dev.clojure.org/jira/browse/JDBC-26)
+
 * Release 0.1.2 on 2012-02-29
   * Handle prepared statement params correctly [JDBC-23](http://dev.clojure.org/jira/browse/JDBC-23)
   * Add support for SQLite3 [JDBC-26](http://dev.clojure.org/jira/browse/JDBC-26)
@@ -332,30 +347,39 @@ Change Log
   * Ensure MS SQL Server passes tests with both Microsoft and jTDS drivers
   * Build server now tests derby, hsqldb and sqlite by default
   * Update README per Stuart Sierra's outline for contrib projects
+
 * Release 0.1.1 on 2011-11-02
   * Accept string or URI in connection definition [JDBC-21](http://dev.clojure.org/jira/browse/JDBC-21)
   * Allow driver, port and subprotocol to be deduced [JDBC-22](http://dev.clojure.org/jira/browse/JDBC-22)
+
 * Release 0.1.0 on 2011-10-16
   * Remove dependence on deprecated structmap [JDBC-15](http://dev.clojure.org/jira/browse/JDBC-15)
+
 * Release 0.0.7 on 2011-10-11
   * Rename duplicate columns [JDBC-9](http://dev.clojure.org/jira/browse/JDBC-9)
   * Ensure do-preared traps invalid SQL [JDBC-16](http://dev.clojure.org/jira/browse/JDBC-16)
+
 * Release 0.0.6 on 2011-08-04
   * Improve exception handling (unwrap RTE)
   * Don't use batch for update (causes exceptions on Apache Derby) [JDBC-12](http://dev.clojure.org/jire/JDBC-12)
   * Add test suite
+
 * Release 0.0.5 on 2011-07-18
   * Expose prepare-statement API
   * Allow with-query-results to accept a PreparedStatement or options for creating one, instead of SQL query string and parameters
   * Support databases that cannot return generated keys
+
 * Release 0.0.4 on 2011-07-17
   * Allow :table-spec {string} in create-table  [JDBC-4](http://dev.clojure.org/jire/JDBC-4)
   * Remove reflection warnings [JDBC-8](http://dev.clojure.org/jire/JDBC-8)
   * Ensure transactions are not committed when Error occurs [JDBC-11](http://dev.clojure.org/jire/JDBC-11)
+
 * Release 0.0.3 on 2011-07-01
   * Key generation compatibility with MS SQL Server, PostgreSQL [JDBC-10](http://dev.clojure.org/jira/browse/JDBC-10)
+
 * Release 0.0.2 on 2011-06-07
   * Clojure 1.2 compatibility [JDBC-7](http://dev.clojure.org/jira/browse/JDBC-7)
+
 * Release 0.0.1 on 2011-05-07
   * Initial release
 
