@@ -720,22 +720,18 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
   :row-fn,and :result-set-fn to control how the ResultSet is transformed and
   returned. See query for more details."
   ([rs-or-value] (metadata-result rs-or-value {}))
-  ([rs-or-value {:keys [as-arrays? identifiers qualifier read-columns
-                        result-set-fn row-fn]
-                 :or {identifiers str/lower-case
-                      read-columns dft-read-columns
-                      row-fn identity}}]
-   (let [result-set-fn (or result-set-fn (if as-arrays? vec doall))]
+  ([rs-or-value opts]
+   (let [{:keys [as-arrays? result-set-fn row-fn] :as opts}
+         (merge {:identifiers str/lower-case :read-columns dft-read-columns
+                 :row-fn identity} opts)
+         result-set-fn (or result-set-fn (if as-arrays? vec doall))]
      (if (instance? java.sql.ResultSet rs-or-value)
        ((^{:once true} fn* [rs]
          (result-set-fn (if as-arrays?
                           (cons (first rs)
                                 (map row-fn (rest rs)))
                           (map row-fn rs))))
-        (result-set-seq rs-or-value {:as-arrays? as-arrays?
-                                     :identifiers identifiers
-                                     :qualifier qualifier
-                                     :read-columns read-columns}))
+        (result-set-seq rs-or-value opts))
        rs-or-value))))
 
 (defmacro metadata-query
@@ -774,8 +770,8 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
 (defn- db-do-execute-prepared-return-keys
   "Executes a PreparedStatement, optionally in a transaction, and (attempts to)
   return any generated keys."
-  [db ^PreparedStatement stmt param-group {:keys [transaction?] :as opts}]
-  (let [opts (merge (when (map? db) db) opts)
+  [db ^PreparedStatement stmt param-group opts]
+  (let [{:keys [transaction?] :as opts} (merge (when (map? db) db) opts)
         exec-and-return-keys
         (^{:once true} fn* []
          (let [counts (.executeUpdate stmt)]
@@ -827,8 +823,8 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
 
 (defn- db-do-execute-prepared-statement
   "Execute a PreparedStatement, optionally in a transaction."
-  [db ^PreparedStatement stmt param-groups {:keys [transaction?] :as opts}]
-  (let [opts (merge (when (map? db) db) opts)]
+  [db ^PreparedStatement stmt param-groups opts]
+  (let [{:keys [transaction?] :as opts} (merge (when (map? db) db) opts)]
     (if (empty? param-groups)
       (if transaction?
         (with-db-transaction [t-db (add-connection db (.getConnection stmt))]
@@ -920,8 +916,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
   See also prepare-statement for additional options."
   ([db sql-params] (query db sql-params {}))
   ([db sql-params opts]
-   (let [{:keys [as-arrays? explain? explain-fn identifiers qualifier
-                 read-columns result-set-fn row-fn] :as opts}
+   (let [{:keys [as-arrays? explain? explain-fn result-set-fn row-fn] :as opts}
          (merge {:explain-fn println :identifiers str/lower-case
                  :read-columns dft-read-columns :row-fn identity}
                 (when (map? db) db)
@@ -943,10 +938,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
                                                   (cons (first rs)
                                                         (map row-fn (rest rs)))
                                                   (map row-fn rs))))
-                                (result-set-seq rset {:as-arrays? as-arrays?
-                                                      :identifiers identifiers
-                                                      :qualifier qualifier
-                                                      :read-columns read-columns})))
+                                (result-set-seq rset opts)))
                               opts))))
 
 (defn- direction
@@ -981,9 +973,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
   ([db table columns] (find-by-keys db table columns {}))
   ([db table columns opts]
    (let [{:keys [entities order-by] :as opts}
-         (merge {:entities identity}
-                (when (map? db) db)
-                opts)
+         (merge {:entities identity} (when (map? db) db) opts)
          ks (keys columns)
          vs (vals columns)]
      (query db (into [(str "SELECT * FROM " (table-str table entities)
@@ -1024,13 +1014,10 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
   executeBatch will be used. This may affect what SQL you can run via execute!"
   ([db sql-params] (execute! db sql-params {}))
   ([db sql-params opts]
-   (let [{:keys [transaction? multi?]}
+   (let [{:keys [transaction?] :as opts}
          (merge {:transaction? true :multi? false} (when (map? db) db) opts)
-         execute-helper
-         (^{:once true} fn* [db]
-          (if multi?
-            (db-do-prepared db transaction? sql-params {:multi? true})
-            (db-do-prepared db transaction? sql-params {})))]
+         execute-helper (^{:once true} fn* [db]
+                         (db-do-prepared db transaction? sql-params opts))]
      (if-let [con (db-find-connection db)]
        (execute-helper db)
        (with-open [con (get-connection db)]
@@ -1055,11 +1042,9 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
     (execute! db [\"DELETE FROM person WHERE zip = ?\" 94546])"
   ([db table where-clause] (delete! db table where-clause {}))
   ([db table where-clause opts]
-   (let [{:keys [entities transaction?]}
+   (let [{:keys [entities] :as opts}
          (merge {:entities identity :transaction? true} (when (map? db) db) opts)]
-     (execute! db
-               (delete-sql table where-clause entities)
-               {:transaction? transaction?}))))
+     (execute! db (delete-sql table where-clause entities) opts))))
 
 (defn- multi-insert-helper
   "Given a (connected) database connection and some SQL statements (for multiple
@@ -1121,7 +1106,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
   "Given a database connection, a table name, a sequence of rows, and an options
   map, insert the rows into the database."
   [db table rows opts]
-  (let [{:keys [entities identifiers qualifier transaction?]}
+  (let [{:keys [entities transaction?] :as opts}
         (merge {:entities identity :identifiers str/lower-case :transaction? true}
                (when (map? db) db)
                opts)
@@ -1130,24 +1115,23 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
                             (throw (IllegalArgumentException. "insert! / insert-multi! called with a non-map row")))
                           (insert-single-row-sql table row entities)) rows)]
     (if-let [con (db-find-connection db)]
-      (insert-helper db transaction? sql-params
-                     {:identifiers identifiers :qualifier qualifier})
+      (insert-helper db transaction? sql-params opts)
       (with-open [con (get-connection db)]
-        (insert-helper (add-connection db con) transaction? sql-params
-                       {:identifiers identifiers :qualifier qualifier})))))
+        (insert-helper (add-connection db con) transaction? sql-params opts)))))
 
 (defn- insert-cols!
   "Given a database connection, a table name, a sequence of columns names, a
   sequence of vectors of column values, one per row, and an options map,
   insert the rows into the database."
   [db table cols values opts]
-  (let [{:keys [entities transaction?]}
+  (let [{:keys [entities transaction?] :as opts}
         (merge {:entities identity :transaction? true} (when (map? db) db) opts)
         sql-params (insert-multi-row-sql table cols values entities)]
     (if-let [con (db-find-connection db)]
-      (db-do-prepared db transaction? sql-params {:multi? true})
+      (db-do-prepared db transaction? sql-params (assoc opts :multi? true))
       (with-open [con (get-connection db)]
-        (db-do-prepared (add-connection db con) transaction? sql-params {:multi? true})))))
+        (db-do-prepared (add-connection db con) transaction? sql-params
+                        (assoc opts :multi? true))))))
 
 (defn insert!
   "Given a database connection, a table name and either a map representing a rows,
@@ -1227,11 +1211,9 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
     (execute! db [\"UPDATE person SET zip = ? WHERE zip = ?\" 94540 94546])"
   ([db table set-map where-clause] (update! db table set-map where-clause {}))
   ([db table set-map where-clause opts]
-   (let [{:keys [entities transaction?]}
+   (let [{:keys [entities] :as opts}
          (merge {:entities identity :transaction? true} (when (map? db) db) opts)]
-     (execute! db
-               (update-sql table set-map where-clause entities)
-               {:transaction? transaction?}))))
+     (execute! db (update-sql table set-map where-clause entities) opts))))
 
 (defn create-table-ddl
   "Given a table name and a vector of column specs, return the DDL string for
