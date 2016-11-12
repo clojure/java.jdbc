@@ -1174,11 +1174,19 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
   rows) or a sequence of column names, followed by a sequence of vectors (for
   the values in each row), and possibly a map of options, insert that data into
   the database.
+
   When inserting rows as a sequence of maps, the result is a sequence of the
-  generated keys, if available (note: PostgreSQL returns the whole rows).
+  generated keys, if available (note: PostgreSQL returns the whole rows). A
+  separate database operation is used for each row inserted. This may be slow
+  for if a large sequence of maps is provided.
+
   When inserting rows as a sequence of lists of column values, the result is
   a sequence of the counts of rows affected (a sequence of 1's), if available.
   Yes, that is singularly unhelpful. Thank you getUpdateCount and executeBatch!
+  A single database operation is used to insert all the rows at once. This may
+  be much faster than inserting a sequence of rows (which performs an insert for
+  each map in the sequence).
+
   The :transaction? option specifies whether to run in a transaction or not.
   The default is true (use a transaction). The :entities option specifies how
   to convert the table name and column names to SQL entities."
