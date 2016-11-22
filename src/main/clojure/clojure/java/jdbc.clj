@@ -72,10 +72,17 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
   Intended to be used with :entities to provide a quoting (naming) strategy that
   is appropriate for your database."
   [q]
-  (if (vector? q)
-    (fn [x]
-      (str (first q) x (last q)))
-    (quoted [q q])))
+  (cond (vector? q)
+        (fn [x]
+          (str (first q) x (last q)))
+        (keyword? q)
+        (case q
+          :ansi      (quoted \")
+          :mysql     (quoted \`)
+          :oracle    (quoted \")
+          :sqlserver (quoted [\[ \]]))
+        :else
+        (quoted [q q])))
 
 (defn- table-str
   "Transform a table spec to an entity name for SQL. The table spec may be a

@@ -87,3 +87,11 @@
   (is (argument-exception? (fn [] (sql/create-table-ddl :thing [[]]))))
   (is (argument-exception? (fn [] (sql/create-table-ddl :thing [[:col1 "int"] []]))))
   (is (argument-exception? (fn [] (sql/create-table-ddl :thing [:col1 "int"])))))
+
+(deftest test-quoted
+  (is (= "`x`" ((sql/quoted \`) "x")))
+  (is (= "[x]" ((sql/quoted [\[ \]]) "x")))
+  (is (= "`x`" ((sql/quoted :mysql) "x")))
+  (is (= "\"x\"" ((sql/quoted :ansi) "x")))
+  (is (= "\"x\"" ((sql/quoted :oracle) "x")))
+  (is (= "[x]" ((sql/quoted :sqlserver) "x"))))

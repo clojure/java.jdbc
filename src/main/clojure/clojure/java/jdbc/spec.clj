@@ -183,7 +183,8 @@
 (s/fdef sql/quoted
         :args (s/cat :q (s/or :pair      (s/coll-of ::delimiter
                                                     :kind vector? :count 2)
-                              :delimiter ::delimiter))
+                              :delimiter ::delimiter
+                              :dialect   #{:ansi :mysql :sqlserver :oracle}))
         :ret  ::naming-strategy)
 
 (s/fdef sql/get-connection

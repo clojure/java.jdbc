@@ -1,3 +1,7 @@
+Changes coming in 0.7.0-alpha2
+
+* `quoted` now accepts keywords for database / dialect (`:ansi` (including PostgresSQL), `:mysql`, `:oracle`, `:sqlserver` -- these match the keywords used in HoneySQL which is the recommended third party SQL DSL for java.jdbc).
+
 Changes in 0.7.0-alpha1 -- potentially breaking changes
 
 * The signatures of `as-sql-name` and `quoted` have changed slightly: the former no longer has the curried (single argument) version, and the latter no longer has the two argument version. This change came out of a discussion on Slack which indicated curried functions are non-idiomatic. If you relied on the curried version of `as-sql-name`, you will not need to use `partial`. If you relied on the two argument version of `quoted`, you will need to add an extra `( )` for the one argument call. I'd be fairly surprised if anyone is using `as-sql-name` at all since it is really an implementation detail. I'd also be surprised if anyone was using the two argument version of `quoted` since the natural usage is `:entities (quoted [\[ \]])` to create a naming strategy (that provides SQL entity quoting).
