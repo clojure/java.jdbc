@@ -1,6 +1,7 @@
 Changes coming in 0.7.0-alpha2
 
 * `quoted` now accepts keywords for database / dialect (`:ansi` (including PostgresSQL), `:mysql`, `:oracle`, `:sqlserver` -- these match the keywords used in HoneySQL which is the recommended third party SQL DSL for java.jdbc) [JDBC-149](http://dev.clojure.org/jira/browse/JDBC-149).
+* Reorder `get-connection` clauses to make it easier to combine keys in a `db-spec` [JDBC-148](http://dev.clojure.org/jira/browse/JDBC-148).
 * Force load `DriverManager` before `classForName` call on drivers to avoid potential race condition on initialization [JDBC-145](http://dev.clojure.org/jira/browse/JDBC-145).
 
 Changes in 0.7.0-alpha1 -- potentially breaking changes

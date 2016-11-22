@@ -258,31 +258,27 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
            name environment]
     :as db-spec}]
   (cond
-    connection
-    connection
+    (string? db-spec)
+    (get-connection (URI. (strip-jdbc db-spec)))
 
     (instance? URI db-spec)
     (get-connection (parse-properties-uri db-spec))
 
-    (string? db-spec)
-    (get-connection (URI. (strip-jdbc db-spec)))
+    connection
+    connection
+
+    (or (and datasource username password)
+        (and datasource user     password))
+    (.getConnection ^DataSource datasource ^String (or username user) ^String password)
+
+    datasource
+    (.getConnection ^DataSource datasource)
 
     factory
     (factory (dissoc db-spec :factory))
 
     connection-uri
     (DriverManager/getConnection connection-uri)
-
-    (and subprotocol subname)
-    (let [;; allow aliases for subprotocols
-          subprotocol (subprotocols subprotocol subprotocol)
-          url (format "jdbc:%s:%s" subprotocol subname)
-          etc (dissoc db-spec :classname :subprotocol :subname)
-          classname (or classname (classnames subprotocol))
-                                        ; force DriverManager to be loaded
-          _ (DriverManager/getLoginTimeout)]
-      (clojure.lang.RT/loadClassForName classname)
-      (DriverManager/getConnection url (as-properties etc)))
 
     (and dbtype dbname)
     (let [;; allow aliases for dbtype
@@ -306,20 +302,24 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
       (clojure.lang.RT/loadClassForName (classnames subprotocol))
       (DriverManager/getConnection url (as-properties etc)))
 
-    (or (and datasource username password)
-        (and datasource user     password))
-    (.getConnection ^DataSource datasource ^String (or username user) ^String password)
-
-    datasource
-    (.getConnection ^DataSource datasource)
+    (and subprotocol subname)
+    (let [;; allow aliases for subprotocols
+          subprotocol (subprotocols subprotocol subprotocol)
+          url (format "jdbc:%s:%s" subprotocol subname)
+          etc (dissoc db-spec :classname :subprotocol :subname)
+          classname (or classname (classnames subprotocol))
+                                        ; force DriverManager to be loaded
+          _ (DriverManager/getLoginTimeout)]
+      (clojure.lang.RT/loadClassForName classname)
+      (DriverManager/getConnection url (as-properties etc)))
 
     name
     (when-available
-     javax.naming.InitialContext
-     (let [env (and environment (Hashtable. ^Map environment))
-           context (javax.naming.InitialContext. env)
-           ^DataSource datasource (.lookup context ^String name)]
-       (.getConnection datasource)))
+        javax.naming.InitialContext
+      (let [env (and environment (Hashtable. ^Map environment))
+            context (javax.naming.InitialContext. env)
+            ^DataSource datasource (.lookup context ^String name)]
+        (.getConnection datasource)))
 
     :else
     (let [^String msg (format "db-spec %s is missing a required parameter" db-spec)]
