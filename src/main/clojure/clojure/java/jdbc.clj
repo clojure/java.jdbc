@@ -278,7 +278,9 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
           subprotocol (subprotocols subprotocol subprotocol)
           url (format "jdbc:%s:%s" subprotocol subname)
           etc (dissoc db-spec :classname :subprotocol :subname)
-          classname (or classname (classnames subprotocol))]
+          classname (or classname (classnames subprotocol))
+                                        ; force DriverManager to be loaded
+          _ (DriverManager/getLoginTimeout)]
       (clojure.lang.RT/loadClassForName classname)
       (DriverManager/getConnection url (as-properties etc)))
 
@@ -298,7 +300,9 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
                 (str "jdbc:" subprotocol "://" host
                      (when port (str ":" port))
                      db-sep dbname))
-          etc (dissoc db-spec :dbtype :dbname)]
+          etc (dissoc db-spec :dbtype :dbname)
+                                        ; force DriverManager to be loaded
+          _ (DriverManager/getLoginTimeout)]
       (clojure.lang.RT/loadClassForName (classnames subprotocol))
       (DriverManager/getConnection url (as-properties etc)))
 
