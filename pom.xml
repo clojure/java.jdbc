@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <artifactId>java.jdbc</artifactId>
   <version>0.7.0-SNAPSHOT</version>
-  <name>${project.artifactId}</name>
+  <name>java.jdbc</name>
 
   <parent>
     <groupId>org.clojure</groupId>
@@ -35,7 +35,7 @@
 	         JAR. Projects may override as needed. -->
 	    <groupId>com.theoryinpractise</groupId>
 	    <artifactId>clojure-maven-plugin</artifactId>
-	    <version>1.3.13</version>
+	    <version>1.7.1</version>
 	    <extensions>true</extensions>
 	    <configuration>
 	      <warnOnReflection>${clojure.warnOnReflection}</warnOnReflection>
