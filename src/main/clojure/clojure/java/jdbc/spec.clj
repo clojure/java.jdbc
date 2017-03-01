@@ -28,7 +28,9 @@
 
 ;; database specification (connection description)
 
-(s/def ::subprotocol-base  #{"derby" "h2" "hsqldb" "jtds:sqlserver" "mysql" "oracle:oci" "oracle:thin" "postgresql" "sqlite" "sqlserver"})
+(s/def ::subprotocol-base  #{"derby" "h2" "hsqldb" "jtds:sqlserver" "mysql"
+                             "oracle:oci" "oracle:thin" "pgsql" "postgresql"
+                             "sqlite" "sqlserver"})
 (s/def ::subprotocol-alias #{"hsql" "jtds" "mssql" "oracle" "postgres"})
 ;; technically :subprotocol can be any string...
 (s/def ::subprotocol string?)

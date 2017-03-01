@@ -1,5 +1,6 @@
 Changes coming in 0.7.0-alpha2
 
+* `pgsql` and the Impossibl PostgresSQL 'NG' driver are now supported (note that `:max-rows` does not work with this driver!); also, providing unknown `dbtype` or `subprotocol` in a `db-spec` should now throw a better exception [JDBC-150](http://dev.clojure.org/jira/browse/JDBC-150).
 * `quoted` now accepts keywords for database / dialect (`:ansi` (including PostgresSQL), `:mysql`, `:oracle`, `:sqlserver` -- these match the keywords used in HoneySQL which is the recommended third party SQL DSL for java.jdbc) [JDBC-149](http://dev.clojure.org/jira/browse/JDBC-149).
 * Reorder `get-connection` clauses to make it easier to combine keys in a `db-spec` [JDBC-148](http://dev.clojure.org/jira/browse/JDBC-148).
 * Force load `DriverManager` before `classForName` call on drivers to avoid potential race condition on initialization [JDBC-145](http://dev.clojure.org/jira/browse/JDBC-145).

@@ -89,6 +89,13 @@
                   :user     "clojure_test"
                   :password "clojure_test"})
 
+(def pgsql-db {:dbtype   "pgsql"
+               :dbname   "clojure_test"
+               :host     postgres-host
+               :port     postgres-port
+               :user     "clojure_test"
+               :password "clojure_test"})
+
 (def mssql-db {:dbtype   "mssql"
                :dbname   mssql-dbname
                :host     mssql-host
@@ -126,9 +133,9 @@
     (doseq [table [:fruit :fruit2 :veggies :veggies2]]
       (try
         (sql/db-do-commands db (sql/drop-table-ddl table))
-        (catch java.sql.SQLException _
+        (catch java.sql.SQLException _))))
           ;; ignore
-          ))))
+
   (t))
 
 (use-fixtures
@@ -160,8 +167,14 @@
 
 (defn- postgres? [db]
   (if (string? db)
-    (re-find #"postgres" db)
-    (re-find #"postgres" (or (:subprotocol db) (:dbtype db)))))
+    (or (re-find #"postgres" db) (re-find #"pgsql"))
+    (or (re-find #"postgres" (or (:subprotocol db) (:dbtype db)))
+        (re-find #"pgsql" (or (:subprotocol db) (:dbtype db))))))
+
+(defn- pgsql? [db]
+  (if (string? db)
+    (re-find #"pgsql")
+    (re-find #"pgsql" (or (:subprotocol db) (:dbtype db)))))
 
 (defmulti create-test-table
   "Create a standard test table. Uses db-do-commands.
@@ -241,7 +254,7 @@
 
 (defn- select-key [db]
   (case (or (:subprotocol db) (:dbtype db))
-    ("postgres" "postgresql") :id
+    ("postgres" "postgresql" "pgsql") :id
     identity))
 
 (defn- generated-key [db k]
@@ -260,7 +273,7 @@
     "h2" (Float. v)
     ("jtds" "jtds:sqlserver") (Float. v)
     ("mssql" "sqlserver") (Float. v)
-    ("postgres" "postgresql") (Float. v)
+    ("postgres" "postgresql" "pgsql") (Float. v)
     v))
 
 (deftest test-create-table
@@ -411,9 +424,11 @@
     (is (= 4 (sql/query db ["SELECT * FROM fruit"] {:result-set-fn count})))
     (is (= 4 (sql/with-db-connection [con db]
                (sql/query con (sql/prepare-statement (sql/db-connection con) "SELECT * FROM fruit") {:result-set-fn count}))))
-    (is (= 2 (sql/query db ["SELECT * FROM fruit"] {:result-set-fn count :max-rows 2})))
-    (is (= 2 (sql/with-db-connection [con db]
-               (sql/query con [(sql/prepare-statement (sql/db-connection con) "SELECT * FROM fruit" {:max-rows 2})] {:result-set-fn count}))))
+    (when-not (pgsql? db)
+      ;; maxRows does not appear to be supported on Impossibl pgsql?
+      (is (= 2 (sql/query db ["SELECT * FROM fruit"] {:result-set-fn count :max-rows 2})))
+      (is (= 2 (sql/with-db-connection [con db]
+                 (sql/query con [(sql/prepare-statement (sql/db-connection con) "SELECT * FROM fruit" {:max-rows 2})] {:result-set-fn count})))))
     (is (= "Apple" (sql/query db ["SELECT * FROM fruit WHERE appearance = ?" "red"] {:row-fn :name :result-set-fn first})))
     (is (= "juicy" (sql/query db ["SELECT * FROM fruit WHERE name = ?" "Orange"] {:row-fn :appearance :result-set-fn first})))
     (is (= "Apple" (:name (sql/get-by-id db :fruit 1))))

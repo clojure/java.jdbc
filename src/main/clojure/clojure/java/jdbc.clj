@@ -1,4 +1,4 @@
-;;  Copyright (c) 2008-2016 Sean Corfield, Stephen C. Gilardi. All rights reserved.
+;;  Copyright (c) 2008-2017 Sean Corfield, Stephen C. Gilardi. All rights reserved.
 ;;  The use and distribution terms for this software are covered by
 ;;  the Eclipse Public License 1.0
 ;;  (http://opensource.org/licenses/eclipse-1.0.php) which can be
@@ -38,7 +38,7 @@ generated keys are returned (as a map).
 
 For more documentation, see:
 
-http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
+http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
   clojure.java.jdbc
   (:require [clojure.set :as set]
             [clojure.string :as str]
@@ -154,6 +154,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
    "oracle:oci"     "oracle.jdbc.OracleDriver"
    "oracle:thin"    "oracle.jdbc.OracleDriver"
    "postgresql"     "org.postgresql.Driver"
+   "pgsql"          "com.impossibl.postgres.jdbc.PGDriver"
    "sqlite"         "org.sqlite.JDBC"
    "sqlserver"      "com.microsoft.sqlserver.jdbc.SQLServerDriver"})
 
@@ -296,30 +297,37 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html" }
                 (str "jdbc:" subprotocol "://" host
                      (when port (str ":" port))
                      db-sep dbname))
-          etc (dissoc db-spec :dbtype :dbname)
-                                        ; force DriverManager to be loaded
-          _ (DriverManager/getLoginTimeout)]
-      (clojure.lang.RT/loadClassForName (classnames subprotocol))
+          etc (dissoc db-spec :dbtype :dbname)]
+      (if-let [class-name (classnames subprotocol)]
+        (do
+          ;; force DriverManager to be loaded
+          (DriverManager/getLoginTimeout)
+          (clojure.lang.RT/loadClassForName class-name))
+        (throw (ex-info (str "Unknown dbtype: " dbtype) db-spec)))
       (DriverManager/getConnection url (as-properties etc)))
 
     (and subprotocol subname)
     (let [;; allow aliases for subprotocols
           subprotocol (subprotocols subprotocol subprotocol)
           url (format "jdbc:%s:%s" subprotocol subname)
-          etc (dissoc db-spec :classname :subprotocol :subname)
-          classname (or classname (classnames subprotocol))
-                                        ; force DriverManager to be loaded
-          _ (DriverManager/getLoginTimeout)]
-      (clojure.lang.RT/loadClassForName classname)
+          etc (dissoc db-spec :classname :subprotocol :subname)]
+      (if-let [class-name (or classname (classnames subprotocol))]
+        (do
+          ;; force DriverManager to be loaded
+          (DriverManager/getLoginTimeout)
+          (clojure.lang.RT/loadClassForName class-name))
+        (throw (ex-info (str "Unknown subprotocol: " subprotocol) db-spec)))
       (DriverManager/getConnection url (as-properties etc)))
 
     name
-    (when-available
-        javax.naming.InitialContext
-      (let [env (and environment (Hashtable. ^Map environment))
-            context (javax.naming.InitialContext. env)
-            ^DataSource datasource (.lookup context ^String name)]
-        (.getConnection datasource)))
+    (or (when-available javax.naming.InitialContext
+          (let [env (and environment (Hashtable. ^Map environment))
+                context (javax.naming.InitialContext. env)
+                ^DataSource datasource (.lookup context ^String name)]
+            (.getConnection datasource)))
+        (throw (ex-info (str "javax.naming.InitialContext is not available for: "
+                             name)
+                        db-spec)))
 
     :else
     (let [^String msg (format "db-spec %s is missing a required parameter" db-spec)]
