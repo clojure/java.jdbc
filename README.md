@@ -16,7 +16,7 @@ Additional documentation can be found in the [java.jdbc section of clojure-doc.o
 Releases and Dependency Information
 ========================================
 
-Latest stable release: 0.7.0-alpha1
+Latest stable release: 0.7.0-alpha2
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22java.jdbc%22)
 
@@ -24,14 +24,14 @@ Latest stable release: 0.7.0-alpha1
 
 [Leiningen](https://github.com/technomancy/leiningen) dependency information:
 ```clojure
-[org.clojure/java.jdbc "0.7.0-alpha1"]
+[org.clojure/java.jdbc "0.7.0-alpha2"]
 ```
 [Maven](http://maven.apache.org/) dependency information:
 ```xml
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>java.jdbc</artifactId>
-  <version>0.7.0-alpha1</version>
+  <version>0.7.0-alpha2</version>
 </dependency>
 ```
 You will also need to add dependencies for the JDBC driver you intend to use. Here are links (to Maven Central) for each of the common database drivers that clojure.java.jdbc is known to be used with:
@@ -119,6 +119,12 @@ Developer Information
 
 Change Log
 ====================
+
+* Release 0.7.0-alpha2 on 2017-03-01
+  * `pgsql` and the Impossibl PostgresSQL 'NG' driver are now supported (note that `:max-rows` does not work with this driver!); also, providing unknown `dbtype` or `subprotocol` in a `db-spec` should now throw a better exception [JDBC-150](http://dev.clojure.org/jira/browse/JDBC-150).
+  * `quoted` now accepts keywords for database / dialect (`:ansi` (including PostgresSQL), `:mysql`, `:oracle`, `:sqlserver` -- these match the keywords used in HoneySQL which is the recommended third party SQL DSL for java.jdbc) [JDBC-149](http://dev.clojure.org/jira/browse/JDBC-149).
+  * Reorder `get-connection` clauses to make it easier to combine keys in a `db-spec` [JDBC-148](http://dev.clojure.org/jira/browse/JDBC-148).
+  * Force load `DriverManager` before `classForName` call on drivers to avoid potential race condition on initialization [JDBC-145](http://dev.clojure.org/jira/browse/JDBC-145).
 
 * Release 0.7.0-alpha1 on 2016-11-12 -- potentially breaking changes
   * The signatures of `as-sql-name` and `quoted` have changed slightly: the former no longer has the curried (single argument) version, and the latter no longer has the two argument version. This change came out of a discussion on Slack which indicated curried functions are non-idiomatic. If you relied on the curried version of `as-sql-name`, you will not need to use `partial`. If you relied on the two argument version of `quoted`, you will need to add an extra `( )` for the one argument call. I'd be fairly surprised if anyone is using `as-sql-name` at all since it is really an implementation detail. I'd also be surprised if anyone was using the two argument version of `quoted` since the natural usage is `:entities (quoted [\[ \]])` to create a naming strategy (that provides SQL entity quoting).
