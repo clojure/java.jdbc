@@ -16,8 +16,10 @@
                  ;; appropriate for you. Again, note that this project.clj
                  ;; file exists for convenience -- the pom.xml file is the
                  ;; "system of record" as far as dependencies go!
+                 ;; Note: 1.12.1.1 is used in pom.xml for Java 6/7 compat
                  [org.apache.derby/derby "10.13.1.1"]
                  [org.hsqldb/hsqldb "2.3.4"]
+                 ;; Note: 1.4.191 is used in pom.xml for Java 6 compat
                  [com.h2database/h2 "1.4.193"]
                  [net.sourceforge.jtds/jtds "1.3.1"]
                  ;; Tests fail with 6.0.2 driver:
