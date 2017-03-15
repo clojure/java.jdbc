@@ -37,11 +37,14 @@ Latest stable release: 0.7.0-alpha2
 You will also need to add dependencies for the JDBC driver you intend to use. Here are links (to Maven Central) for each of the common database drivers that clojure.java.jdbc is known to be used with:
 
 * [Apache Derby](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.apache.derby%22%20AND%20a%3A%22derby%22)
+* [H2](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22com.h2database%22%20AND%20a%3A%22h2%22)
 * [HSQLDB](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22hsqldb%22%20AND%20a%3A%22hsqldb%22)
 * [Microsoft SQL Server jTDS](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22net.sourceforge.jtds%22%20AND%20a%3A%22jtds%22)
 * [MySQL](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22mysql%22%20AND%20a%3A%22mysql-connector-java%22)
 * [PostgreSQL](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.postgresql%22%20AND%20a%3A%22postgresql%22)
 * [SQLite](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.xerial%22%20AND%20a%3A%22sqlite-jdbc%22)
+
+Note: different versions of various database drivers have different Java/JVM version requirements. In particular, recent versions of Apache Derby require at least Java 8 and recent versions of H2 require at least Java 7. Clojure's Continuous Integration system uses older versions so tests can be run on Java 6 (see `pom.xml`); local testing is done with more recent versions on Java 8.
 
 clojure.java.jdbc is also tested against Microsoft's own JDBC4 Driver 4.0 but that
 has to be [downloaded manually](https://www.microsoft.com/en-us/download/details.aspx?id=11774) and placed in a Maven repository accessible to your system. For testing, it was installed locally as:
