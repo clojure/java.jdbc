@@ -41,8 +41,7 @@
 	      <warnOnReflection>${clojure.warnOnReflection}</warnOnReflection>
 	      <temporaryOutputDirectory>true</temporaryOutputDirectory>
 	    </configuration>
-	    <executions>
-	      <execution>
+	    <executions>1	      <execution>
 	        <id>clojure-compile</id>
 	        <phase>none</phase>
 	      </execution>
@@ -80,7 +79,7 @@
     <dependency>
       <groupId>com.h2database</groupId>
       <artifactId>h2</artifactId>
-      <version>1.4.193</version>
+      <version>1.4.191</version>
   		<scope>test</scope>
     </dependency>
     <dependency>
