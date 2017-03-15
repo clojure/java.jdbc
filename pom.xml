@@ -41,7 +41,8 @@
 	      <warnOnReflection>${clojure.warnOnReflection}</warnOnReflection>
 	      <temporaryOutputDirectory>true</temporaryOutputDirectory>
 	    </configuration>
-	    <executions>1	      <execution>
+	    <executions>
+	      <execution>
 	        <id>clojure-compile</id>
 	        <phase>none</phase>
 	      </execution>
