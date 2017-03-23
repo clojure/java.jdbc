@@ -145,7 +145,9 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
   (add-connection [_ connection] {:connection connection :level 0 :legacy true})
   (get-level [_] 0))
 
-(def ^{:private true :doc "Map of classnames to subprotocols"} classnames
+(def ^:private classnames
+  "Map of subprotocols to classnames. dbtype specifies one of these keys.
+  The subprotocols map below provides aliases for dbtype."
   {"derby"          "org.apache.derby.jdbc.EmbeddedDriver"
    "h2"             "org.h2.Driver"
    "hsqldb"         "org.hsqldb.jdbcDriver"
@@ -155,10 +157,12 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
    "oracle:thin"    "oracle.jdbc.OracleDriver"
    "postgresql"     "org.postgresql.Driver"
    "pgsql"          "com.impossibl.postgres.jdbc.PGDriver"
+   "redshift"       "com.redshift.jdbc.Driver"
    "sqlite"         "org.sqlite.JDBC"
    "sqlserver"      "com.microsoft.sqlserver.jdbc.SQLServerDriver"})
 
-(def ^{:private true :doc "Map of schemes to subprotocols"} subprotocols
+(def ^:private subprotocols
+  "Map of schemes to subprotocols. Used to provide aliases for dbtype."
   {"hsql"     "hsqldb"
    "jtds"     "jtds:sqlserver"
    "mssql"    "sqlserver"
