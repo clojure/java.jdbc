@@ -157,7 +157,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
    "oracle:thin"    "oracle.jdbc.OracleDriver"
    "postgresql"     "org.postgresql.Driver"
    "pgsql"          "com.impossibl.postgres.jdbc.PGDriver"
-   "redshift"       "com.redshift.jdbc.Driver"
+   "redshift"       "com.amazon.redshift.jdbc.Driver"
    "sqlite"         "org.sqlite.JDBC"
    "sqlserver"      "com.microsoft.sqlserver.jdbc.SQLServerDriver"})
 
@@ -210,6 +210,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
   DriverManager (preferred):
     :dbtype      (required) a String, the type of the database (the jdbc subprotocol)
     :dbname      (required) a String, the name of the database
+    :classname   (optional) a String, the jdbc driver class name
     :host        (optional) a String, the host name/IP of the database
                             (defaults to 127.0.0.1)
     :port        (optional) a Long, the port of the database
@@ -302,7 +303,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
                      (when port (str ":" port))
                      db-sep dbname))
           etc (dissoc db-spec :dbtype :dbname)]
-      (if-let [class-name (classnames subprotocol)]
+      (if-let [class-name (or classname (classnames subprotocol))]
         (do
           ;; force DriverManager to be loaded
           (DriverManager/getLoginTimeout)

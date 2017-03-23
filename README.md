@@ -16,7 +16,7 @@ Additional documentation can be found in the [java.jdbc section of clojure-doc.o
 Releases and Dependency Information
 ========================================
 
-Latest stable release: 0.7.0-alpha2
+Latest stable release: 0.7.0-alpha3
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22java.jdbc%22)
 
@@ -24,14 +24,14 @@ Latest stable release: 0.7.0-alpha2
 
 [Leiningen](https://github.com/technomancy/leiningen) dependency information:
 ```clojure
-[org.clojure/java.jdbc "0.7.0-alpha2"]
+[org.clojure/java.jdbc "0.7.0-alpha3"]
 ```
 [Maven](http://maven.apache.org/) dependency information:
 ```xml
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>java.jdbc</artifactId>
-  <version>0.7.0-alpha2</version>
+  <version>0.7.0-alpha3</version>
 </dependency>
 ```
 You will also need to add dependencies for the JDBC driver you intend to use. Here are links (to Maven Central) for each of the common database drivers that clojure.java.jdbc is known to be used with:
@@ -73,6 +73,15 @@ Example Usage
             :password "secret"
             :ssl true
             :sslfactory "org.postgresql.ssl.NonValidatingFactory"})
+
+;; if the dbtype is not known to clojure.java.jdbc, or you want to override the
+;; default choice of JDBC driver class name, you can provide :classname and the
+;; name of the class to use:
+
+(def redshift42 {:dbtype "redshift"
+                 :dbname "myredstore"
+                 :classname "com.amazon.redshift.jdbc42.Driver"
+                 ...})
 
 ;; you can also specify a full connection string if you'd prefer:
 (def pg-uri
@@ -122,6 +131,10 @@ Developer Information
 
 Change Log
 ====================
+
+Release 0.7.0-alpha3 on 2017-03-23
+  * `classname` is now accepted with `dbtype` / `dbname` so you can easily specify a JDBC driver class name for a database type that is not known [JDBC-151](http://dev.clojure.org/jira/browse/JDBC-151).
+  * `redshift` has been added as a `dbtype` with `com.amazon.redshift.jdbc.Driver` as the driver name.
 
 * Release 0.7.0-alpha2 on 2017-03-01
   * `pgsql` and the Impossibl PostgresSQL 'NG' driver are now supported (note that `:max-rows` does not work with this driver!); also, providing unknown `dbtype` or `subprotocol` in a `db-spec` should now throw a better exception [JDBC-150](http://dev.clojure.org/jira/browse/JDBC-150).

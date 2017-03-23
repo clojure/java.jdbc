@@ -1,3 +1,8 @@
+Changes in 0.7.0-alpha3
+
+* `classname` is now accepted with `dbtype` / `dbname` so you can easily specify a JDBC driver class name for a database type that is not known [JDBC-151](http://dev.clojure.org/jira/browse/JDBC-151).
+* `redshift` has been added as a `dbtype` with `com.amazon.redshift.jdbc.Driver` as the driver name.
+
 Changes in 0.7.0-alpha2
 
 * `pgsql` and the Impossibl PostgresSQL 'NG' driver are now supported (note that `:max-rows` does not work with this driver!); also, providing unknown `dbtype` or `subprotocol` in a `db-spec` should now throw a better exception [JDBC-150](http://dev.clojure.org/jira/browse/JDBC-150).
