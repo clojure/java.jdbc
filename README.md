@@ -26,6 +26,14 @@ Latest stable release: 0.7.0-alpha3
 ```clojure
 [org.clojure/java.jdbc "0.7.0-alpha3"]
 ```
+
+Also include the relevant database adapter, for example:
+```clojure
+[org.xerial/sqlite-jdbc "3.7.2"]
+[mysql/mysql-connector-java "5.1.21"]
+[postgresql "9.1-901.jdbc4"]
+```
+
 [Maven](http://maven.apache.org/) dependency information:
 ```xml
 <dependency>
