@@ -1,7 +1,7 @@
 Changes in 0.7.0-beta1
 
 * Support for Clojure 1.4.0 has been dropped -- breaking change.
-* `reducible-query` accepts a `db-spec` and a SQL/parameters vector and returns a reducible (`IReduce`): when reduced, it runs the query, obtains a reducible result set, and then reduces that. A reducible query will run the query each time it is reduced. The helper function `reducible-result-set` is public: it accepts a `ResultSet` and produces a reducible that offers a single pass reduce over the rows. Both functions honor `reduced` values to short-circuit the process [JDBC-99](https://dev.clojure.org/jira/browse/JDBC-99)
+* `reducible-query` accepts a `db-spec` and a SQL/parameters vector and returns a reducible (`IReduce` on Clojure 1.7 or later; `CollReduce` on Clojure 1.5/1.6): when reduced, it runs the query, obtains a reducible result set, and then reduces that. A reducible query will run the query each time it is reduced. The helper function `reducible-result-set` is public: it accepts a `ResultSet` and produces a reducible that offers a single pass reduce over the rows. Both functions honor `reduced` values to short-circuit the process [JDBC-99](https://dev.clojure.org/jira/browse/JDBC-99)
 
 Changes in 0.7.0-alpha3
 
