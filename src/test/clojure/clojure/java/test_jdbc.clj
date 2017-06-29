@@ -437,9 +437,22 @@
     (is (= ["Peach"] (map :name (sql/find-by-keys db :fruit {:id 3 :cost 139}))))
     (is (= ["Peach" "Orange"] (map :name (sql/find-by-keys db :fruit {:cost 139} {:order-by [:id]}))))
     (is (= ["Orange" "Peach"] (map :name (sql/find-by-keys db :fruit {:cost 139} {:order-by [{:appearance :desc}]}))))
+    ;; reduce with init
     (is (= 366 (reduce (fn [n r] (+ n (:cost r))) 0
                        (sql/reducible-query db "SELECT * FROM fruit"))))
+    ;; reduce without init
+    (is (= 366 (reduce (fn ([] 0) ([n r] (+ n (:cost r))))
+                       (sql/reducible-query db "SELECT * FROM fruit"))))
+    ;; plain old into
+    (is (= 4 (count (into [] (sql/reducible-query db "SELECT * FROM fruit")))))
     (when-let [transduce-fn (resolve 'clojure.core/transduce)]
+      ;; transducing into
+      (is (= [29 59 139 139]
+             (into [] (map :cost) (sql/reducible-query
+                                   db
+                                   (str "SELECT * FROM fruit"
+                                        " ORDER BY cost")))))
+      ;; transduce without init
       (is (= 366 (transduce-fn (map :cost) +
                                (sql/reducible-query db "SELECT * FROM fruit")))))))
 
