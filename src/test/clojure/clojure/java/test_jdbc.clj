@@ -438,23 +438,59 @@
     (is (= ["Peach" "Orange"] (map :name (sql/find-by-keys db :fruit {:cost 139} {:order-by [:id]}))))
     (is (= ["Orange" "Peach"] (map :name (sql/find-by-keys db :fruit {:cost 139} {:order-by [{:appearance :desc}]}))))
     ;; reduce with init
-    (is (= 366 (reduce (fn [n r] (+ n (:cost r))) 0
+    (is (= 466 (reduce (fn [n r] (+ n (:cost r))) 100
                        (sql/reducible-query db "SELECT * FROM fruit"))))
-    ;; reduce without init
-    (is (= 366 (reduce (fn ([] 0) ([n r] (+ n (:cost r))))
-                       (sql/reducible-query db "SELECT * FROM fruit"))))
-    ;; plain old into
+    ;; reduce without init -- uses first row as init!
+    (is (= 366
+           (:cost (reduce (fn
+                            ([] (throw (ex-info "I should not be called!" {})))
+                            ([m r] (update-in m [:cost] + (:cost r))))
+                          (sql/reducible-query db "SELECT * FROM fruit")))))
+    ;; verify reduce without init on empty rs calls 0-arity only
+    (is (= "Zero-arity!"
+           (reduce (fn
+                     ([] "Zero-arity!")
+                     ([m r] (throw (ex-info "I should not be called!"
+                                            {:m m :r r}))))
+                   (sql/reducible-query db "SELECT * FROM fruit WHERE ID = -99"))))
+    ;; verify reduce with init does not call f for empty rs
+    (is (= "Unchanged!"
+           (reduce (fn
+                     ([] (throw (ex-info "I should not be called!" {})))
+                     ([m r] (throw (ex-info "I should not be called!"
+                                            {:m m :r r}))))
+                   "Unchanged!"
+                   (sql/reducible-query db "SELECT * FROM fruit WHERE ID = -99"))))
+    ;; verify reduce without init does not call f if only one row is in the rs
+    (is (= "Orange"
+           (:name (reduce (fn
+                            ([] (throw (ex-info "I should not be called!" {})))
+                            ([m r] (throw (ex-info "I should not be called!"
+                                                   {:m m :r r}))))
+                          (sql/reducible-query db "SELECT * FROM fruit WHERE ID = 4")))))
+    ;; verify reduce with init does not call 0-arity f and
+    ;; only calls 2-arity f once if only one row is in the rs
+    (is (= 239
+           (reduce (fn
+                     ([] (throw (ex-info "I should not be called!" {})))
+                     ;; cannot be called on its own result:
+                     ([m r] (+ (:a m) (:cost r))))
+                   {:a 100}
+                   (sql/reducible-query db "SELECT * FROM fruit WHERE ID = 4"))))
+    ;; plain old into (uses (reduce conj coll) behind the scenes)
     (is (= 4 (count (into [] (sql/reducible-query db "SELECT * FROM fruit")))))
-    (when-let [transduce-fn (resolve 'clojure.core/transduce)]
-      ;; transducing into
-      (is (= [29 59 139 139]
-             (into [] (map :cost) (sql/reducible-query
-                                   db
-                                   (str "SELECT * FROM fruit"
-                                        " ORDER BY cost")))))
-      ;; transduce without init
-      (is (= 366 (transduce-fn (map :cost) +
-                               (sql/reducible-query db "SELECT * FROM fruit")))))))
+    ;; transducing into
+    (is (= [29 59 139 139]
+           (into []
+                 (map :cost)
+                 (sql/reducible-query db (str "SELECT * FROM fruit"
+                                              " ORDER BY cost")))))
+    ;; transduce without init (calls (+) to get init value)
+    (is (= 366 (transduce (map :cost) +
+                          (sql/reducible-query db "SELECT * FROM fruit"))))
+    ;; transduce with init
+    (is (= 466 (transduce (map :cost) + 100
+                          (sql/reducible-query db "SELECT * FROM fruit"))))))
 
 (deftest test-insert-values
   (doseq [db (test-specs)]
