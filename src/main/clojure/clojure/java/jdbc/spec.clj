@@ -1,4 +1,4 @@
-;;  Copyright (c) 2016 Sean Corfield. All rights reserved.
+;;  Copyright (c) 2016-2017 Sean Corfield. All rights reserved.
 ;;  The use and distribution terms for this software are covered by
 ;;  the Eclipse Public License 1.0
 ;;  (http://opensource.org/licenses/eclipse-1.0.php) which can be
@@ -14,7 +14,7 @@
 (ns ^{:author "Sean Corfield"
       :doc "Optional specifications for use with Clojure 1.9 or later."}
   clojure.java.jdbc.spec
-  (:require [clojure.spec :as s]
+  (:require [clojure.spec.alpha :as s]
             [clojure.java.jdbc :as sql]))
 
 ;; basic java.sql types -- cannot be generated!
@@ -172,6 +172,10 @@
                                         ::identifiers ::qualifier
                                         ::as-arrays? ::read-columns]))
 
+(s/def ::reducible-query-options (s/keys :req-un []
+                                         :opt-un [::identifiers ::qualifier
+                                                  ::read-columns]))
+
 ;; the function API
 
 (s/def ::naming-strategy (s/fspec :args (s/cat :x ::identifier)
@@ -277,6 +281,17 @@
         :args (s/cat :db         ::db-spec
                      :sql-params ::sql-params
                      :opts       (s/? ::query-options))
+        :ret  any?)
+
+(s/fdef sql/reducible-result-set
+        :args (s/cat :rs   ::result-set
+                     :opts (s/? ::reducible-query-options))
+        :ret  any?)
+
+(s/fdef sql/reducible-query
+        :args (s/cat :db         ::db-spec
+                     :sql-params ::sql-params
+                     :opts       (s/? ::reducible-query-options))
         :ret  any?)
 
 (s/fdef sql/find-by-keys

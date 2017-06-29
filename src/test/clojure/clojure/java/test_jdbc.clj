@@ -27,11 +27,11 @@
 
 (def with-spec? (try
                   (require 'clojure.java.jdbc.spec)
-                  (require 'clojure.spec.test)
+                  (require 'clojure.spec.test.alpha)
                   ;; require this to workaround rebinding of report multi-fn
                   (require 'clojure.test.check.clojure-test)
-                  (let [syms ((resolve 'clojure.spec.test/enumerate-namespace) 'clojure.java.jdbc)]
-                    ((resolve 'clojure.spec.test/instrument) syms))
+                  (let [syms ((resolve 'clojure.spec.test.alpha/enumerate-namespace) 'clojure.java.jdbc)]
+                    ((resolve 'clojure.spec.test.alpha/instrument) syms))
                   (println "Instrumenting clojure.java.jdbc with clojure.spec")
                   true
                   (catch Exception _
