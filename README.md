@@ -16,7 +16,7 @@ Additional documentation can be found in the [java.jdbc section of clojure-doc.o
 Releases and Dependency Information
 ========================================
 
-Latest stable release: 0.7.0-alpha3
+Latest stable release: 0.7.0-beta1
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22java.jdbc%22)
 
@@ -24,14 +24,14 @@ Latest stable release: 0.7.0-alpha3
 
 [Leiningen](https://github.com/technomancy/leiningen) dependency information:
 ```clojure
-[org.clojure/java.jdbc "0.7.0-alpha3"]
+[org.clojure/java.jdbc "0.7.0-beta1"]
 ```
 [Maven](http://maven.apache.org/) dependency information:
 ```xml
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>java.jdbc</artifactId>
-  <version>0.7.0-alpha3</version>
+  <version>0.7.0-beta1</version>
 </dependency>
 ```
 You will also need to add dependencies for the JDBC driver you intend to use. Here are links (to Maven Central) for each of the common database drivers that clojure.java.jdbc is known to be used with:
@@ -131,6 +131,10 @@ Developer Information
 
 Change Log
 ====================
+
+Release 0.7.0-beta1 on 2017-06-28
+  * Support for Clojure 1.4.0 has been dropped -- breaking change.
+  * `reducible-query` accepts a `db-spec` and a SQL/parameters vector and returns a reducible (`IReduce`): when reduced, it runs the query, obtains a reducible result set, and then reduces that. A reducible query will run the query each time it is reduced. The helper function `reducible-result-set` is public: it accepts a `ResultSet` and produces a reducible that offers a single pass reduce over the rows. Both functions honor `reduced` values to short-circuit the process [JDBC-99](https://dev.clojure.org/jira/browse/JDBC-99)
 
 Release 0.7.0-alpha3 on 2017-03-23
   * `classname` is now accepted with `dbtype` / `dbname` so you can easily specify a JDBC driver class name for a database type that is not known [JDBC-151](http://dev.clojure.org/jira/browse/JDBC-151).
