@@ -27,6 +27,10 @@
     <tag>HEAD</tag>
   </scm>
 
+  <properties>
+    <clojure.version>1.5.1</clojure.version>
+  </properties>
+
   <build>
     <plugins>
       <plugin>
