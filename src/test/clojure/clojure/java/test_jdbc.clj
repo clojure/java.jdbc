@@ -436,7 +436,12 @@
     (is (= "Peach" (:name (sql/get-by-id db :fruit 3 :id))))
     (is (= ["Peach"] (map :name (sql/find-by-keys db :fruit {:id 3 :cost 139}))))
     (is (= ["Peach" "Orange"] (map :name (sql/find-by-keys db :fruit {:cost 139} {:order-by [:id]}))))
-    (is (= ["Orange" "Peach"] (map :name (sql/find-by-keys db :fruit {:cost 139} {:order-by [{:appearance :desc}]}))))))
+    (is (= ["Orange" "Peach"] (map :name (sql/find-by-keys db :fruit {:cost 139} {:order-by [{:appearance :desc}]}))))
+    (is (= 366 (reduce (fn [n r] (+ n (:cost r))) 0
+                       (sql/reducible-query db "SELECT * FROM fruit"))))
+    (when-let [transduce-fn (resolve 'clojure.core/transduce)]
+      (is (= 366 (transduce-fn (map :cost) +
+                               (sql/reducible-query db "SELECT * FROM fruit")))))))
 
 (deftest test-insert-values
   (doseq [db (test-specs)]

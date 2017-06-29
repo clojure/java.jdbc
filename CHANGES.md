@@ -1,3 +1,7 @@
+Changes coming in 0.7.0-beta1
+
+* `reducible-query` accepts a `db-spec` and a SQL/parameters vector and returns a reducible (`IReduce`): when reduced, it runs the query, obtains a reducible result set, and then reduces that. A reducible query will run the query each time it is reduced. The helper function `reducible-result-set` is public: it accepts a `ResultSet` and produces a reducible that offers a single pass reduce over the rows. Both functions honor `reduced` values to short-circuit the process [JDBC-99](https://dev.clojure.org/jira/browse/JDBC-99)
+
 Changes in 0.7.0-alpha3
 
 * `classname` is now accepted with `dbtype` / `dbname` so you can easily specify a JDBC driver class name for a database type that is not known [JDBC-151](http://dev.clojure.org/jira/browse/JDBC-151).

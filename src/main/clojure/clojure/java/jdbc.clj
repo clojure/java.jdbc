@@ -965,6 +965,54 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
                                 (result-set-seq rset opts)))
                               opts))))
 
+(defn reducible-result-set
+  "Given a java.sql.ResultSet return a reducible collection.
+  Note: :as-arrays? is not accepted here."
+  [^ResultSet rs {:keys [identifiers qualifier read-columns]
+                  :or {identifiers str/lower-case
+                       read-columns dft-read-columns}}]
+  (reify clojure.core.protocols.CollReduce
+    (coll-reduce [this f] (clojure.core.protocols/coll-reduce this f (f)))
+    (coll-reduce [this f init]
+            (let [rsmeta (.getMetaData rs)
+                  idxs (range 1 (inc (.getColumnCount rsmeta)))
+                  identifier-fn (if qualifier
+                                  (comp (partial keyword qualifier) identifiers)
+                                  (comp keyword identifiers))
+                  keys (->> idxs
+                            (mapv (fn [^Integer i] (.getColumnLabel rsmeta i)))
+                            (make-cols-unique)
+                            (mapv identifier-fn))]
+              (loop [init' init]
+                (if (.next rs)
+                  (let [result (f init' (zipmap keys (read-columns rs rsmeta idxs)))]
+                    (if (reduced? result)
+                      @result
+                      (recur result)))
+                  init'))))))
+
+(defn reducible-query
+  "Given a database connection, a vector containing SQL and optional parameters,
+  return a reducible collection. When reduced, it will start the database query
+  and reduce the result set, and then close the connection. The following options
+  from query etc are not accepted here:
+    :as-arrays? :explain :explain-fn :result-set-fn :row-fn
+  See also prepare-statement for additional options."
+  ([db sql-params] (reducible-query db sql-params {}))
+  ([db sql-params opts]
+   (let [{:keys [reducing-fn] :as opts}
+         (merge {:identifiers str/lower-case :read-columns dft-read-columns}
+                (when (map? db) db)
+                opts)
+         sql-params-vector (if (sql-stmt? sql-params) (vector sql-params) (vec sql-params))]
+     (reify clojure.core.protocols.CollReduce
+       (coll-reduce [this f] (clojure.core.protocols/coll-reduce this f (f)))
+       (coll-reduce [this f init]
+               (db-query-with-resultset
+                 db sql-params-vector
+                 (^{:once true} fn* [rset]
+                   (reduce f init (reducible-result-set rset opts)))))))))
+
 (defn- direction
   "Given an entities function, a column name, and a direction,
   return the matching SQL column / order.
