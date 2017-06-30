@@ -683,56 +683,64 @@
       (catch Exception _
         (is (= 0 (sql/query db ["SELECT * FROM fruit"] {:result-set-fn count})))))))
 
+(defmacro illegal-arg-or-spec
+  "Execute a form in the context of a try/catch that verifies either
+  IllegalArgumentException was thrown or a spec violation occurred
+  so that we can test transparently across Clojure 1.7 to 1.9+."
+  [fn-name & body]
+  `(try
+     ~@body
+     (is false (str "Illegal arguments to " ~fn-name " were not detected!"))
+     (catch IllegalArgumentException _#)
+     (catch clojure.lang.ExceptionInfo e#
+       (is (re-find #"did not conform to spec" (.getMessage e#))))))
+
 (deftest test-sql-exception
   (doseq [db (test-specs)]
     (create-test-table :fruit db)
-    (try
+    (illegal-arg-or-spec "insert!"
       (sql/with-db-transaction [t-conn db]
         (sql/insert! t-conn
                      :fruit
                      [:name :appearance]
-                     ["Apple" "strange" "whoops"]))
-      (catch IllegalArgumentException _
-        (is (= 0 (sql/query db ["SELECT * FROM fruit"] {:result-set-fn count})))))
+                     ["Apple" "strange" "whoops"])))
     (is (= 0 (sql/query db ["SELECT * FROM fruit"] {:result-set-fn count})))))
 
 (deftest test-sql-exception-with-isolation
   (doseq [db (test-specs)]
     (create-test-table :fruit db)
-    (try
+    (illegal-arg-or-spec "insert!"
       (sql/with-db-transaction [t-conn db {:isolation :read-uncommitted}]
         (sql/insert! t-conn
                      :fruit
                      [:name :appearance]
-                     ["Apple" "strange" "whoops"]))
-      (catch IllegalArgumentException _
-        (is (= 0 (sql/query db ["SELECT * FROM fruit"] {:result-set-fn count})))))
+                     ["Apple" "strange" "whoops"])))
     (is (= 0 (sql/query db ["SELECT * FROM fruit"] {:result-set-fn count})))))
 
 (deftest test-insert-values-exception
   (doseq [db (test-specs)]
     (create-test-table :fruit db)
-    (is (thrown? IllegalArgumentException
-                 (sql/with-db-transaction [t-conn db]
-                   (sql/insert-multi! t-conn
-                                      :fruit
-                                      [:name :appearance]
-                                      [["Grape" "yummy"]
-                                       ["Pear" "bruised"]
-                                       ["Apple" "strange" "whoops"]]))))
+    (illegal-arg-or-spec "insert-multi!"
+      (sql/with-db-transaction [t-conn db]
+        (sql/insert-multi! t-conn
+                           :fruit
+                           [:name :appearance]
+                           [["Grape" "yummy"]
+                            ["Pear" "bruised"]
+                            ["Apple" "strange" "whoops"]])))
     (is (= 0 (sql/query db ["SELECT * FROM fruit"] {:result-set-fn count})))))
 
 (deftest test-insert-values-exception-with-isolation
   (doseq [db (test-specs)]
     (create-test-table :fruit db)
-    (is (thrown? IllegalArgumentException
-                 (sql/with-db-transaction [t-conn db {:isolation :read-uncommitted}]
-                   (sql/insert-multi! t-conn
-                                      :fruit
-                                      [:name :appearance]
-                                      [["Grape" "yummy"]
-                                       ["Pear" "bruised"]
-                                       ["Apple" "strange" "whoops"]]))))
+    (illegal-arg-or-spec
+      (sql/with-db-transaction [t-conn db {:isolation :read-uncommitted}]
+        (sql/insert-multi! t-conn
+                           :fruit
+                           [:name :appearance]
+                           [["Grape" "yummy"]
+                            ["Pear" "bruised"]
+                            ["Apple" "strange" "whoops"]])))
     (is (= 0 (sql/query db ["SELECT * FROM fruit"] {:result-set-fn count})))))
 
 (deftest test-rollback
@@ -1029,10 +1037,10 @@
 
 (deftest illegal-insert-arguments
   (doseq [db (test-specs)]
-    (is (thrown? IllegalArgumentException (sql/insert! db)))
-    (is (thrown? IllegalArgumentException (sql/insert! db {:name "Apple"} [:name])))
-    (is (thrown? IllegalArgumentException (sql/insert! db {:name "Apple"} [:name] {:entities identity})))
-    (is (thrown? IllegalArgumentException (sql/insert! db [:name])))
+    (illegal-arg-or-spec "insert!" (sql/insert! db))
+    (illegal-arg-or-spec "insert!" (sql/insert! db {:name "Apple"} [:name]))
+    (illegal-arg-or-spec "insert!" (sql/insert! db {:name "Apple"} [:name] {:entities identity}))
+    (illegal-arg-or-spec "insert!" (sql/insert! db [:name]))
     (if with-spec? ; clojure.spec catches this differently
       (is (thrown? clojure.lang.ExceptionInfo (sql/insert! db [:name] {:entities identity})))
       (is (thrown? ClassCastException (sql/insert! db [:name] {:entities identity}))))))

@@ -30,7 +30,7 @@
 
 (s/def ::subprotocol-base  #{"derby" "h2" "hsqldb" "jtds:sqlserver" "mysql"
                              "oracle:oci" "oracle:thin" "pgsql" "postgresql"
-                             "sqlite" "sqlserver"})
+                             "redshift" "sqlite" "sqlserver"})
 (s/def ::subprotocol-alias #{"hsql" "jtds" "mssql" "oracle" "postgres"})
 ;; technically :subprotocol can be any string...
 (s/def ::subprotocol string?)
@@ -269,13 +269,34 @@
         :args (s/cat :meta-query any?
                      :opt-args   (s/? any?)))
 
-;; db-do-commands
+(s/fdef sql/db-do-commands
+        :args (s/cat :db           ::db-spec
+                     :transaction? (s/? boolean?)
+                     :sql-commands (s/or :command  string?
+                                         :commands (s/coll-of string?)))
+        :ret  any?)
 
-;; db-do-prepared-return-keys -- can have both execute options and query options!
+(s/fdef sql/db-do-prepared-return-keys
+        :args (s/cat :db           ::db-spec
+                     :transaction? (s/? boolean?)
+                     :sql-params   ::sql-params
+                     :opts         (s/? (s/merge ::execute-options ::query-options)))
+        :ret  any?)
 
-;; db-do-prepared
+(s/fdef sql/db-do-prepared
+        :args (s/cat :db           ::db-spec
+                     :transaction? (s/? boolean?)
+                     :sql-params   ::sql-params
+                     ;; TODO: this set of options needs reviewing:
+                     :opts         (s/? (s/merge ::execute-options ::query-options)))
+        :ret  any?)
 
-;; db-query-with-resultset
+(s/fdef sql/db-query-with-resultset
+        :args (s/cat :db           ::db-spec
+                     :sql-params   ::sql-params
+                     :func         ifn?
+                     :opts         (s/? ::query-options))
+        :ret  any?)
 
 (s/fdef sql/query
         :args (s/cat :db         ::db-spec
@@ -322,9 +343,29 @@
                      :opts         (s/? ::exec-sql-options))
         :ret  ::execute-result)
 
-;; insert! -- can have both execute options and query options!
+(s/fdef sql/insert!
+        :args (s/or :row (s/cat :db    ::db-spec
+                                :table ::identifier
+                                :row   (s/map-of ::identifier any?)
+                                :opts  (s/? (s/merge ::execute-options ::query-options)))
+                    :cvs (s/cat :db    ::db-spec
+                                :table ::identifier
+                                :cols  (s/nilable (s/coll-of ::identifier))
+                                :vals  (s/coll-of any?)
+                                :opts  (s/? (s/merge ::execute-options ::query-options))))
+        :ret  any?)
 
-;; insert-multi! -- can have both execute options and query options!
+(s/fdef sql/insert-multi!
+        :args (s/or :rows (s/cat :db    ::db-spec
+                                 :table ::identifier
+                                 :rows  (s/coll-of (s/map-of ::identifier any?))
+                                 :opts  (s/? (s/merge ::execute-options ::query-options)))
+                    :cvs  (s/cat :db    ::db-spec
+                                 :table ::identifier
+                                 :cols  (s/nilable (s/coll-of ::identifier))
+                                 :vals  (s/coll-of (s/coll-of any?))
+                                 :opts  (s/? (s/merge ::execute-options ::query-options))))
+        :ret  any?)
 
 (s/fdef sql/update!
         :args (s/cat :db           ::db-spec
