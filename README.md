@@ -16,7 +16,7 @@ Additional documentation can be found in the [java.jdbc section of clojure-doc.o
 Releases and Dependency Information
 ========================================
 
-Latest stable release: 0.7.0-beta2
+Latest stable release: 0.7.0-beta2 -- requires Clojure 1.7 or later!
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22java.jdbc%22)
 
@@ -34,6 +34,8 @@ Latest stable release: 0.7.0-beta2
   <version>0.7.0-beta2</version>
 </dependency>
 ```
+_Note: Earlier versions of Clojure are supported by older versions of `clojure.java.jdbc`: e.g., version 0.6.1 supports Clojure 1.4 and later._
+
 You will also need to add dependencies for the JDBC driver you intend to use. Here are links (to Maven Central) for each of the common database drivers that clojure.java.jdbc is known to be used with:
 
 * [Apache Derby](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.apache.derby%22%20AND%20a%3A%22derby%22)
@@ -46,7 +48,7 @@ You will also need to add dependencies for the JDBC driver you intend to use. He
 
 Note: different versions of various database drivers have different Java/JVM version requirements. In particular, recent versions of Apache Derby require at least Java 8 and recent versions of H2 require at least Java 7. Clojure's Continuous Integration system uses older versions so tests can be run on Java 6 (see `pom.xml`); local testing is done with more recent versions on Java 8.
 
-clojure.java.jdbc is also tested against Microsoft's own JDBC4 Driver 4.0 but that
+`clojure.java.jdbc` is also tested against Microsoft's own JDBC4 Driver 4.0 but that
 has to be [downloaded manually](https://www.microsoft.com/en-us/download/details.aspx?id=11774) and placed in a Maven repository accessible to your system. For testing, it was installed locally as:
 ```clojure
 ;; Microsoft SQL Server JDBC4 Driver 4.0
