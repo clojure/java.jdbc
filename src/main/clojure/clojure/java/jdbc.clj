@@ -45,7 +45,8 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
             [clojure.walk :as walk])
   (:import (java.net URI)
            (java.sql BatchUpdateException DriverManager
-                     PreparedStatement ResultSet SQLException Statement Types)
+                     PreparedStatement ResultSet ResultSetMetaData
+                     SQLException Statement Types)
            (java.util Hashtable Map Properties)
            (javax.sql DataSource)))
 
@@ -975,12 +976,12 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
   (let [identifier-fn (if qualifier
                         (comp (partial keyword qualifier) identifiers)
                         (comp keyword identifiers))
-        make-keys (fn [idxs rsmeta]
+        make-keys (fn [idxs ^ResultSetMetaData rsmeta]
                     (->> idxs
                          (mapv (fn [^Integer i] (.getColumnLabel rsmeta i)))
                          (make-cols-unique)
                          (mapv identifier-fn)))
-        init-reduce (fn [keys rs rsmeta idxs f init]
+        init-reduce (fn [keys ^ResultSet rs rsmeta idxs f init]
                       (loop [init' init]
                         (if (.next rs)
                           (let [result (f init' (zipmap keys (read-columns rs rsmeta idxs)))]

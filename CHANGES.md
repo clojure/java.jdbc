@@ -1,3 +1,7 @@
+Changes coming in 0.7.0
+
+* Reflection warnings removed in `reducible-result-set` [JDBC-152](https://dev.clojure.org/jira/browse/JDBC-152).
+
 Changes in 0.7.0-beta2
 
 * Support for Clojure 1.6.0 and earlier has been dropped -- breaking change.
