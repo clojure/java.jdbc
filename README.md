@@ -16,7 +16,7 @@ Additional documentation can be found in the [java.jdbc section of clojure-doc.o
 Releases and Dependency Information
 ========================================
 
-Latest stable release: 0.7.0-beta3 -- requires Clojure 1.7 or later!
+Latest stable release: 0.7.0-beta4 -- requires Clojure 1.7 or later!
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22java.jdbc%22)
 
@@ -24,14 +24,14 @@ Latest stable release: 0.7.0-beta3 -- requires Clojure 1.7 or later!
 
 [Leiningen](https://github.com/technomancy/leiningen) dependency information:
 ```clojure
-[org.clojure/java.jdbc "0.7.0-beta3"]
+[org.clojure/java.jdbc "0.7.0-beta4"]
 ```
 [Maven](http://maven.apache.org/) dependency information:
 ```xml
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>java.jdbc</artifactId>
-  <version>0.7.0-beta3</version>
+  <version>0.7.0-beta4</version>
 </dependency>
 ```
 _Note: Earlier versions of Clojure are supported by older versions of `clojure.java.jdbc`: e.g., version 0.6.1 supports Clojure 1.4 and later._
@@ -134,11 +134,14 @@ Developer Information
 Change Log
 ====================
 
+Release 0.7.0-beta4 on 2017-07-04
+
+  * `opts` are now correctly passed from `reducible-query` to `db-query-with-resultset`.
+  * Updated the `::query-options` spec to make it clear that `::prepare-options` are also acceptable there.
+
 Release 0.7.0-beta3 on 2017-07-04
 
   * Reflection warnings removed in `reducible-result-set` [JDBC-152](https://dev.clojure.org/jira/browse/JDBC-152).
-  * `opts` are now correctly passed from `reducible-query` to `db-query-with-resultset`.
-  * Updated the `::query-options` spec to make it clear that `::prepare-options` are also acceptable there.
 
 Release 0.7.0-beta2 on 2017-06-30 (a.k.a The Reducible Saga, Part 2)
   * Support for Clojure 1.5 and 1.6 has been dropped -- breaking change.
