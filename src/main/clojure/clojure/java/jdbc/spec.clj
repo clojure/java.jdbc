@@ -167,14 +167,16 @@
 (s/def ::transaction-options (s/keys :req-un []
                                      :opt-un [::isolation ::read-only?]))
 
-(s/def ::query-options (s/keys :req-un []
-                               :opt-un [::result-set-fn ::row-fn
-                                        ::identifiers ::qualifier
-                                        ::as-arrays? ::read-columns]))
+(s/def ::query-options (s/merge (s/keys :req-un []
+                                        :opt-un [::result-set-fn ::row-fn
+                                                 ::identifiers ::qualifier
+                                                 ::as-arrays? ::read-columns])
+                                ::prepare-options))
 
-(s/def ::reducible-query-options (s/keys :req-un []
-                                         :opt-un [::identifiers ::qualifier
-                                                  ::read-columns]))
+(s/def ::reducible-query-options (s/merge (s/keys :req-un []
+                                                  :opt-un [::identifiers ::qualifier
+                                                           ::read-columns])
+                                          ::prepare-options))
 
 ;; the function API
 

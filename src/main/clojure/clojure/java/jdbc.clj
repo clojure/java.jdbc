@@ -1028,12 +1028,14 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
                (db-query-with-resultset
                  db sql-params-vector
                  (^{:once true} fn* [rset]
-                   (reduce f (reducible-result-set rset opts)))))
+                   (reduce f (reducible-result-set rset opts)))
+                 opts))
        (reduce [this f init]
                (db-query-with-resultset
                  db sql-params-vector
                  (^{:once true} fn* [rset]
-                   (reduce f init (reducible-result-set rset opts)))))))))
+                   (reduce f init (reducible-result-set rset opts)))
+                 opts))))))
 
 (defn- direction
   "Given an entities function, a column name, and a direction,

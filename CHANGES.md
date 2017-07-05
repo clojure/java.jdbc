@@ -1,6 +1,8 @@
-Changes coming in 0.7.0
+Changes in 0.7.0-beta3
 
 * Reflection warnings removed in `reducible-result-set` [JDBC-152](https://dev.clojure.org/jira/browse/JDBC-152).
+* `opts` are now correctly passed from `reducible-query` to `db-query-with-resultset`.
+* Updated the `::query-options` spec to make it clear that `::prepare-options` are also acceptable there.
 
 Changes in 0.7.0-beta2
 
