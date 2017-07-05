@@ -100,6 +100,7 @@
 ;; the corresponding options must either be omitted or given valid values
 
 (s/def ::as-arrays? (s/or :as-is #{:cols-as-is} :truthy (s/nilable boolean?)))
+(s/def ::auto-commit? boolean?)
 (s/def ::concurrency (set (keys @#'sql/result-set-concurrency)))
 (s/def ::cursors (set (keys @#'sql/result-set-holdability)))
 (s/def ::fetch-size nat-int?)
@@ -159,10 +160,14 @@
                                                ::identifiers ::qualifier
                                                ::as-arrays? ::read-columns]))
 
-(s/def ::prepare-options (s/keys :req-un []
-                                 :opt-un [::return-keys ::result-type
-                                          ::concurrency ::cursors ::fetch-size
-                                          ::max-rows ::timeout]))
+(s/def ::connection-options (s/keys :req-un []
+                                    :opt-un [::auto-commit? ::read-only?]))
+
+(s/def ::prepare-options (s/merge (s/keys :req-un []
+                                          :opt-un [::return-keys ::result-type
+                                                   ::concurrency ::cursors ::fetch-size
+                                                   ::max-rows ::timeout])
+                                  ::connection-options))
 
 (s/def ::transaction-options (s/keys :req-un []
                                      :opt-un [::isolation ::read-only?]))
@@ -196,7 +201,8 @@
         :ret  ::naming-strategy)
 
 (s/fdef sql/get-connection
-        :args (s/cat :db-spec ::db-spec)
+        :args (s/cat :db-spec ::db-spec
+                     :opts    (s/? ::connection-options))
         :ret  ::connection)
 
 (s/fdef sql/result-set-seq

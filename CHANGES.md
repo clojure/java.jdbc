@@ -1,3 +1,8 @@
+Changes coming in 0.7.0-?
+
+* `get-connection` now accepts an `opts` map with `:auto-commit?` and `:read-only?` options. If present, the appropriate methods will be called on the connection obtained. These options are valid in any function call that may call `get-connection` under the hood. This should allow for streaming results in a query for most databases [JDBC-153](https://dev.clojure.org/jira/browse/JDBC-153).
+* Additional validation of options is performed in `prepared-statement` to avoid silently ignoring invalid combinations of `:concurrency`, `:cursors`, `:result-type`, and `:return-keys`.
+
 Changes in 0.7.0-beta4
 
 * `opts` are now correctly passed from `reducible-query` to `db-query-with-resultset`.

@@ -203,6 +203,17 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
       (list* 'do body))
     (catch ClassNotFoundException _#)))
 
+(defn- modify-connection
+  "Given a database connection and a map of options, update the connection
+  as specified by the options."
+  ^java.sql.Connection
+  [^java.sql.Connection connection opts]
+  (when (contains? opts :auto-commit?)
+    (.setAutoCommit connection (:auto-commit? opts)))
+  (when (contains? opts :read-only?)
+    (.setReadOnly connection (:read-only? opts)))
+  connection)
+
 (defn get-connection
   "Creates a connection to a database. db-spec is usually a map containing connection
   parameters but can also be a URI or a String. The various possibilities are described
@@ -255,89 +266,100 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
   java.lang.String:
     subprotocol://user:password@host:post/subname
                  An optional prefix of jdbc: is allowed."
-  ^java.sql.Connection
-  [{:keys [connection
-           factory
-           connection-uri
-           classname subprotocol subname
-           dbtype dbname host port
-           datasource username password user
-           name environment]
-    :as db-spec}]
-  (cond
-    (string? db-spec)
-    (get-connection (URI. (strip-jdbc db-spec)))
+  (^java.sql.Connection [db-spec] (get-connection db-spec {}))
+  (^java.sql.Connection
+    [{:keys [connection
+             factory
+             connection-uri
+             classname subprotocol subname
+             dbtype dbname host port
+             datasource username password user
+             name environment]
+      :as db-spec}
+     opts]
+    (cond
+     (string? db-spec)
+     (get-connection (URI. (strip-jdbc db-spec)) opts)
 
-    (instance? URI db-spec)
-    (get-connection (parse-properties-uri db-spec))
+     (instance? URI db-spec)
+     (get-connection (parse-properties-uri db-spec) opts)
 
-    connection
-    connection
+     connection
+     connection ;; do not apply opts here
 
-    (or (and datasource username password)
-        (and datasource user     password))
-    (.getConnection ^DataSource datasource ^String (or username user) ^String password)
+     (or (and datasource username password)
+         (and datasource user     password))
+     (-> (.getConnection ^DataSource datasource
+                         ^String (or username user)
+                         ^String password)
+         (modify-connection opts))
 
-    datasource
-    (.getConnection ^DataSource datasource)
+     datasource
+     (-> (.getConnection ^DataSource datasource)
+         (modify-connection opts))
 
-    factory
-    (factory (dissoc db-spec :factory))
+     factory
+     (-> (factory (dissoc db-spec :factory))
+         (modify-connection opts))
 
-    connection-uri
-    (DriverManager/getConnection connection-uri)
+     connection-uri
+     (-> (DriverManager/getConnection connection-uri)
+         (modify-connection opts))
 
-    (and dbtype dbname)
-    (let [;; allow aliases for dbtype
-          subprotocol (subprotocols dbtype dbtype)
-          host (or host "127.0.0.1")
-          port (or port (condp = subprotocol
-                          "jtds:sqlserver" 1433
-                          "mysql"          3306
-                          "postgresql"     5432
-                          "sqlserver"      1433
-                          nil))
-          db-sep (if (= "sqlserver" subprotocol) ";DATABASENAME=" "/")
-          url (if (#{"derby" "h2" "hsqldb" "sqlite"} subprotocol)
-                (str "jdbc:" subprotocol ":" dbname)
-                (str "jdbc:" subprotocol "://" host
-                     (when port (str ":" port))
-                     db-sep dbname))
-          etc (dissoc db-spec :dbtype :dbname)]
-      (if-let [class-name (or classname (classnames subprotocol))]
-        (do
-          ;; force DriverManager to be loaded
-          (DriverManager/getLoginTimeout)
-          (clojure.lang.RT/loadClassForName class-name))
-        (throw (ex-info (str "Unknown dbtype: " dbtype) db-spec)))
-      (DriverManager/getConnection url (as-properties etc)))
+     (and dbtype dbname)
+     (let [;; allow aliases for dbtype
+           subprotocol (subprotocols dbtype dbtype)
+           host (or host "127.0.0.1")
+           port (or port (condp = subprotocol
+                                "jtds:sqlserver" 1433
+                                "mysql"          3306
+                                "postgresql"     5432
+                                "sqlserver"      1433
+                                nil))
+           db-sep (if (= "sqlserver" subprotocol) ";DATABASENAME=" "/")
+           url (if (#{"derby" "h2" "hsqldb" "sqlite"} subprotocol)
+                 (str "jdbc:" subprotocol ":" dbname)
+                 (str "jdbc:" subprotocol "://" host
+                      (when port (str ":" port))
+                      db-sep dbname))
+           etc (dissoc db-spec :dbtype :dbname)]
+       (if-let [class-name (or classname (classnames subprotocol))]
+         (do
+           ;; force DriverManager to be loaded
+           (DriverManager/getLoginTimeout)
+           (clojure.lang.RT/loadClassForName class-name))
+         (throw (ex-info (str "Unknown dbtype: " dbtype) db-spec)))
+       (-> (DriverManager/getConnection url (as-properties etc))
+           (modify-connection opts)))
 
-    (and subprotocol subname)
-    (let [;; allow aliases for subprotocols
-          subprotocol (subprotocols subprotocol subprotocol)
-          url (format "jdbc:%s:%s" subprotocol subname)
-          etc (dissoc db-spec :classname :subprotocol :subname)]
-      (if-let [class-name (or classname (classnames subprotocol))]
-        (do
-          ;; force DriverManager to be loaded
-          (DriverManager/getLoginTimeout)
-          (clojure.lang.RT/loadClassForName class-name))
-        (throw (ex-info (str "Unknown subprotocol: " subprotocol) db-spec)))
-      (DriverManager/getConnection url (as-properties etc)))
+     (and subprotocol subname)
+     (let [;; allow aliases for subprotocols
+           subprotocol (subprotocols subprotocol subprotocol)
+           url (format "jdbc:%s:%s" subprotocol subname)
+           etc (dissoc db-spec :classname :subprotocol :subname)]
+       (if-let [class-name (or classname (classnames subprotocol))]
+         (do
+           ;; force DriverManager to be loaded
+           (DriverManager/getLoginTimeout)
+           (clojure.lang.RT/loadClassForName class-name))
+         (throw (ex-info (str "Unknown subprotocol: " subprotocol) db-spec)))
+       (-> (DriverManager/getConnection url (as-properties etc))
+           (modify-connection opts)))
 
-    name
-    (or (when-available javax.naming.InitialContext
-          (let [env (and environment (Hashtable. ^Map environment))
-                context (javax.naming.InitialContext. env)
-                ^DataSource datasource (.lookup context ^String name)]
-            (.getConnection datasource)))
-        (throw (ex-info (str "javax.naming.InitialContext is not available for: "
-                             name)
-                        db-spec)))
+     name
+     (or (when-available javax.naming.InitialContext
+           (let [env (and environment (Hashtable. ^Map environment))
+                 context (javax.naming.InitialContext. env)
+                 ^DataSource datasource (.lookup context ^String name)]
+             (-> (.getConnection datasource)
+                 (modify-connection opts))))
+         (throw (ex-info (str "javax.naming.InitialContext is not available for: "
+                              name)
+                         db-spec)))
 
-    :else
-    (let [^String msg (format "db-spec %s is missing a required parameter" db-spec)]
-      (throw (IllegalArgumentException. msg)))))
+     :else
+     (let [^String msg (format "db-spec %s is missing a required parameter" db-spec)]
+       (throw (IllegalArgumentException. msg))))))
 
 (defn- make-name-unique
   "Given a collection of column names and a new column name,
@@ -510,7 +532,9 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
      :cursors
      :fetch-size n
      :max-rows n
-     :timeout n"
+     :timeout n
+  Note that :result-type and :concurrency must be specified together as the
+  underlying Java API expects both (or neither)."
   ([con sql] (prepare-statement con sql {}))
   ([^java.sql.Connection con ^String sql
     {:keys [return-keys result-type concurrency cursors
@@ -518,6 +542,10 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
    (let [^PreparedStatement
          stmt (cond return-keys
                     (try
+                      (when (or result-type concurrency cursors)
+                        (throw (IllegalArgumentException.
+                                (str ":concurrency, :cursors, and :result-type "
+                                     "may not be specified with :return-keys."))))
                       (if (vector? return-keys)
                         (try
                           (.prepareStatement con sql (string-array return-keys))
@@ -539,6 +567,10 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
                                          (get result-set-type result-type result-type)
                                          (get result-set-concurrency concurrency concurrency)))
 
+                    (or result-type concurrency cursors)
+                    (throw (IllegalArgumentException.
+                            (str ":concurrency, :cursors, and :result-type "
+                                 "may not be specified independently.")))
                     :else
                     (.prepareStatement con sql))]
      (when fetch-size (.setFetchSize stmt fetch-size))
@@ -692,7 +724,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
                   (try
                     (.setReadOnly con old-readonly)
                     (catch Exception _)))))))
-         (with-open [con (get-connection db)]
+         (with-open [con (get-connection db opts)]
            (db-transaction* (add-connection db con) func opts)))
        (do
          (when (and isolation
@@ -719,11 +751,11 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
 
 (defmacro with-db-connection
   "Evaluates body in the context of an active connection to the database.
-  (with-db-connection [con-db db-spec]
+  (with-db-connection [con-db db-spec opts]
     ... con-db ...)"
   [binding & body]
-  `(let [db-spec# ~(second binding)]
-     (with-open [con# (get-connection db-spec#)]
+  `(let [db-spec# ~(second binding) opts# (or ~(second (rest binding)) {})]
+     (with-open [con# (get-connection db-spec# opts#)]
        (let [~(first binding) (add-connection db-spec# con#)]
          ~@body))))
 
@@ -731,12 +763,13 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
   "Evaluates body in the context of an active connection with metadata bound
    to the specified name. See also metadata-result for dealing with the results
    of operations that retrieve information from the metadata.
-   (with-db-metadata [md db-spec]
+   (with-db-metadata [md db-spec opts]
      ... md ...)"
   [binding & body]
-  `(with-open [con# (get-connection ~(second binding))]
-     (let [~(first binding) (.getMetaData con#)]
-       ~@body)))
+  `(let [db-spec# ~(second binding) opts# (or ~(second (rest binding)) {})]
+     (with-open [con# (get-connection db-spec# opts#)]
+       (let [~(first binding) (.getMetaData con#)]
+         ~@body))))
 
 (defn metadata-result
   "If the argument is a java.sql.ResultSet, turn it into a result-set-seq,
@@ -843,7 +876,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
            (db-do-execute-prepared-return-keys db sql params (assoc opts :transaction? transaction?))
            (with-open [^PreparedStatement stmt (prepare-statement con sql (assoc opts :return-keys true))]
              (db-do-execute-prepared-return-keys db stmt params (assoc opts :transaction? transaction?)))))
-       (with-open [con (get-connection db)]
+       (with-open [con (get-connection db opts)]
          (db-do-prepared-return-keys (add-connection db con) transaction? sql-params opts))))))
 
 (defn- db-do-execute-prepared-statement
@@ -885,7 +918,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
            (db-do-execute-prepared-statement db sql params (assoc opts :transaction? transaction?))
            (with-open [^PreparedStatement stmt (prepare-statement con sql opts)]
              (db-do-execute-prepared-statement db stmt params (assoc opts :transaction? transaction?)))))
-       (with-open [con (get-connection db)]
+       (with-open [con (get-connection db opts)]
          (db-do-prepared (add-connection db con) transaction? sql-params opts))))))
 
 (defn db-query-with-resultset
@@ -919,7 +952,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
        (if-let [con (db-find-connection db)]
          (with-open [^PreparedStatement stmt (prepare-statement con sql opts)]
            (run-query-with-params stmt))
-         (with-open [con (get-connection db)]
+         (with-open [con (get-connection db opts)]
            (with-open [^PreparedStatement stmt (prepare-statement con sql opts)]
              (run-query-with-params stmt))))))))
 
@@ -1116,7 +1149,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
                          (db-do-prepared db transaction? sql-params opts))]
      (if-let [con (db-find-connection db)]
        (execute-helper db)
-       (with-open [con (get-connection db)]
+       (with-open [con (get-connection db opts)]
          (execute-helper (add-connection db con)))))))
 
 (defn- delete-sql
@@ -1212,7 +1245,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
                           (insert-single-row-sql table row entities)) rows)]
     (if-let [con (db-find-connection db)]
       (insert-helper db transaction? sql-params opts)
-      (with-open [con (get-connection db)]
+      (with-open [con (get-connection db opts)]
         (insert-helper (add-connection db con) transaction? sql-params opts)))))
 
 (defn- insert-cols!
@@ -1225,7 +1258,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
         sql-params (insert-multi-row-sql table cols values entities)]
     (if-let [con (db-find-connection db)]
       (db-do-prepared db transaction? sql-params (assoc opts :multi? true))
-      (with-open [con (get-connection db)]
+      (with-open [con (get-connection db opts)]
         (db-do-prepared (add-connection db con) transaction? sql-params
                         (assoc opts :multi? true))))))
 

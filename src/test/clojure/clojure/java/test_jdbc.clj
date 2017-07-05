@@ -176,6 +176,11 @@
     (re-find #"pgsql")
     (re-find #"pgsql" (or (:subprotocol db) (:dbtype db)))))
 
+(defn- sqlite? [db]
+  (if (string? db)
+    (re-find #"sqlite:" db)
+    (= "sqlite" (or (:subprotocol db) (:dbtype db)))))
+
 (defmulti create-test-table
   "Create a standard test table. Uses db-do-commands.
    For MySQL, ensure table uses an engine that supports transactions!"
@@ -437,10 +442,14 @@
     (is (= ["Peach"] (map :name (sql/find-by-keys db :fruit {:id 3 :cost 139}))))
     (is (= ["Peach" "Orange"] (map :name (sql/find-by-keys db :fruit {:cost 139} {:order-by [:id]}))))
     (is (= ["Orange" "Peach"] (map :name (sql/find-by-keys db :fruit {:cost 139} {:order-by [{:appearance :desc}]}))))
-    ;; reduce with init (and ensure we can pass :fetch-size through)
+    ;; reduce with init (and ensure we can pass :fetch-size & connection opts through)
     (is (= 466 (reduce (fn [n r] (+ n (:cost r))) 100
                        (sql/reducible-query db "SELECT * FROM fruit"
-                                            {:fetch-size 100}))))
+                                            (cond-> {:fetch-size 100}
+                                              (not (sqlite? db))
+                                              (assoc :read-only? true)
+                                              (not (derby? db))
+                                              (assoc :auto-commit? false))))))
     ;; reduce without init -- uses first row as init!
     (is (= 366
            (:cost (reduce (fn
