@@ -16,7 +16,7 @@ Additional documentation can be found in the [java.jdbc section of clojure-doc.o
 Releases and Dependency Information
 ========================================
 
-Latest stable release: 0.7.0-beta4 -- requires Clojure 1.7 or later!
+Latest stable release: 0.7.0-beta5 -- requires Clojure 1.7 or later!
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22java.jdbc%22)
 
@@ -24,14 +24,14 @@ Latest stable release: 0.7.0-beta4 -- requires Clojure 1.7 or later!
 
 [Leiningen](https://github.com/technomancy/leiningen) dependency information:
 ```clojure
-[org.clojure/java.jdbc "0.7.0-beta4"]
+[org.clojure/java.jdbc "0.7.0-beta5"]
 ```
 [Maven](http://maven.apache.org/) dependency information:
 ```xml
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>java.jdbc</artifactId>
-  <version>0.7.0-beta4</version>
+  <version>0.7.0-beta5</version>
 </dependency>
 ```
 _Note: Earlier versions of Clojure are supported by older versions of `clojure.java.jdbc`: e.g., version 0.6.1 supports Clojure 1.4 and later._
@@ -133,6 +133,11 @@ Developer Information
 
 Change Log
 ====================
+
+Release 0.7.0-beta5 on 2017-07-05
+
+  * `get-connection` now accepts an `opts` map with `:auto-commit?` and `:read-only?` options. If present, the appropriate methods will be called on the connection obtained. These options are valid in any function call that may call `get-connection` under the hood. This should allow for streaming results in a query for most databases [JDBC-153](https://dev.clojure.org/jira/browse/JDBC-153).
+  * Additional validation of options is performed in `prepared-statement` to avoid silently ignoring invalid combinations of `:concurrency`, `:cursors`, `:result-type`, and `:return-keys`.
 
 Release 0.7.0-beta4 on 2017-07-04
 
