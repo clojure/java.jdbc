@@ -1360,6 +1360,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
   ([table specs] (create-table-ddl table specs {}))
   ([table specs opts]
    (let [table-spec     (:table-spec opts)
+         conditional?   (:conditional? opts)
          entities       (:entities   opts identity)
          table-spec-str (or (and table-spec (str " " table-spec)) "")
          spec-to-string (fn [spec]
@@ -1369,7 +1370,10 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
                             (catch Exception _
                               (throw (IllegalArgumentException.
                                       "column spec is not a sequence of keywords / strings")))))]
-     (format "CREATE TABLE %s (%s)%s"
+     (format "CREATE TABLE%s %s (%s)%s"
+             (if (boolean? conditional?)
+               (if conditional? " IF NOT EXISTS" "")
+               conditional?)
              (as-sql-name entities table)
              (str/join ", " (map spec-to-string specs))
              table-spec-str))))
@@ -1377,5 +1381,9 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
 (defn drop-table-ddl
   "Given a table name, return the DDL string for dropping that table."
   ([name] (drop-table-ddl name {}))
-  ([name {:keys [entities] :or {entities identity}}]
-   (format "DROP TABLE %s" (as-sql-name entities name))))
+  ([name {:keys [entities conditional?] :or {entities identity}}]
+   (format "DROP TABLE%s %s"
+           (if (boolean? conditional?)
+             (if conditional? " IF EXISTS" "")
+             conditional?)
+           (as-sql-name entities name))))
