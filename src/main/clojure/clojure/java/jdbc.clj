@@ -170,21 +170,29 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
    "oracle"   "oracle:thin"
    "postgres" "postgresql"})
 
+(def ^:private host-prefixes
+  "Map of subprotocols to non-standard host-prefixes.
+  Anything not listed is assumed to use //."
+  {"oracle:oci"  "@"
+   "oracle:thin" "@"})
+
 (defn- parse-properties-uri [^URI uri]
   (let [host (.getHost uri)
         port (if (pos? (.getPort uri)) (.getPort uri))
         path (.getPath uri)
         scheme (.getScheme uri)
+        subprotocol (subprotocols scheme scheme)
+        host-prefix (host-prefixes subprotocol "//")
         ^String query (.getQuery uri)
         query-parts (and query (for [^String kvs (.split query "&")]
                                  (vec (.split kvs "="))))]
     (merge
      {:subname (if host
                  (if port
-                   (str "//" host ":" port path)
-                   (str "//" host path))
+                   (str host-prefix host ":" port path)
+                   (str host-prefix host path))
                  (.getSchemeSpecificPart uri))
-      :subprotocol (subprotocols scheme scheme)}
+      :subprotocol subprotocol}
      (if-let [user-info (.getUserInfo uri)]
        {:user (first (str/split user-info #":"))
         :password (second (str/split user-info #":"))})
@@ -313,13 +321,17 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
            port (or port (condp = subprotocol
                                 "jtds:sqlserver" 1433
                                 "mysql"          3306
+                                "oracle:oci"     1521
+                                "oracle:thin"    1521
                                 "postgresql"     5432
                                 "sqlserver"      1433
                                 nil))
            db-sep (if (= "sqlserver" subprotocol) ";DATABASENAME=" "/")
            url (if (#{"derby" "h2" "hsqldb" "sqlite"} subprotocol)
                  (str "jdbc:" subprotocol ":" dbname)
-                 (str "jdbc:" subprotocol "://" host
+                 (str "jdbc:" subprotocol ":"
+                      (host-prefixes subprotocol "//")
+                      host
                       (when port (str ":" port))
                       db-sep dbname))
            etc (dissoc db-spec :dbtype :dbname)]
@@ -1356,12 +1368,18 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
   remaining elements are left as-is when converting them to strings.
   An options map may be provided that can contain:
   :table-spec -- a string that is appended to the DDL -- and/or
-  :entities -- a function to specify how column names are transformed."
+  :entities -- a function to specify how column names are transformed.
+  :conditional? -- either a boolean, indicating whether to add 'IF NOT EXISTS',
+    or a string, which is inserted literally before the table name, or a
+    function of two arguments (table name and the create statement), that can
+    manipulate the generated statement to better support other databases, e.g.,
+    MS SQL Server which need to wrap create table in an existence query."
   ([table specs] (create-table-ddl table specs {}))
   ([table specs opts]
    (let [table-spec     (:table-spec opts)
          conditional?   (:conditional? opts)
          entities       (:entities   opts identity)
+         table-name     (as-sql-name entities table)
          table-spec-str (or (and table-spec (str " " table-spec)) "")
          spec-to-string (fn [spec]
                           (try
@@ -1370,20 +1388,38 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
                             (catch Exception _
                               (throw (IllegalArgumentException.
                                       "column spec is not a sequence of keywords / strings")))))]
-     (format "CREATE TABLE%s %s (%s)%s"
-             (if (boolean? conditional?)
-               (if conditional? " IF NOT EXISTS" "")
-               conditional?)
-             (as-sql-name entities table)
-             (str/join ", " (map spec-to-string specs))
-             table-spec-str))))
+     (cond->> (format "CREATE TABLE%s %s (%s)%s"
+                      (cond (or (nil? conditional?)
+                                (instance? Boolean conditional?))
+                            (if conditional? " IF NOT EXISTS" "")
+                            (fn? conditional?)
+                            ""
+                            :else
+                            (str " " conditional?))
+                      table-name
+                      (str/join ", " (map spec-to-string specs))
+                      table-spec-str)
+       (fn? conditional?) (conditional? table-name)))))
 
 (defn drop-table-ddl
-  "Given a table name, return the DDL string for dropping that table."
-  ([name] (drop-table-ddl name {}))
-  ([name {:keys [entities conditional?] :or {entities identity}}]
-   (format "DROP TABLE%s %s"
-           (if (boolean? conditional?)
-             (if conditional? " IF EXISTS" "")
-             conditional?)
-           (as-sql-name entities name))))
+  "Given a table name, return the DDL string for dropping that table.
+  An options map may be provided that can contain:
+  :entities -- a function to specify how column names are transformed.
+  :conditional? -- either a boolean, indicating whether to add 'IF EXISTS',
+    or a string, which is inserted literally before the table name, or a
+    function of two arguments (table name and the create statement), that can
+    manipulate the generated statement to better support other databases, e.g.,
+    MS SQL Server which need to wrap create table in an existence query."
+  ([table] (drop-table-ddl table {}))
+  ([table {:keys [entities conditional?] :or {entities identity}}]
+   (let [table-name (as-sql-name entities table)]
+     (cond->> (format "DROP TABLE%s %s"
+                      (cond (or (nil? conditional?)
+                                (instance? Boolean conditional?))
+                            (if conditional? " IF EXISTS" "")
+                            (fn? conditional?)
+                            ""
+                            :else
+                            (str " " conditional?))
+                      table-name)
+       (fn? conditional?) (conditional? table-name)))))

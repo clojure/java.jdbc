@@ -145,10 +145,11 @@
 (s/def ::table-spec string?)
 (s/def ::timeout nat-int?)
 (s/def ::transaction? boolean?)
+(s/def ::explain? (s/or :b boolean? :s string?))
+(s/def ::explain-fn fn?)
+(s/def ::conditional? (s/or :b boolean? :s string? :f fn?))
 
 ;; various types of options
-
-(s/def ::create-options (s/keys :req-un [] :opt-un [::table-spec ::entities]))
 
 (s/def ::exec-sql-options (s/keys :req-un [] :opt-un [::entities ::transaction?]))
 
@@ -309,7 +310,10 @@
 (s/fdef sql/query
         :args (s/cat :db         ::db-spec
                      :sql-params ::sql-params
-                     :opts       (s/? ::query-options))
+                     :opts       (s/? (s/merge ::query-options
+                                               (s/keys :req-un []
+                                                       :opt-un [::explain?
+                                                                ::explain-fn]))))
         :ret  any?)
 
 (s/fdef sql/reducible-result-set
@@ -388,10 +392,16 @@
 (s/fdef sql/create-table-ddl
         :args (s/cat :table ::identifier
                      :specs (s/coll-of ::column-spec)
-                     :opts  (s/? ::create-options))
+                     :opts  (s/? (s/keys :req-un []
+                                         :opt-un [::entities
+                                                  ::conditional?
+                                                  ::table-spec])))
+
         :ret  string?)
 
 (s/fdef sql/drop-table-ddl
         :args (s/cat :table ::identifier
-                     :opts  (s/? (s/keys :req-un [] :opt-un [::entities])))
+                     :opts  (s/? (s/keys :req-un []
+                                         :opt-un [::entities
+                                                  ::conditional?])))
         :ret  string?)
