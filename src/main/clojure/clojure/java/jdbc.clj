@@ -315,13 +315,19 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
                                 "mysql"          3306
                                 "postgresql"     5432
                                 "sqlserver"      1433
+                                "oracle"         1521
                                 nil))
            db-sep (if (= "sqlserver" subprotocol) ";DATABASENAME=" "/")
-           url (if (#{"derby" "h2" "hsqldb" "sqlite"} subprotocol)
-                 (str "jdbc:" subprotocol ":" dbname)
-                 (str "jdbc:" subprotocol "://" host
-                      (when port (str ":" port))
-                      db-sep dbname))
+           url (cond (#{"derby" "h2" "hsqldb" "sqlite"} subprotocol)
+                     (str "jdbc:" subprotocol ":" dbname)
+
+                     (#{"oracle:oci" "oracle:thin"} subprotocol)
+                     (str "jdbc:" subprotocol ":@" host  ":" port ":" dbname)
+
+                     :else (str "jdbc:" subprotocol "://" host
+                                (when port (str ":" port))
+                                db-sep dbname))
+
            etc (dissoc db-spec :dbtype :dbname)]
        (if-let [class-name (or classname (classnames subprotocol))]
          (do
