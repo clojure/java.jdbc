@@ -541,10 +541,10 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
        the generated keys to return, otherwise it should just be true
      :result-type :forward-only | :scroll-insensitive | :scroll-sensitive
      :concurrency :read-only | :updatable
-     :cursors
-     :fetch-size n
-     :max-rows n
-     :timeout n
+     :cursors     :hold | :close
+     :fetch-size  n
+     :max-rows    n
+     :timeout     n
   Note that :result-type and :concurrency must be specified together as the
   underlying Java API expects both (or neither)."
   ([con sql] (prepare-statement con sql {}))
