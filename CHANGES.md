@@ -1,3 +1,7 @@
+Changes in 0.7.1
+
+* Connection strings with empty values were not parsed correctly [JDBC-155](https://dev.clojure.org/jira/browse/JDBC-155).
+
 Changes in 0.7.0
 
 * `:conditional?` option for `create-table-ddl` and `drop-table-ddl` to provide for existence check (or a function to manipulate the generated DDL).

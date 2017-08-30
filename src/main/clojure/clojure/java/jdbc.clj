@@ -184,8 +184,9 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
         subprotocol (subprotocols scheme scheme)
         host-prefix (host-prefixes subprotocol "//")
         ^String query (.getQuery uri)
-        query-parts (and query (for [^String kvs (.split query "&")]
-                                 (vec (.split kvs "="))))]
+        query-parts (and query
+                         (for [^String kvs (.split query "&")]
+                           ((juxt first second) (.split kvs "="))))]
     (merge
      {:subname (if host
                  (if port
