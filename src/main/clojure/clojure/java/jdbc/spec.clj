@@ -20,7 +20,6 @@
 ;; basic java.sql types -- cannot be generated!
 
 (s/def ::connection #(instance? java.sql.Connection %))
-(s/def ::connection-uri #(instance? java.net.URI %))
 (s/def ::datasource #(instance? javax.sql.DataSource %))
 (s/def ::prepared-statement #(instance? java.sql.PreparedStatement %))
 (s/def ::result-set #(instance? java.sql.ResultSet %))
@@ -55,6 +54,8 @@
 (s/def ::password string?)
 (s/def ::name     string?)
 (s/def ::environment (s/nilable map?))
+;; raw connection-uri
+(s/def ::connection-uri string?)
 
 (s/def ::db-spec-connection (s/keys :req-un [::connection]))
 (s/def ::db-spec-friendly (s/keys :req-un [::dbtype ::dbname] :opt-un [::host ::port]))
