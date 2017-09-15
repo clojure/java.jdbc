@@ -7,7 +7,7 @@ See [Contributing] and the [FAQ] on the Clojure development [wiki] for
 more information on how to contribute.
 
 [Clojure contrib]: http://dev.clojure.org/display/doc/Clojure+Contrib
-[Contributing]: http://dev.clojure.org/display/community/Contributing
+[Contributing]: https://clojure.org/community/contributing
 [FAQ]: http://dev.clojure.org/display/community/Contributing+FAQ
 [JIRA]: http://dev.clojure.org/jira/browse/JDBC
 [guidelines]: http://dev.clojure.org/display/community/Guidelines+for+Clojure+Contrib+committers
