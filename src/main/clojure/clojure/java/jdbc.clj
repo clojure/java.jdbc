@@ -236,11 +236,14 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
                             (defaults to 127.0.0.1)
     :port        (optional) a Long, the port of the database
                             (defaults to 3306 for mysql, 1433 for mssql/jtds, else nil)
-    (others)     (optional) passed to the driver as properties.
+    (others)     (optional) passed to the driver as properties
+                            (may include :user and :password)
 
   Raw:
     :connection-uri (required) a String
                  Passed directly to DriverManager/getConnection
+                 (both :user and :password may be specified as well, rather
+                  than passing them as part of the connection string)
 
   Other formats accepted:
 
@@ -252,7 +255,8 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
     :subprotocol (required) a String, the jdbc subprotocol
     :subname     (required) a String, the jdbc subname
     :classname   (optional) a String, the jdbc driver class name
-    (others)     (optional) passed to the driver as properties.
+    (others)     (optional) passed to the driver as properties
+                            (may include :user and :password)
 
   Factory:
     :factory     (required) a function of one argument, a map of params
@@ -260,10 +264,9 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
 
   DataSource:
     :datasource  (required) a javax.sql.DataSource
-    :username    (optional) a String
-    :user        (optional) a String - an alternate alias for :username
-                            (added after 0.3.0-beta2 for consistency JDBC-74)
-    :password    (optional) a String, required if :username is supplied
+    :username    (optional) a String - deprecated, use :user instead
+    :user        (optional) a String - preferred
+    :password    (optional) a String, required if :user is supplied
 
   JNDI:
     :name        (required) a String or javax.naming.Name
@@ -296,8 +299,8 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
      connection
      connection ;; do not apply opts here
 
-     (or (and datasource username password)
-         (and datasource user     password))
+     (or (and datasource username password)  ; legacy
+         (and datasource user     password)) ; preferred
      (-> (.getConnection ^DataSource datasource
                          ^String (or username user)
                          ^String password)
@@ -312,7 +315,9 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
          (modify-connection opts))
 
      connection-uri
-     (-> (DriverManager/getConnection connection-uri)
+     (-> (if (and user password)
+           (DriverManager/getConnection connection-uri user password)
+           (DriverManager/getConnection connection-uri))
          (modify-connection opts))
 
      (and dbtype dbname)

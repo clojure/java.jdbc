@@ -1,6 +1,8 @@
 Changes coming in 0.7.2
 
 * `connection-uri` was incorrectly spec'd as a `java.net.URI` but should be `string?` [JDBC-156](https://dev.clojure.org/jira/browse/JDBC-156).
+* Allow for `:user` and `:password` to be passed with `:connection-uri`, so credentials can be omitted from the connection string.
+* Clarified docstring for `get-connection` to show where `:user` and `:password` can be passed.
 
 Changes in 0.7.1
 
