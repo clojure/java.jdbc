@@ -241,6 +241,10 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
   Raw:
     :connection-uri (required) a String
                  Passed directly to DriverManager/getConnection
+                 Username and password can be part of the :connection-uri
+                 or passed separately.
+    :username    (optional) a String
+    :password    (optional) a String, required if :username is supplied
 
   Other formats accepted:
 
@@ -309,6 +313,10 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
 
      factory
      (-> (factory (dissoc db-spec :factory))
+         (modify-connection opts))
+
+     (and connection-uri username password)
+     (-> (DriverManager/getConnection connection-uri username password)
          (modify-connection opts))
 
      connection-uri
