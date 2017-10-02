@@ -16,7 +16,7 @@ Additional documentation can be found in the [java.jdbc section of clojure-doc.o
 Releases and Dependency Information
 ========================================
 
-Latest stable release: 0.7.1 -- requires Clojure 1.7 or later!
+Latest stable release: 0.7.2 -- requires Clojure 1.7 or later!
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22java.jdbc%22)
 
@@ -24,14 +24,14 @@ Latest stable release: 0.7.1 -- requires Clojure 1.7 or later!
 
 [Leiningen](https://github.com/technomancy/leiningen) dependency information:
 ```clojure
-[org.clojure/java.jdbc "0.7.1"]
+[org.clojure/java.jdbc "0.7.2"]
 ```
 [Maven](http://maven.apache.org/) dependency information:
 ```xml
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>java.jdbc</artifactId>
-  <version>0.7.1</version>
+  <version>0.7.2</version>
 </dependency>
 ```
 _Note: Earlier versions of Clojure are supported by older versions of `clojure.java.jdbc`: e.g., version 0.6.1 supports Clojure 1.4 and later._
@@ -134,6 +134,12 @@ Developer Information
 Change Log
 ====================
 
+
+Release 0.7.2 on 2017-10-02
+
+  * `connection-uri` was incorrectly spec'd as a `java.net.URI` but should be `string?` [JDBC-156](https://dev.clojure.org/jira/browse/JDBC-156).
+  * Allow for `:user` and `:password` to be passed with `:connection-uri`, so credentials can be omitted from the connection string.
+  * Clarified docstring for `get-connection` to show where `:user` and `:password` can be passed.
 
 Release 0.7.1 on 2017-08-30
 
