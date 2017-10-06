@@ -471,17 +471,29 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
   are untouched (the result set maintains column name/value order).
   The :identifiers option specifies how SQL column names are converted to Clojure
   keywords. The default is to convert them to lower case.
-  The :qualifier option specifies the namespace qualifier for those identifiers."
+  The :keywordize? option can be specified as false to opt-out of the conversion
+  to keywords.
+  The :qualifier option specifies the namespace qualifier for those identifiers
+  (and this may not be specified when :keywordize? is false)."
   ([rs] (result-set-seq rs {}))
-  ([^ResultSet rs {:keys [as-arrays? identifiers qualifier read-columns]
+  ([^ResultSet rs {:keys [as-arrays? identifiers keywordize?
+                          qualifier read-columns]
                    :or {identifiers str/lower-case
+                        keywordize? true
                         read-columns dft-read-columns}}]
    (let [rsmeta (.getMetaData rs)
          idxs (range 1 (inc (.getColumnCount rsmeta)))
          col-name-fn (if (= :cols-as-is as-arrays?) identity make-cols-unique)
-         identifier-fn (if qualifier
-                         (comp (partial keyword qualifier) identifiers)
-                         (comp keyword identifiers))
+         identifier-fn (cond (and qualifier (not keywordize?))
+                             (throw (IllegalArgumentException.
+                                     (str ":qualifier is not allowed unless "
+                                          ":keywordize? is true")))
+                             (and qualifier keywordize?)
+                             (comp (partial keyword qualifier) identifiers)
+                             keywordize?
+                             (comp keyword identifiers)
+                             :else
+                             identifiers)
          keys (->> idxs
                    (mapv (fn [^Integer i] (.getColumnLabel rsmeta i)))
                    col-name-fn
@@ -792,13 +804,15 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
 (defn metadata-result
   "If the argument is a java.sql.ResultSet, turn it into a result-set-seq,
   else return it as-is. This makes working with metadata easier.
-  Also accepts an option map containing :identifiers, :qualifier, :as-arrays?,
-  :row-fn,and :result-set-fn to control how the ResultSet is transformed and
-  returned. See query for more details."
+  Also accepts an option map containing :identifiers, :keywordize?, :qualifier,
+  :as-arrays?, :row-fn,and :result-set-fn to control how the ResultSet is
+  transformed and returned. See query for more details."
   ([rs-or-value] (metadata-result rs-or-value {}))
   ([rs-or-value opts]
    (let [{:keys [as-arrays? result-set-fn row-fn] :as opts}
-         (merge {:identifiers str/lower-case :read-columns dft-read-columns
+         (merge {:identifiers str/lower-case
+                 :keywordize? true
+                 :read-columns dft-read-columns
                  :row-fn identity} opts)
          result-set-fn (or result-set-fn (if as-arrays? vec doall))]
      (if (instance? java.sql.ResultSet rs-or-value)
@@ -982,6 +996,8 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
   set (and are also passed to prepare-statement as needed):
     :as-arrays? - return the results as a set of arrays, default false.
     :identifiers - applied to each column name in the result set, default lower-case
+    :keywordize? - defaults to true, can be false to opt-out of converting
+        identifiers to keywords
     :qualifier - optionally provides the namespace qualifier for identifiers
     :result-set-fn - applied to the entire result set, default doall / vec
         if :as-arrays? true, :result-set-fn will default to vec
@@ -994,6 +1010,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
   ([db sql-params opts]
    (let [{:keys [as-arrays? explain? explain-fn result-set-fn row-fn] :as opts}
          (merge {:explain-fn println :identifiers str/lower-case
+                 :keywordize? true
                  :read-columns dft-read-columns :row-fn identity}
                 (when (map? db) db)
                 opts)
@@ -1021,12 +1038,20 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
   "Given a java.sql.ResultSet return a reducible collection.
   Compiled with Clojure 1.7 or later -- uses clojure.lang.IReduce
   Note: :as-arrays? is not accepted here."
-  [^ResultSet rs {:keys [identifiers qualifier read-columns]
+  [^ResultSet rs {:keys [identifiers keywordize? qualifier read-columns]
                   :or {identifiers str/lower-case
+                       keywordize? true
                        read-columns dft-read-columns}}]
-  (let [identifier-fn (if qualifier
-                        (comp (partial keyword qualifier) identifiers)
-                        (comp keyword identifiers))
+  (let [identifier-fn (cond (and qualifier (not keywordize?))
+                            (throw (IllegalArgumentException.
+                                    (str ":qualifier is not allowed unless "
+                                         ":keywordize? is true")))
+                            (and qualifier keywordize?)
+                            (comp (partial keyword qualifier) identifiers)
+                            keywordize?
+                            (comp keyword identifiers)
+                            :else
+                            identifiers)
         make-keys (fn [idxs ^ResultSetMetaData rsmeta]
                     (->> idxs
                          (mapv (fn [^Integer i] (.getColumnLabel rsmeta i)))
@@ -1070,7 +1095,8 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
   ([db sql-params] (reducible-query db sql-params {}))
   ([db sql-params opts]
    (let [{:keys [reducing-fn] :as opts}
-         (merge {:identifiers str/lower-case :read-columns dft-read-columns}
+         (merge {:identifiers str/lower-case :keywordize? true
+                 :read-columns dft-read-columns}
                 (when (map? db) db)
                 opts)
          sql-params-vector (if (sql-stmt? sql-params) (vector sql-params) (vec sql-params))]
@@ -1254,7 +1280,8 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
   map, insert the rows into the database."
   [db table rows opts]
   (let [{:keys [entities transaction?] :as opts}
-        (merge {:entities identity :identifiers str/lower-case :transaction? true}
+        (merge {:entities identity :identifiers str/lower-case
+                :keywordize? true :transaction? true}
                (when (map? db) db)
                opts)
         sql-params (map (fn [row]

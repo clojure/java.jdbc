@@ -1,3 +1,7 @@
+Changes coming in 0.7.3
+
+* Added `:keywordize?` option alongside `:identifiers` that defaults to `true` but can be set to `false` to opt-out of converting identifiers to keywords (so column names etc will only be processed by the function passed as `:identifiers`) [JDBC-159](https://dev.clojure.org/jira/browse/JDBC-159).
+
 Changes in 0.7.2
 
 * `connection-uri` was incorrectly spec'd as a `java.net.URI` but should be `string?` [JDBC-156](https://dev.clojure.org/jira/browse/JDBC-156).
