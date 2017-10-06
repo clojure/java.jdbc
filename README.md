@@ -16,7 +16,7 @@ Additional documentation can be found in the [java.jdbc section of clojure-doc.o
 Releases and Dependency Information
 ========================================
 
-Latest stable release: 0.7.2 -- requires Clojure 1.7 or later!
+Latest stable release: 0.7.3 -- requires Clojure 1.7 or later!
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22java.jdbc%22)
 
@@ -24,14 +24,14 @@ Latest stable release: 0.7.2 -- requires Clojure 1.7 or later!
 
 [Leiningen](https://github.com/technomancy/leiningen) dependency information:
 ```clojure
-[org.clojure/java.jdbc "0.7.2"]
+[org.clojure/java.jdbc "0.7.3"]
 ```
 [Maven](http://maven.apache.org/) dependency information:
 ```xml
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>java.jdbc</artifactId>
-  <version>0.7.2</version>
+  <version>0.7.3</version>
 </dependency>
 ```
 _Note: Earlier versions of Clojure are supported by older versions of `clojure.java.jdbc`: e.g., version 0.6.1 supports Clojure 1.4 and later._
@@ -134,6 +134,10 @@ Developer Information
 Change Log
 ====================
 
+Release 0.7.3 on 2017-10-05
+
+  * Added `:keywordize?` option alongside `:identifiers` that defaults to `true` but can be set to `false` to opt-out of converting identifiers to keywords (so column names etc will only be processed by the function passed as `:identifiers`) [JDBC-159](https://dev.clojure.org/jira/browse/JDBC-159).
+  * If an exception occurs during a transaction, and then rollback fails with another exception, both exceptions will now be combined into an `ex-info`. Previously the rollback exception obscured the transaction exception [JDBC-158](https://dev.clojure.org/jira/browse/JDBC-158).
 
 Release 0.7.2 on 2017-10-02
 

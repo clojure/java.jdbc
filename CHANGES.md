@@ -1,4 +1,4 @@
-Changes coming in 0.7.3
+Changes in 0.7.3
 
 * Added `:keywordize?` option alongside `:identifiers` that defaults to `true` but can be set to `false` to opt-out of converting identifiers to keywords (so column names etc will only be processed by the function passed as `:identifiers`) [JDBC-159](https://dev.clojure.org/jira/browse/JDBC-159).
 * If an exception occurs during a transaction, and then rollback fails with another exception, both exceptions will now be combined into an `ex-info`. Previously the rollback exception obscured the transaction exception [JDBC-158](https://dev.clojure.org/jira/browse/JDBC-158).
