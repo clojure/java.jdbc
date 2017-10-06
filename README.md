@@ -16,7 +16,7 @@ Documentation
 * [How to Reuse Database Connections](http://clojure-doc.org/articles/ecosystem/java_jdbc/reusing_connections.html)
 * [Using DDL and Metadata](http://clojure-doc.org/articles/ecosystem/java_jdbc/using_ddl.html)
 
-Support 
+Support
 ========================================
 * [Mailing List](https://groups.google.com/forum/#!forum/clojure-java-jdbc)
 * #sql on [Clojurians Slack](http://clojurians.net/)
@@ -142,47 +142,40 @@ Developer Information
 Change Log
 ====================
 
-Release 0.7.3 on 2017-10-05
-
+* Release 0.7.3 on 2017-10-05
   * Added `:keywordize?` option alongside `:identifiers` that defaults to `true` but can be set to `false` to opt-out of converting identifiers to keywords (so column names etc will only be processed by the function passed as `:identifiers`) [JDBC-159](https://dev.clojure.org/jira/browse/JDBC-159).
   * If an exception occurs during a transaction, and then rollback fails with another exception, both exceptions will now be combined into an `ex-info`. Previously the rollback exception obscured the transaction exception [JDBC-158](https://dev.clojure.org/jira/browse/JDBC-158).
 
-Release 0.7.2 on 2017-10-02
-
+* Release 0.7.2 on 2017-10-02
   * `connection-uri` was incorrectly spec'd as a `java.net.URI` but should be `string?` [JDBC-156](https://dev.clojure.org/jira/browse/JDBC-156).
   * Allow for `:user` and `:password` to be passed with `:connection-uri`, so credentials can be omitted from the connection string.
   * Clarified docstring for `get-connection` to show where `:user` and `:password` can be passed.
 
-Release 0.7.1 on 2017-08-30
-
+* Release 0.7.1 on 2017-08-30
   * Connection strings with empty values were not parsed correctly [JDBC-155](https://dev.clojure.org/jira/browse/JDBC-155).
 
-Release 0.7.0 on 2017-07-16
-
+* Release 0.7.0 on 2017-07-16
   * `:conditional?` option for `create-table-ddl` and `drop-table-ddl` to provide for existence check (or a function to manipulate the generated DDL).
   * Add better support for Oracle connections (default port to `1521`, support `:dbtype "oracle"` -- as `"oracle:thin"` -- and `:dbtype "oracle:oci"`, with `@` instead of `//` before host).
 
-Release 0.7.0-beta5 on 2017-07-05
-
+* Release 0.7.0-beta5 on 2017-07-05
   * `get-connection` now accepts an `opts` map with `:auto-commit?` and `:read-only?` options. If present, the appropriate methods will be called on the connection obtained. These options are valid in any function call that may call `get-connection` under the hood. This should allow for streaming results in a query for most databases [JDBC-153](https://dev.clojure.org/jira/browse/JDBC-153).
   * Additional validation of options is performed in `prepared-statement` to avoid silently ignoring invalid combinations of `:concurrency`, `:cursors`, `:result-type`, and `:return-keys`.
 
-Release 0.7.0-beta4 on 2017-07-04
-
+* Release 0.7.0-beta4 on 2017-07-04
   * `opts` are now correctly passed from `reducible-query` to `db-query-with-resultset`.
   * Updated the `::query-options` spec to make it clear that `::prepare-options` are also acceptable there.
 
-Release 0.7.0-beta3 on 2017-07-04
-
+* Release 0.7.0-beta3 on 2017-07-04
   * Reflection warnings removed in `reducible-result-set` [JDBC-152](https://dev.clojure.org/jira/browse/JDBC-152).
 
-Release 0.7.0-beta2 on 2017-06-30 (a.k.a The Reducible Saga, Part 2)
+* Release 0.7.0-beta2 on 2017-06-30 (a.k.a The Reducible Saga, Part 2)
   * Support for Clojure 1.5 and 1.6 has been dropped -- breaking change.
   * Or, put another way, `clojure.java.jdbc` now requires Clojure 1.7 or later!
   * All public functions now have specs in the optional `clojure.java.jdbc.spec` namespace (requires `clojure.spec.alpha`).
   * `reducible-query` and `reducible-result-set` use `IReduce` and correctly support the no-`init` arity of `reduce` by using the first row of the `ResultSet`, if present, as the (missing) `init` value, and only calling `f` with no arguments if the `ResultSet` is empty. The `init` arity of `reduce` only ever calls `f` with two arguments.
 
-Release 0.7.0-beta1 on 2017-06-29
+* Release 0.7.0-beta1 on 2017-06-29
   * Support for Clojure 1.4.0 has been dropped -- breaking change.
   * Optional spec support now uses `clojure.spec.alpha`.
   * `reducible-query` accepts a `db-spec` and a SQL/parameters vector and returns a reducible (`IReduce` on Clojure 1.7 or later; `CollReduce` on Clojure 1.5/1.6): when reduced, it runs the query, obtains a reducible result set, and then reduces that. A reducible query will run the query each time it is reduced. The helper function `reducible-result-set` is public: it accepts a `ResultSet` and produces a reducible that offers a single pass reduce over the rows. Both functions honor `reduced` values to short-circuit the process [JDBC-99](https://dev.clojure.org/jira/browse/JDBC-99).
