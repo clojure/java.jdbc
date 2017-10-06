@@ -58,12 +58,18 @@
 (s/def ::connection-uri string?)
 
 (s/def ::db-spec-connection (s/keys :req-un [::connection]))
-(s/def ::db-spec-friendly (s/keys :req-un [::dbtype ::dbname] :opt-un [::host ::port]))
-(s/def ::db-spec-raw (s/keys :req-un [::connection-uri]))
-(s/def ::db-spec-driver-manager (s/keys :req-un [::subprotocol ::subname] :opt-un [::classname]))
+(s/def ::db-spec-friendly (s/keys :req-un [::dbtype ::dbname]
+                                  :opt-un [::host ::port ::user ::password
+                                           ::classname]))
+(s/def ::db-spec-raw (s/keys :req-un [::connection-uri]
+                             :opt-un [::user ::password]))
+(s/def ::db-spec-driver-manager (s/keys :req-un [::subprotocol ::subname]
+                                        :opt-un [::classname ::user ::password]))
 (s/def ::db-spec-factory (s/keys :req-un [::factory]))
-(s/def ::db-spec-data-source (s/keys :req-un [::datasource] :opt-un [::username ::user ::password]))
-(s/def ::db-spec-jndi (s/keys :req-un [::name] :opt-un [::environment]))
+(s/def ::db-spec-data-source (s/keys :req-un [::datasource]
+                                     :opt-un [::username ::user ::password]))
+(s/def ::db-spec-jndi (s/keys :req-un [::name]
+                              :opt-un [::environment]))
 (s/def ::db-spec-string string?)
 (s/def ::db-spec (s/or :connection ::db-spec-connection
                        :friendly   ::db-spec-friendly
@@ -115,6 +121,7 @@
 (s/def ::isolation (set (keys @#'sql/isolation-levels)))
 (s/def ::entities (s/fspec :args (s/cat :s string?)
                            :ret  ::entity))
+(s/def ::keywordize? boolean?)
 (s/def ::max-size nat-int?)
 (s/def ::multi? boolean?)
 ;; strictly speaking we accept any keyword or string whose upper case name
@@ -160,6 +167,7 @@
                                       :opt-un [::entities ::order-by
                                                ::result-set-fn ::row-fn
                                                ::identifiers ::qualifier
+                                               ::keywordize?
                                                ::as-arrays? ::read-columns]))
 
 (s/def ::connection-options (s/keys :req-un []
@@ -177,11 +185,14 @@
 (s/def ::query-options (s/merge (s/keys :req-un []
                                         :opt-un [::result-set-fn ::row-fn
                                                  ::identifiers ::qualifier
+                                                 ::keywordize?
                                                  ::as-arrays? ::read-columns])
                                 ::prepare-options))
 
 (s/def ::reducible-query-options (s/merge (s/keys :req-un []
-                                                  :opt-un [::identifiers ::qualifier
+                                                  :opt-un [::identifiers
+                                                           ::keywordize?
+                                                           ::qualifier
                                                            ::read-columns])
                                           ::prepare-options))
 
