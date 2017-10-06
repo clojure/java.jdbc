@@ -735,7 +735,15 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
                   (.commit con))
                 result)
               (catch Throwable t
-                (.rollback con)
+                (try
+                  (.rollback con)
+                  (catch Throwable rb
+                    ;; combine both exceptions
+                    (throw (ex-info (str "Rollback failed handling \""
+                                         (.getMessage t)
+                                         "\"")
+                                    {:rollback rb
+                                     :handling t}))))
                 (throw t))
               (finally
                 (db-unset-rollback-only! nested-db)
