@@ -570,39 +570,41 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
     {:keys [return-keys result-type concurrency cursors
             fetch-size max-rows timeout]}]
    (let [^PreparedStatement
-         stmt (cond return-keys
-                    (try
-                      (when (or result-type concurrency cursors)
-                        (throw (IllegalArgumentException.
-                                (str ":concurrency, :cursors, and :result-type "
-                                     "may not be specified with :return-keys."))))
-                      (if (vector? return-keys)
-                        (try
-                          (.prepareStatement con sql (string-array return-keys))
-                          (catch Exception _
-                            ;; assume it is unsupported and try regular generated keys:
-                            (.prepareStatement con sql java.sql.Statement/RETURN_GENERATED_KEYS)))
-                        (.prepareStatement con sql java.sql.Statement/RETURN_GENERATED_KEYS))
-                      (catch Exception _
-                        ;; assume it is unsupported and try basic PreparedStatement:
-                        (.prepareStatement con sql)))
-
-                    (and result-type concurrency)
-                    (if cursors
-                      (.prepareStatement con sql
-                                         (get result-set-type result-type result-type)
-                                         (get result-set-concurrency concurrency concurrency)
-                                         (get result-set-holdability cursors cursors))
-                      (.prepareStatement con sql
-                                         (get result-set-type result-type result-type)
-                                         (get result-set-concurrency concurrency concurrency)))
-
-                    (or result-type concurrency cursors)
+         stmt (cond
+                return-keys
+                (do
+                  (when (or result-type concurrency cursors)
                     (throw (IllegalArgumentException.
                             (str ":concurrency, :cursors, and :result-type "
-                                 "may not be specified independently.")))
-                    :else
-                    (.prepareStatement con sql))]
+                                 "may not be specified with :return-keys."))))
+                  (try
+                    (if (vector? return-keys)
+                      (try
+                        (.prepareStatement con sql (string-array return-keys))
+                        (catch Exception _
+                          ;; assume it is unsupported and try regular generated keys:
+                          (.prepareStatement con sql java.sql.Statement/RETURN_GENERATED_KEYS)))
+                      (.prepareStatement con sql java.sql.Statement/RETURN_GENERATED_KEYS))
+                    (catch Exception _
+                      ;; assume it is unsupported and try basic PreparedStatement:
+                      (.prepareStatement con sql))))
+
+                (and result-type concurrency)
+                (if cursors
+                  (.prepareStatement con sql
+                                     (get result-set-type result-type result-type)
+                                     (get result-set-concurrency concurrency concurrency)
+                                     (get result-set-holdability cursors cursors))
+                  (.prepareStatement con sql
+                                     (get result-set-type result-type result-type)
+                                     (get result-set-concurrency concurrency concurrency)))
+
+                (or result-type concurrency cursors)
+                (throw (IllegalArgumentException.
+                        (str ":concurrency, :cursors, and :result-type "
+                             "may not be specified independently.")))
+                :else
+                (.prepareStatement con sql))]
      (when fetch-size (.setFetchSize stmt fetch-size))
      (when max-rows (.setMaxRows stmt max-rows))
      (when timeout (.setQueryTimeout stmt timeout))
