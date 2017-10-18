@@ -1118,8 +1118,8 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
   See also prepare-statement for additional options."
   ([db sql-params] (reducible-query db sql-params {}))
   ([db sql-params opts]
-   (let [opts (merge {:identifiers str/lower-case :keywordize? true}
-                     :read-columns dft-read-columns
+   (let [opts (merge {:identifiers str/lower-case :keywordize? true
+                      :read-columns dft-read-columns}
                      (when (map? db) db)
                      opts)
          sql-params-vector (if (sql-stmt? sql-params) (vector sql-params) (vec sql-params))]
