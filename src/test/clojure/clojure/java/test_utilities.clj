@@ -1,4 +1,4 @@
-;;  Copyright (c) 2008-2016 Sean Corfield, Stephen C. Gilardi.
+;;  Copyright (c) 2008-2017 Sean Corfield, Stephen C. Gilardi.
 ;;                                       All rights reserved.  The use and
 ;;  distribution terms for this software are covered by the Eclipse Public
 ;;  License 1.0 (http://opensource.org/licenses/eclipse-1.0.php) which can
@@ -41,19 +41,18 @@
       (is (re-find (pattern "Message: Test Message.*Message: Base Message") except-str))
       (is (re-find (pattern "SQLState: Test State.*SQLState: Base State") except-str)))))
 
-(deftest test-make-name-unique
-  (let [make-name-unique @#'sql/make-name-unique]
-    (is (= "a" (make-name-unique '() "a" 1)))
-    (is (= "a_2" (make-name-unique '("a") "a" 1)))
-    (is (= "a_3" (make-name-unique '("a" "b" "a_2") "a" 1)))))
-
 (deftest test-make-cols-unique
   (let [make-cols-unique @#'sql/make-cols-unique]
-    (is (= '() (make-cols-unique '())))
-    (is (= '("a") (make-cols-unique '("a"))))
-    (is (= '("a" "a_2") (make-cols-unique '("a" "a"))))
-    (is (= '("a" "b" "a_2" "a_3") (make-cols-unique '("a" "b" "a" "a"))))
-    (is (= '("a" "b" "a_2" "b_2" "a_3" "b_3") (make-cols-unique '("a" "b" "a" "b" "a" "b"))))))
+    (is (= []
+           (into [] make-cols-unique [])))
+    (is (= ["a"]
+           (into [] make-cols-unique ["a"])))
+    (is (= ["a" "a_2"]
+           (into [] make-cols-unique ["a" "a"])))
+    (is (= ["a" "b" "a_2" "a_3"]
+           (into [] make-cols-unique ["a" "b" "a" "a"])))
+    (is (= ["a" "b" "a_2" "b_2" "a_3" "b_3"]
+           (into [] make-cols-unique ["a" "b" "a" "b" "a" "b"])))))
 
 ;; DDL tests
 

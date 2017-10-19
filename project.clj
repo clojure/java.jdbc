@@ -27,8 +27,8 @@
                  [org.postgresql/postgresql "9.4.1212.jre7"]
                  [com.impossibl.pgjdbc-ng/pgjdbc-ng "0.7.1"]
                  [org.xerial/sqlite-jdbc "3.16.1"]
-                 ;; if you have the MS driver in your local repo
-                 [sqljdbc4 "4.0"]]
+                 ;; Assumes Java 8; there's a .jre7 version as well:
+                 [com.microsoft.sqlserver/mssql-jdbc "6.2.2.jre8"]]
 
   :profiles {:1.7 {:dependencies [[org.clojure/clojure "1.7.0"]]}
              :1.8 {:dependencies [[org.clojure/clojure "1.8.0"]]}

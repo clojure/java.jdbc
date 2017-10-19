@@ -379,24 +379,22 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
      (let [^String msg (format "db-spec %s is missing a required parameter" db-spec)]
        (throw (IllegalArgumentException. msg))))))
 
-(defn- make-name-unique
-  "Given a collection of column names and a new column name,
-   return the new column name made unique, if necessary, by
-   appending _N where N is some unique integer suffix."
-  [cols col-name n]
-  (let [suffixed-name (if (= n 1) col-name (str col-name "_" n))]
-    (if (apply distinct? suffixed-name cols)
-      suffixed-name
-      (recur cols col-name (inc n)))))
-
 (defn- make-cols-unique
-  "Given a collection of column names, rename duplicates so
-   that the result is a collection of unique column names."
-  [cols]
-  (if (or (empty? cols) (apply distinct? cols))
-    cols
-    (reduce (fn [unique-cols col-name]
-              (conj unique-cols (make-name-unique unique-cols col-name 1))) []  cols)))
+  "A transducer that, given a collection of strings, returns a collection of
+  strings that have been made unique by appending _n to duplicates."
+  [xf]
+  (let [seen (volatile! {})]
+    (fn
+      ([] (xf))
+      ([result] (xf result))
+      ([result input]
+       (if-let [suffix (get @seen input)]
+         (do
+           (vswap! seen assoc input (inc suffix))
+           (xf result (str input "_" suffix)))
+         (do
+           (vswap! seen assoc input 2)
+           (xf result input)))))))
 
 (defprotocol ISQLValue
   "Protocol for creating SQL values from Clojure values. Default
@@ -462,6 +460,22 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
   [^ResultSet rs rsmeta idxs]
   (mapv (fn [^Integer i] (result-set-read-column (.getObject rs i) rsmeta i)) idxs))
 
+(defn- make-identifier-fn
+  "Given the user's identifiers function, an optional namespace qualifier, and
+  a flag indicating whether to produce keywords or not, return a compound
+  function that will perform the appropriate entity to identifier conversion."
+  [identifiers qualifier keywordize?]
+  (cond (and qualifier (not keywordize?))
+        (throw (IllegalArgumentException.
+                (str ":qualifier is not allowed unless "
+                     ":keywordize? is true")))
+        (and qualifier keywordize?)
+        (comp (partial keyword qualifier) identifiers)
+        keywordize?
+        (comp keyword identifiers)
+        :else
+        identifiers))
+
 (defn result-set-seq
   "Creates and returns a lazy sequence of maps corresponding to the rows in the
   java.sql.ResultSet rs. Loosely based on clojure.core/resultset-seq but it
@@ -484,20 +498,12 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
    (let [rsmeta (.getMetaData rs)
          idxs (range 1 (inc (.getColumnCount rsmeta)))
          col-name-fn (if (= :cols-as-is as-arrays?) identity make-cols-unique)
-         identifier-fn (cond (and qualifier (not keywordize?))
-                             (throw (IllegalArgumentException.
-                                     (str ":qualifier is not allowed unless "
-                                          ":keywordize? is true")))
-                             (and qualifier keywordize?)
-                             (comp (partial keyword qualifier) identifiers)
-                             keywordize?
-                             (comp keyword identifiers)
-                             :else
-                             identifiers)
-         keys (->> idxs
-                   (mapv (fn [^Integer i] (.getColumnLabel rsmeta i)))
-                   col-name-fn
-                   (mapv identifier-fn))
+         keys (into [] (comp (map (fn [^Integer i] (.getColumnLabel rsmeta i)))
+                             col-name-fn
+                             (map (make-identifier-fn identifiers
+                                                      qualifier
+                                                      keywordize?)))
+                    idxs)
          row-values (fn [] (read-columns rs rsmeta idxs))
          ;; This used to use create-struct (on keys) and then struct to populate each row.
          ;; That had the side effect of preserving the order of columns in each row. As
@@ -963,6 +969,41 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
        (with-open [con (get-connection db opts)]
          (db-do-prepared (add-connection db con) transaction? sql-params opts))))))
 
+(defn- execute-query-with-params
+  "Given a prepared statement, a set of parameters, a parameter setting
+  function, and a function to process the result set, execute the query and
+  apply the processing function."
+  [^PreparedStatement stmt params set-parameters func]
+  (set-parameters stmt params)
+  (with-open [rset (.executeQuery stmt)]
+    (func rset)))
+
+(defn- db-query-with-resultset*
+  "Given a db-spec, a SQL statement (or a prepared statement), a set of
+  parameters, a result set processing function and options, execute the query."
+  [db sql params func opts]
+  (if (instance? PreparedStatement sql)
+    (let [^PreparedStatement stmt sql]
+      (execute-query-with-params
+        stmt
+        params
+        (:set-parameters opts dft-set-parameters)
+        func))
+    (if-let [con (db-find-connection db)]
+      (with-open [^PreparedStatement stmt (prepare-statement con sql opts)]
+        (execute-query-with-params
+          stmt
+          params
+          (:set-parameters opts dft-set-parameters)
+          func))
+      (with-open [con (get-connection db opts)]
+        (with-open [^PreparedStatement stmt (prepare-statement con sql opts)]
+          (execute-query-with-params
+            stmt
+            params
+            (:set-parameters opts dft-set-parameters)
+            func))))))
+
 (defn db-query-with-resultset
   "Executes a query, then evaluates func passing in the raw ResultSet as an
    argument. The second argument is a vector containing either:
@@ -974,11 +1015,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
   ([db sql-params func] (db-query-with-resultset db sql-params func {}))
   ([db sql-params func opts]
    (let [opts (merge (when (map? db) db) opts)
-         [sql & params] (if (sql-stmt? sql-params) (vector sql-params) (vec sql-params))
-         run-query-with-params (^{:once true} fn* [^PreparedStatement stmt]
-                                ((:set-parameters opts dft-set-parameters) stmt params)
-                                (with-open [rset (.executeQuery stmt)]
-                                  (func rset)))]
+         [sql & params] (if (sql-stmt? sql-params) (vector sql-params) (vec sql-params))]
      (when-not (sql-stmt? sql)
        (let [^Class sql-class (class sql)
              ^String msg (format "\"%s\" expected %s %s, found %s %s"
@@ -988,15 +1025,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
                                  (.getName sql-class)
                                  (pr-str sql))]
          (throw (IllegalArgumentException. msg))))
-     (if (instance? PreparedStatement sql)
-       (let [^PreparedStatement stmt sql]
-         (run-query-with-params stmt))
-       (if-let [con (db-find-connection db)]
-         (with-open [^PreparedStatement stmt (prepare-statement con sql opts)]
-           (run-query-with-params stmt))
-         (with-open [con (get-connection db opts)]
-           (with-open [^PreparedStatement stmt (prepare-statement con sql opts)]
-             (run-query-with-params stmt))))))))
+     (db-query-with-resultset* db sql params func opts))))
 
 ;; top-level API for actual SQL operations
 
@@ -1025,38 +1054,91 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
                 (when (map? db) db)
                 opts)
          result-set-fn (or result-set-fn (if as-arrays? vec doall))
-         sql-params-vector (if (sql-stmt? sql-params) (vector sql-params) (vec sql-params))]
-     (when (and explain? (string? (first sql-params-vector)))
+         [sql & params] (if (sql-stmt? sql-params) (vector sql-params) (vec sql-params))]
+     (when-not (sql-stmt? sql)
+       (let [^Class sql-class (class sql)
+             ^String msg (format "\"%s\" expected %s %s, found %s %s"
+                                 "sql-params"
+                                 "vector"
+                                 "[sql param*]"
+                                 (.getName sql-class)
+                                 (pr-str sql))]
+         (throw (IllegalArgumentException. msg))))
+     (when (and explain? (string? sql))
        (query db (into [(str (if (string? explain?) explain? "EXPLAIN")
                              " "
-                             (first sql-params-vector))]
-                       (rest sql-params-vector))
+                             sql)]
+                       params)
               (-> opts
                   (dissoc :explain? :result-set-fn :row-fn)
                   (assoc :result-set-fn explain-fn))))
-     (db-query-with-resultset db sql-params-vector
-                              (^{:once true} fn* [rset]
-                               ((^{:once true} fn* [rs]
-                                 (result-set-fn (if as-arrays?
-                                                  (cons (first rs)
-                                                        (map row-fn (rest rs)))
-                                                  (map row-fn rs))))
-                                (result-set-seq rset opts)))
+     (db-query-with-resultset* db sql params
+                               (if as-arrays?
+                                 (^{:once true} fn* [rset]
+                                  ((^{:once true} fn* [rs]
+                                    (result-set-fn (cons (first rs)
+                                                         (map row-fn (rest rs)))))
+                                   (result-set-seq rset opts)))
+                                 (^{:once true} fn* [rset]
+                                  (result-set-fn (map row-fn
+                                                      (result-set-seq rset opts)))))
                               opts))))
 
 ;; performance notes -- goal is to lift as much logic as possible into a "once"
 ;; pass (so reducible-query preloads all the stuff that doesn't depend on the
 ;; query results, and then you can repeatedly reduce it, which runs the query
 ;; each time and runs the minimal result set reduction)
-;; turn make-cols-unique into a transducer and optimize it
-;; turn make-keys into a transducer pipeline and lift it
-;; lift identifier-fn out as make-identifier-fn and refactor
-;; lift init-reduce
-;; refactor reducible-result-set to lift identifier-fn out
-;; call new reducible-result-set version from reducible-query (after calling
-;; make-identifier-fn etc)
+;; done: turn make-cols-unique into a transducer and optimize it
+;; done: turn make-keys into a transducer pipeline and lift it
+;; done: lift identifier-fn out as make-identifier-fn and refactor
+;; done: lift init-reduce
+;; done: refactor reducible-result-set to lift identifier-fn out
+;; done: call new reducible-result-set version from reducible-query (after calling
+;;       make-identifier-fn etc)
 ;; create an optimized version of db-query-with-resultset without :as-arrays?
 ;; and with options handling lifted
+
+(defn- get-rs-columns
+  "Given a set of indices, a result set's metadata, and a function to convert
+  SQL entity names to Clojure column names,
+  return the unique vector of column names."
+  [idxs ^ResultSetMetaData rsmeta identifier-fn]
+  (into [] (comp (map (fn [^Integer i] (.getColumnLabel rsmeta i)))
+                 make-cols-unique
+                 (map identifier-fn))
+        idxs))
+
+(defn- init-reduce-rs
+  "Given a sequence of columns, a result set, its metadata, a sequence of
+  indices, a mapping function to apply, an initial value, and a function that
+  can read column data from the result set, reduce the result set and
+  return the result of that reduction."
+  [cols ^ResultSet rs rsmeta idxs f init read-columns]
+  (loop [init' init]
+    (if (.next rs)
+      (let [result (f init' (zipmap cols (read-columns rs rsmeta idxs)))]
+        (if (reduced? result)
+          @result
+          (recur result)))
+      init')))
+
+(defn- reducible-result-set*
+  "Given a java.sql.ResultSet, indices, metadata, column names and a reader,
+  return a reducible collection.
+  Compiled with Clojure 1.7 or later -- uses clojure.lang.IReduce."
+  [^ResultSet rs idxs ^ResultSetMetaData rsmeta cols read-columns]
+  (reify clojure.lang.IReduce
+    (reduce [this f]
+            (if (.next rs)
+              ;; reduce init is first row of ResultSet
+              (init-reduce-rs cols rs rsmeta idxs f
+                              (zipmap cols (read-columns rs rsmeta idxs))
+                              read-columns)
+              ;; no rows so call 0-arity f to get result value
+              ;; per reduce docstring contract
+              (f)))
+    (reduce [this f init]
+            (init-reduce-rs cols rs rsmeta idxs f init read-columns))))
 
 (defn reducible-result-set
   "Given a java.sql.ResultSet return a reducible collection.
@@ -1066,46 +1148,32 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
                   :or {identifiers str/lower-case
                        keywordize? true
                        read-columns dft-read-columns}}]
-  (let [identifier-fn (cond (and qualifier (not keywordize?))
-                            (throw (IllegalArgumentException.
-                                    (str ":qualifier is not allowed unless "
-                                         ":keywordize? is true")))
-                            (and qualifier keywordize?)
-                            (comp (partial keyword qualifier) identifiers)
-                            keywordize?
-                            (comp keyword identifiers)
-                            :else
-                            identifiers)
-        make-keys (fn [idxs ^ResultSetMetaData rsmeta]
-                    (->> idxs
-                         (mapv (fn [^Integer i] (.getColumnLabel rsmeta i)))
-                         (make-cols-unique)
-                         (mapv identifier-fn)))
-        init-reduce (fn [keys ^ResultSet rs rsmeta idxs f init]
-                      (loop [init' init]
-                        (if (.next rs)
-                          (let [result (f init' (zipmap keys (read-columns rs rsmeta idxs)))]
-                            (if (reduced? result)
-                              @result
-                              (recur result)))
-                          init')))]
-    (reify clojure.lang.IReduce
-      (reduce [this f]
-              (let [rsmeta (.getMetaData rs)
-                    idxs (range 1 (inc (.getColumnCount rsmeta)))
-                    keys (make-keys idxs rsmeta)]
-                (if (.next rs)
-                  ;; reduce init is first row of ResultSet
-                  (init-reduce keys rs rsmeta idxs f
-                               (zipmap keys (read-columns rs rsmeta idxs)))
-                  ;; no rows so call 0-arity f to get result value
-                  ;; per reduce docstring contract
-                  (f))))
-      (reduce [this f init]
-              (let [rsmeta (.getMetaData rs)
-                    idxs (range 1 (inc (.getColumnCount rsmeta)))
-                    keys (make-keys idxs rsmeta)]
-                (init-reduce keys rs rsmeta idxs f init))))))
+  (let [rsmeta (.getMetaData rs)
+        idxs (range 1 (inc (.getColumnCount rsmeta)))
+        cols (get-rs-columns idxs rsmeta
+                             (make-identifier-fn identifiers
+                                                 qualifier
+                                                 keywordize?))]
+    (reducible-result-set* rs idxs rsmeta cols read-columns)))
+
+(defn- query-reducer
+  "Given options, return a function of f that accepts a result set and reduces
+  it using f."
+  [identifiers keywordize? qualifier read-columns]
+  (let [identifier-fn (make-identifier-fn identifiers qualifier keywordize?)]
+    (fn
+      ([f]
+       (^{:once true} fn* [^ResultSet rs]
+         (let [rsmeta (.getMetaData rs)
+               idxs (range 1 (inc (.getColumnCount rsmeta)))
+               cols (get-rs-columns idxs rsmeta identifier-fn)]
+           (reduce f (reducible-result-set* rs idxs rsmeta cols read-columns)))))
+      ([f init]
+       (^{:once true} fn* [^ResultSet rs]
+         (let [rsmeta (.getMetaData rs)
+               idxs (range 1 (inc (.getColumnCount rsmeta)))
+               cols (get-rs-columns idxs rsmeta identifier-fn)]
+           (reduce f init (reducible-result-set* rs idxs rsmeta cols read-columns))))))))
 
 (defn reducible-query
   "Given a database connection, a vector containing SQL and optional parameters,
@@ -1118,23 +1186,32 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
   See also prepare-statement for additional options."
   ([db sql-params] (reducible-query db sql-params {}))
   ([db sql-params opts]
-   (let [opts (merge {:identifiers str/lower-case :keywordize? true
-                      :read-columns dft-read-columns}
-                     (when (map? db) db)
-                     opts)
-         sql-params-vector (if (sql-stmt? sql-params) (vector sql-params) (vec sql-params))]
+   (let [{:keys [identifiers keywordize? qualifier read-columns] :as opts}
+         (merge {:identifiers str/lower-case :keywordize? true
+                 :read-columns dft-read-columns}
+                (when (map? db) db)
+                opts)
+         [sql & params] (if (sql-stmt? sql-params) (vector sql-params) (vec sql-params))
+         reducing-fn (query-reducer identifiers keywordize? qualifier read-columns)]
+     (when-not (sql-stmt? sql)
+       (let [^Class sql-class (class sql)
+             ^String msg (format "\"%s\" expected %s %s, found %s %s"
+                                 "sql-params"
+                                 "vector"
+                                 "[sql param*]"
+                                 (.getName sql-class)
+                                 (pr-str sql))]
+         (throw (IllegalArgumentException. msg))))
      (reify clojure.lang.IReduce
        (reduce [this f]
-               (db-query-with-resultset
-                 db sql-params-vector
-                 (^{:once true} fn* [rset]
-                   (reduce f (reducible-result-set rset opts)))
+               (db-query-with-resultset*
+                 db sql params
+                 (reducing-fn f)
                  opts))
        (reduce [this f init]
-               (db-query-with-resultset
-                 db sql-params-vector
-                 (^{:once true} fn* [rset]
-                   (reduce f init (reducible-result-set rset opts)))
+               (db-query-with-resultset*
+                 db sql params
+                 (reducing-fn f init)
                  opts))))))
 
 (defn- direction
