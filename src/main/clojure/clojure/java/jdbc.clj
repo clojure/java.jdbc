@@ -1158,8 +1158,8 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
     (reducible-result-set* rs idxs rsmeta cols read-columns)))
 
 (defn- query-reducer
-  "Given options, return a function of f that accepts a result set and reduces
-  it using f."
+  "Given options, return a function of f (or f and init) that accepts a
+  result set and reduces it using f."
   [identifiers keywordize? qualifier read-columns]
   (let [identifier-fn (make-identifier-fn identifiers qualifier keywordize?)]
     (fn
@@ -1175,6 +1175,55 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
                idxs (range 1 (inc (.getColumnCount rsmeta)))
                cols (get-rs-columns idxs rsmeta identifier-fn)]
            (reduce f init (reducible-result-set* rs idxs rsmeta cols read-columns))))))))
+
+(defn- mapify-result-set
+  "Given a result set, return an object that wraps the current row as a hash
+  map. Note that a result set is mutable and the current row will change behind
+  this wrapper so operations need to be eager (and fairly limited).
+  Supports ILookup (keywords are treated as strings).
+  Supports Associative for lookup only (again, keywords are treated as strings).
+  Later we may realize a new hash map when assoc (and other, future, operations
+  are performed on the result set row)."
+  [^ResultSet rs]
+  (reify
+    clojure.lang.ILookup
+    (valAt [this k]
+           (try
+             (.getObject rs (name k))
+             (catch SQLException _)))
+    (valAt [this k not-found]
+           (try
+             (.getObject rs (name k))
+             (catch SQLException _
+               not-found)))
+    clojure.lang.Associative
+    (containsKey [this k]
+                 (try
+                   (.getObject rs (name k))
+                   true
+                   (catch SQLException _
+                     false)))
+    (entryAt [this k]
+             (try
+               (clojure.lang.MapEntry/create k (.getObject rs (name k)))
+               (catch SQLException _)))
+    (assoc [this _ _]
+           (throw (ex-info "assoc not supported on raw result set" {})))))
+
+(defn- raw-query-reducer
+  "Given a function f and an initial value, return a function that accepts a
+  result set and reduces it using no translation. The result set is extended
+  to support ILookup only."
+  [f init]
+  (^{:once true} fn* [^ResultSet rs]
+    (let [rs-map (mapify-result-set rs)]
+      (loop [init' init]
+        (if (.next rs)
+          (let [result (f init' rs-map)]
+            (if (reduced? result)
+              @result
+              (recur result)))
+          init')))))
 
 (defn reducible-query
   "Given a database connection, a vector containing SQL and optional parameters,
@@ -1193,7 +1242,9 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
                 (when (map? db) db)
                 opts)
          [sql & params] (if (sql-stmt? sql-params) (vector sql-params) (vec sql-params))
-         reducing-fn (query-reducer identifiers keywordize? qualifier read-columns)]
+         reducing-fn (if (:raw? opts)
+                       raw-query-reducer
+                       (query-reducer identifiers keywordize? qualifier read-columns))]
      (when-not (sql-stmt? sql)
        (let [^Class sql-class (class sql)
              ^String msg (format "\"%s\" expected %s %s, found %s %s"
