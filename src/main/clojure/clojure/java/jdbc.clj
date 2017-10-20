@@ -1213,7 +1213,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
 (defn- raw-query-reducer
   "Given a function f and an initial value, return a function that accepts a
   result set and reduces it using no translation. The result set is extended
-  to support ILookup only."
+  to support ILookup and the readonly parts of Associative only."
   [f init]
   (^{:once true} fn* [^ResultSet rs]
     (let [rs-map (mapify-result-set rs)]
@@ -1230,10 +1230,18 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
   return a reducible collection. When reduced, it will start the database query
   and reduce the result set, and then close the connection:
     (transduce (map :cost) + (reducible-query db sql-params))
-  Compiled with Clojure 1.7 or later -- uses clojure.lang.IReduce
+
   The following options from query etc are not accepted here:
     :as-arrays? :explain :explain-fn :result-set-fn :row-fn
-  See also prepare-statement for additional options."
+  See prepare-statement for additional options that may be passed through.
+
+  If :raw? true is specified, the rows of the result set are not converted to
+  hash maps, and it as if the following options were specified:
+    :identifiers identity :keywordize? false :qualifier nil
+  In addition, the rows of the result set may only be read as if they were hash
+  maps (get, keyword lookup, select-keys) but the sequence representation is
+  not available (so, no keys, no vals, and no seq calls). This is much faster
+  than converting each row to a hash map but it is also more restrictive."
   ([db sql-params] (reducible-query db sql-params {}))
   ([db sql-params opts]
    (let [{:keys [identifiers keywordize? qualifier read-columns] :as opts}
