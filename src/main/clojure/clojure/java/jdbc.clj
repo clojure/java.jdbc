@@ -432,9 +432,10 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
 (defn- dft-set-parameters
   "Default implementation of parameter setting for the given statement."
   [stmt params]
-  (dorun (map-indexed (fn [ix value]
-                        (set-parameter value stmt (inc ix)))
-                      params)))
+  (loop [ix 1 values params]
+    (when (seq values)
+      (set-parameter (first values) stmt ix)
+      (recur (inc ix) (rest values)))))
 
 (defprotocol IResultSetReadColumn
   "Protocol for reading objects from the java.sql.ResultSet. Default
