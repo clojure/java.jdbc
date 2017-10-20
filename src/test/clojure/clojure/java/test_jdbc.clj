@@ -445,7 +445,7 @@
     ;; reduce with init (and ensure we can pass :fetch-size & connection opts through)
     (is (= 466 (reduce (fn [n r] (+ n (:cost r))) 100
                        (sql/reducible-query db "SELECT * FROM fruit"
-                                            (cond-> {:fetch-size 100}
+                                            (cond-> {:fetch-size 100 :raw? true}
                                               (not (sqlite? db))
                                               (assoc :read-only? true)
                                               (not (derby? db))
@@ -494,7 +494,8 @@
            (into []
                  (map :cost)
                  (sql/reducible-query db (str "SELECT * FROM fruit"
-                                              " ORDER BY cost")))))
+                                              " ORDER BY cost")
+                                      {:raw? true}))))
     ;; transduce without init (calls (+) to get init value)
     (is (= 366 (transduce (map :cost) +
                           (sql/reducible-query db "SELECT * FROM fruit"))))
