@@ -1205,7 +1205,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
                      false)))
     (entryAt [this k]
              (try
-               (clojure.lang.MapEntry/create k (.getObject rs (name k)))
+               (clojure.lang.MapEntry. k (.getObject rs (name k)))
                (catch SQLException _)))
     (assoc [this _ _]
            (throw (ex-info "assoc not supported on raw result set" {})))))
