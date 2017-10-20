@@ -33,10 +33,15 @@
   :profiles {:1.7 {:dependencies [[org.clojure/clojure "1.7.0"]]}
              :1.8 {:dependencies [[org.clojure/clojure "1.8.0"]]}
              :1.9 {:dependencies [[org.clojure/clojure "1.9.0-master-SNAPSHOT"]]}
-             :dev {:dependencies [[org.clojure/test.check "0.9.0"]]}}
-
+             :dev {:dependencies [[org.clojure/test.check "0.9.0"]
+                                  [criterium "0.4.4"]]}
+             :perf {:test-paths ["src/perf/clojure"]
+                    :jvm-opts ^:replace ["-server"
+                                         "-Xmx4096m"
+                                         "-Dclojure.compiler.direct-linking=true"]}}
   :repositories {"sonatype-oss-public" "https://oss.sonatype.org/content/groups/public/"
                  "ws-archiva" "https://d259tvauhnips9.cloudfront.net/archiva/repository/internal/"}
   ;; include dev profile with 1.9 to pull in test.check
-  :aliases {"test-all" ["with-profile" "test,1.7:test,1.8:dev,test,1.9" "test"]}
+  :aliases {"test-all" ["with-profile" "test,1.7:test,1.8:dev,test,1.9" "test"]
+            "perf" ["with-profile" "default,dev,perf"]}
   :min-lein-version "2.0.0")

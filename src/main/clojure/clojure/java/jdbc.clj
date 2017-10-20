@@ -1085,20 +1085,6 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
                                                       (result-set-seq rset opts)))))
                               opts))))
 
-;; performance notes -- goal is to lift as much logic as possible into a "once"
-;; pass (so reducible-query preloads all the stuff that doesn't depend on the
-;; query results, and then you can repeatedly reduce it, which runs the query
-;; each time and runs the minimal result set reduction)
-;; done: turn make-cols-unique into a transducer and optimize it
-;; done: turn make-keys into a transducer pipeline and lift it
-;; done: lift identifier-fn out as make-identifier-fn and refactor
-;; done: lift init-reduce
-;; done: refactor reducible-result-set to lift identifier-fn out
-;; done: call new reducible-result-set version from reducible-query (after calling
-;;       make-identifier-fn etc)
-;; create an optimized version of db-query-with-resultset without :as-arrays?
-;; and with options handling lifted
-
 (defn- get-rs-columns
   "Given a set of indices, a result set's metadata, and a function to convert
   SQL entity names to Clojure column names,
