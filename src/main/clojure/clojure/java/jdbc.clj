@@ -855,7 +855,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
 
 (defn db-do-commands
   "Executes SQL commands on the specified database connection. Wraps the commands
-  in a transaction if transaction? is true. transaction? can be ommitted and it
+  in a transaction if transaction? is true. transaction? can be omitted and it
   defaults to true. Accepts a single SQL command (string) or a vector of them.
   Uses executeBatch. This may affect what SQL you can run via db-do-commands."
   ([db sql-commands]
@@ -907,7 +907,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
 (defn db-do-prepared-return-keys
   "Executes an (optionally parameterized) SQL prepared statement on the
   open database connection. The param-group is a seq of values for all of
-  the parameters. transaction? can be ommitted and will default to true.
+  the parameters. transaction? can be omitted and will default to true.
   Return the generated keys for the (single) update/insert.
   A PreparedStatement may be passed in, instead of a SQL string, in which
   case :return-keys MUST BE SET on that PreparedStatement!"
