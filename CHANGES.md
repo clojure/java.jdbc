@@ -1,9 +1,10 @@
-Changes coming in 0.7.4
+Changes in 0.7.4
 
 * Improved discoverability of other `java.jdbc` documentation [JDBC-160](https://dev.clojure.org/jira/browse/JDBC-160).
 * Optional specs updated with `:keywordize?` and `:connection-uri` changes from 0.7.2 and 0.7.3 releases.
 * Performance improvements, primarily in `query` and `reducible-query`.
 * Experimental `:raw?` result set handling in `reducible-query`.
+* `modify-connection` is more robust in the face of `null` connections and bad option values.
 
 Changes in 0.7.3
 

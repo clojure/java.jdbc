@@ -24,7 +24,7 @@ Support
 Releases and Dependency Information
 ========================================
 
-Latest stable release: 0.7.3 -- requires Clojure 1.7 or later!
+Latest stable release: 0.7.4 -- requires Clojure 1.7 or later!
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22java.jdbc%22)
 
@@ -32,14 +32,14 @@ Latest stable release: 0.7.3 -- requires Clojure 1.7 or later!
 
 [Leiningen](https://github.com/technomancy/leiningen) dependency information:
 ```clojure
-[org.clojure/java.jdbc "0.7.3"]
+[org.clojure/java.jdbc "0.7.4"]
 ```
 [Maven](http://maven.apache.org/) dependency information:
 ```xml
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>java.jdbc</artifactId>
-  <version>0.7.3</version>
+  <version>0.7.4</version>
 </dependency>
 ```
 _Note: Earlier versions of Clojure are supported by older versions of `clojure.java.jdbc`: e.g., version 0.6.1 supports Clojure 1.4 and later._
@@ -135,6 +135,13 @@ Developer Information
 
 Change Log
 ====================
+
+* Release 0.7.4 on 2017-12-14
+  * Improved discoverability of other `java.jdbc` documentation [JDBC-160](https://dev.clojure.org/jira/browse/JDBC-160).
+  * Optional specs updated with `:keywordize?` and `:connection-uri` changes from 0.7.2 and 0.7.3 releases.
+  * Performance improvements, primarily in `query` and `reducible-query`.
+  * Experimental `:raw?` result set handling in `reducible-query`.
+  * `modify-connection` is more robust in the face of `null` connections and bad option values.
 
 * Release 0.7.3 on 2017-10-05
   * Added `:keywordize?` option alongside `:identifiers` that defaults to `true` but can be set to `false` to opt-out of converting identifiers to keywords (so column names etc will only be processed by the function passed as `:identifiers`) [JDBC-159](https://dev.clojure.org/jira/browse/JDBC-159).

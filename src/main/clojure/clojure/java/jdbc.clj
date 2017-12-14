@@ -217,10 +217,10 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
   as specified by the options."
   ^java.sql.Connection
   [^java.sql.Connection connection opts]
-  (when (contains? opts :auto-commit?)
-    (.setAutoCommit connection (:auto-commit? opts)))
-  (when (contains? opts :read-only?)
-    (.setReadOnly connection (:read-only? opts)))
+  (when (and connection (contains? opts :auto-commit?))
+    (.setAutoCommit connection (boolean (:auto-commit? opts))))
+  (when (and connection (contains? opts :read-only?))
+    (.setReadOnly connection (boolean (:read-only? opts))))
   connection)
 
 (defn get-connection
@@ -771,7 +771,8 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
                   (try
                     (.setReadOnly con old-readonly)
                     (catch Exception _)))))))
-         (with-open [con (get-connection db opts)]
+         ;; avoid confusion of read-only? TX and read-only? connection:
+         (with-open [con (get-connection db (dissoc opts :read-only?))]
            (db-transaction* (add-connection db con) func opts)))
        (do
          (when (and isolation
