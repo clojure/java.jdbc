@@ -1,3 +1,7 @@
+Changes in 0.7.5
+
+* Add support for `:return-keys` in `execute!` and `:multi?` in `db-do-prepared-return-keys` [JDBC-163](https://dev.clojure.org/jira/browse/JDBC-163).
+
 Changes in 0.7.4
 
 * Improved discoverability of other `java.jdbc` documentation [JDBC-160](https://dev.clojure.org/jira/browse/JDBC-160).

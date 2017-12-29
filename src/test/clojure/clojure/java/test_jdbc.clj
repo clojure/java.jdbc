@@ -1,9 +1,9 @@
-;;  Copyright (c) Stephen C. Gilardi. All rights reserved.  The use and
-;;  distribution terms for this software are covered by the Eclipse Public
-;;  License 1.0 (http://opensource.org/licenses/eclipse-1.0.php) which can
-;;  be found in the file epl-v10.html at the root of this distribution.  By
+;;  Copyright (c) Stephen C. Gilardi, Sean Corfield. All rights reserved.
+;;  The use and distribution terms for this software are covered by the Eclipse
+;;  Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php) which
+;;  can be found in the file epl-v10.html at the root of this distribution. By
 ;;  using this software in any fashion, you are agreeing to be bound by the
-;;  terms of this license.  You must not remove this notice, or any other,
+;;  terms of this license. You must not remove this notice, or any other,
 ;;  from this software.
 ;;
 ;;  test_jdbc.clj
@@ -382,7 +382,7 @@
 (deftest test-do-prepared1e
   (doseq [db (test-specs)]
     ;; Derby/SQL Server does not have auto-generated id column which we're testing here
-    (when-not (#{"derby" "jtds:sqlserver"} (or (:subprotocol db) (:dbtype db)))
+    (when-not (#{"derby" "jtds" "jtds:sqlserver"} (or (:subprotocol db) (:dbtype db)))
       (create-test-table :fruit db)
       (with-open [con (sql/get-connection db)]
         (let [stmt (sql/prepare-statement con "INSERT INTO fruit ( name, appearance, cost, grade ) VALUES ( 'test', 'test', 1, 1.0 )"
@@ -892,6 +892,57 @@
   (doseq [db (test-specs)]
     (create-test-table :fruit db)
     (is (= [] (sql/query db "SELECT * FROM fruit")))))
+
+(deftest insert-one-via-execute
+  (doseq [db (test-specs)]
+    (create-test-table :fruit db)
+    (let [new-key ((select-key db)
+                   (sql/execute! db [(str "INSERT INTO fruit ( name )"
+                                          " VALUES ( ? )")
+                                     "Apple"]
+                                 {:return-keys true}))]
+      (is (= (returned-key db 1) new-key)))))
+
+(deftest insert-two-via-execute
+   (doseq [db (test-specs)]
+     (create-test-table :fruit db)
+     (let [execute-multi-insert
+           (fn [db]
+             (sql/execute! db [(str "INSERT INTO fruit ( name )"
+                                    " VALUES ( ? )")
+                               ["Apple"]
+                               ["Orange"]]
+                           {:return-keys true
+                            :multi? true}))
+           new-keys (map (select-key db)
+                         (if (#{"jtds" "jtds:sqlserver"}
+                               (or (:subprotocol db) (:dbtype db)))
+                           (do
+                             (is (thrown? java.sql.BatchUpdateException
+                                          (execute-multi-insert db)))
+                             [])
+                           (execute-multi-insert db)))]
+       (case (or (:subprotocol db) (:dbtype db))
+         ;; SQLite only returns the last key inserted in a batch
+         "sqlite" (is (= [(returned-key db 2)] new-keys))
+         ;; Derby returns a single row count
+         "derby"  (is (= [(returned-key db 1)] new-keys))
+         ;; H2 returns nothing useful
+         "h2"     (is (= [] new-keys))
+         ;; HSQL returns nothing useful
+         "hsql"   (is (= [] new-keys))
+         ;; MS SQL returns row counts
+         "mssql"  (is (= [1 1] new-keys))
+         ;; jTDS disallows batch updates returning keys (handled above)
+         ("jtds" "jtds:sqlserver")
+         (is (= [] new-keys))
+         ;; otherwise expect two rows with the correct keys
+         (do
+           (when-not (= [(returned-key db 1) (returned-key db 2)] new-keys)
+             (println "FAIL FOR" db))
+           (is (= [(returned-key db 1)
+                   (returned-key db 2)]
+                  new-keys)))))))
 
 (deftest insert-one-row
   (doseq [db (test-specs)]

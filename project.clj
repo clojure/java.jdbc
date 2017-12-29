@@ -2,7 +2,7 @@
 ;; develop and test java.jdbc locally. The pom.xml file is the
 ;; "system of record" as far as the project version is concerned.
 
-(defproject org.clojure/java.jdbc "0.7.5-SNAPSHOT"
+(defproject org.clojure/java.jdbc "0.7.6-SNAPSHOT"
   :description "A low-level Clojure wrapper for JDBC-based access to databases."
   :parent [org.clojure/pom.contrib "0.1.2"]
   :url "https://github.com/clojure/java.jdbc"
@@ -10,7 +10,7 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :source-paths ["src/main/clojure"]
   :test-paths ["src/test/clojure"]
-  :dependencies [[org.clojure/clojure "1.9.0-beta2"]
+  :dependencies [[org.clojure/clojure "1.9.0"]
                  ;; These are just the versions most recently test against
                  ;; for your own projects, use whatever version is most
                  ;; appropriate for you. Again, note that this project.clj
@@ -32,16 +32,17 @@
 
   :profiles {:1.7 {:dependencies [[org.clojure/clojure "1.7.0"]]}
              :1.8 {:dependencies [[org.clojure/clojure "1.8.0"]]}
-             :1.9 {:dependencies [[org.clojure/clojure "1.9.0-master-SNAPSHOT"]]}
+             :master {:dependencies [[org.clojure/clojure "1.10.0-master-SNAPSHOT"]]}
              :dev {:dependencies [[org.clojure/test.check "0.9.0"]
                                   [criterium "0.4.4"]]}
              :perf {:test-paths ["src/perf/clojure"]
                     :jvm-opts ^:replace ["-server"
                                          "-Xmx4096m"
                                          "-Dclojure.compiler.direct-linking=true"]}}
-  :repositories {"sonatype-oss-public" "https://oss.sonatype.org/content/groups/public/"
-                 "ws-archiva" "https://d259tvauhnips9.cloudfront.net/archiva/repository/internal/"}
-  ;; include dev profile with 1.9 to pull in test.check
-  :aliases {"test-all" ["with-profile" "test,1.7:test,1.8:dev,test,1.9" "test"]
+  :repositories {"sonatype-oss-public" "https://oss.sonatype.org/content/groups/public/"}
+  ;; include dev profile with 1.9+ to pull in test.check
+  :aliases {"test-all" ["with-profile"
+                        "dev,test,master:dev,test:test,1.8:test,1.7"
+                        "test"]
             "perf" ["with-profile" "default,dev,perf"]}
   :min-lein-version "2.0.0")

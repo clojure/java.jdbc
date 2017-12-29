@@ -24,7 +24,7 @@ Support
 Releases and Dependency Information
 ========================================
 
-Latest stable release: 0.7.4 -- requires Clojure 1.7 or later!
+Latest stable release: 0.7.5 -- requires Clojure 1.7 or later!
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22java.jdbc%22)
 
@@ -32,14 +32,14 @@ Latest stable release: 0.7.4 -- requires Clojure 1.7 or later!
 
 [Leiningen](https://github.com/technomancy/leiningen) dependency information:
 ```clojure
-[org.clojure/java.jdbc "0.7.4"]
+[org.clojure/java.jdbc "0.7.5"]
 ```
 [Maven](http://maven.apache.org/) dependency information:
 ```xml
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>java.jdbc</artifactId>
-  <version>0.7.4</version>
+  <version>0.7.5</version>
 </dependency>
 ```
 _Note: Earlier versions of Clojure are supported by older versions of `clojure.java.jdbc`: e.g., version 0.6.1 supports Clojure 1.4 and later._
@@ -135,6 +135,9 @@ Developer Information
 
 Change Log
 ====================
+
+* Release 0.7.5 on 2017-12-29
+  * Add support for `:return-keys` in `execute!` and `:multi?` in `db-do-prepared-return-keys` [JDBC-163](https://dev.clojure.org/jira/browse/JDBC-163).
 
 * Release 0.7.4 on 2017-12-14
   * Improved discoverability of other `java.jdbc` documentation [JDBC-160](https://dev.clojure.org/jira/browse/JDBC-160).

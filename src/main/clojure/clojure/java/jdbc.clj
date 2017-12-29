@@ -877,15 +877,24 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
 
 (defn- db-do-execute-prepared-return-keys
   "Executes a PreparedStatement, optionally in a transaction, and (attempts to)
-  return any generated keys."
+  return any generated keys.
+
+  Supports :multi? which causes a full result set sequence of keys to be
+  returned, and assumes the param-group is a sequence of parameter lists,
+  rather than a single sequence of parameters."
   [db ^PreparedStatement stmt param-group opts]
-  (let [{:keys [transaction?] :as opts} (merge (when (map? db) db) opts)
+  (let [{:keys [transaction? multi?] :as opts} (merge (when (map? db) db) opts)
         exec-and-return-keys
         (^{:once true} fn* []
-         (let [counts (.executeUpdate stmt)]
+         (let [counts (if multi?
+                        (.executeBatch stmt)
+                        (.executeUpdate stmt))]
            (try
              (let [rs (.getGeneratedKeys stmt)
-                   result (first (result-set-seq rs opts))]
+                   rss (result-set-seq rs opts)
+                   result (if multi?
+                            (doall rss)
+                            (first rss))]
                ;; sqlite (and maybe others?) requires
                ;; record set to be closed
                (.close rs)
@@ -893,7 +902,11 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
              (catch Exception _
                ;; assume generated keys is unsupported and return counts instead:
                counts))))]
-    ((:set-parameters opts dft-set-parameters) stmt param-group)
+    (if multi?
+      (doseq [params param-group]
+        ((:set-parameters opts dft-set-parameters) stmt params)
+        (.addBatch stmt))
+      ((:set-parameters opts dft-set-parameters) stmt param-group))
     (if transaction?
       (with-db-transaction [t-db (add-connection db (.getConnection stmt))]
         (exec-and-return-keys))
@@ -1324,20 +1337,31 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
 (defn execute!
   "Given a database connection and a vector containing SQL (or PreparedStatement)
   followed by optional parameters, perform a general (non-select) SQL operation.
+
   The :transaction? option specifies whether to run the operation in a
   transaction or not (default true).
+
   If the :multi? option is false (the default), the SQL statement should be
   followed by the parameters for that statement.
+
   If the :multi? option is true, the SQL statement should be followed by one or
   more vectors of parameters, one for each application of the SQL statement.
+
+  If :return-keys is provided, db-do-prepared-return-keys will be called
+  instead of db-do-prepared, and the result will be a sequence of maps
+  containing the generated keys.
+
   If there are no parameters specified, executeUpdate will be used, otherwise
   executeBatch will be used. This may affect what SQL you can run via execute!"
   ([db sql-params] (execute! db sql-params {}))
   ([db sql-params opts]
-   (let [{:keys [transaction?] :as opts}
+   (let [{:keys [transaction? return-keys] :as opts}
          (merge {:transaction? true :multi? false} (when (map? db) db) opts)
+         db-do-helper (if return-keys
+                        db-do-prepared-return-keys
+                        db-do-prepared)
          execute-helper (^{:once true} fn* [db]
-                         (db-do-prepared db transaction? sql-params opts))]
+                         (db-do-helper db transaction? sql-params opts))]
      (if-let [con (db-find-connection db)]
        (execute-helper db)
        (with-open [con (get-connection db opts)]

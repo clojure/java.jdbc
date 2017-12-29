@@ -161,7 +161,8 @@
 
 (s/def ::exec-sql-options (s/keys :req-un [] :opt-un [::entities ::transaction?]))
 
-(s/def ::execute-options (s/keys :req-un [] :opt-un [::transaction? ::multi?]))
+(s/def ::execute-options (s/keys :req-un [] :opt-un [::transaction? ::multi?
+                                                     ::return-keys]))
 
 (s/def ::find-by-keys-options (s/keys :req-un []
                                       :opt-un [::entities ::order-by
@@ -358,7 +359,8 @@
         :args (s/cat :db         ::db-spec
                      :sql-params ::sql-params
                      :opts       (s/? ::execute-options))
-        :ret  ::execute-result)
+        :ret  (s/or :rows ::execute-result
+                    :keys (s/coll-of map?)))
 
 (s/fdef sql/delete!
         :args (s/cat :db           ::db-spec
