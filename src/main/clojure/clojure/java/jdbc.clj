@@ -1302,7 +1302,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
   "Given a database connection, a table name, a map of column name/value
   pairs, and an optional options map, return any matching rows.
   An :order-by option may be supplied to sort the rows by a sequence of
-  columns, e.g,. {:order-by [:name {:age :desc]}"
+  columns, e.g,. {:order-by [:name [:age :desc]}"
   ([db table columns] (find-by-keys db table columns {}))
   ([db table columns opts]
    (let [{:keys [entities order-by] :as opts}
