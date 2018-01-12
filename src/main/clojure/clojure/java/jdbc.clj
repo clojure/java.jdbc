@@ -1301,8 +1301,21 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
 (defn find-by-keys
   "Given a database connection, a table name, a map of column name/value
   pairs, and an optional options map, return any matching rows.
-  An :order-by option may be supplied to sort the rows by a sequence of
-  columns, e.g,. {:order-by [:name {:age :desc]}"
+
+  An :order-by option may be supplied to sort the rows, e.g.,
+
+      {:order-by [{:name :asc} {:age :desc} {:income :asc}]}
+      ;; equivalent to:
+      {:order-by [:name {:age :desc} :income]}
+
+  The :order-by value is a sequence of column names (to sort in ascending
+  order) and/or maps from column names to directions (:asc or :desc). The
+  directions may be strings or keywords and are not case-sensitive. They
+  are mapped to ASC or DESC in the generated SQL.
+
+  Note: if a ordering map has more than one key, the order of the columns
+  in the generated SQL ORDER BY clause is unspecified (so such maps should
+  only contain one key/value pair)."
   ([db table columns] (find-by-keys db table columns {}))
   ([db table columns opts]
    (let [{:keys [entities order-by] :as opts}
