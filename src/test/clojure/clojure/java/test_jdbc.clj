@@ -25,6 +25,7 @@
             [clojure.java.jdbc :as sql]
             [clojure.string :as str]))
 
+(println "\nTesting with Clojure" (clojure-version))
 (def with-spec? (try
                   (require 'clojure.java.jdbc.spec)
                   (require 'clojure.spec.test.alpha)
@@ -42,7 +43,7 @@
 ;; Apache Derby and HSQLDB can run without an external setup.
 (def test-databases
   (if-let [dbs (System/getenv "TEST_DBS")]
-    (map keyword (.split dbs ","))
+    (map keyword (.split dbs " "))
     ;; enable more by default once the build server is equipped?
     [:derby :hsqldb :h2 :sqlite]))
 

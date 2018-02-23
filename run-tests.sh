@@ -32,18 +32,14 @@
 #
 # TEST_JTDS_HOST TEST_JTDS_PORT TEST_JTDS_NAME TEST_JTDS_USER TEST_JTDS_PASS
 #
+# For jtds you can just specify the IP address or hostname, you do not need
+# the \\SQLEXPRESS part.
+#
 # Note: if you specify both mssql and jtds, make sure they're pointing at
 # different database names or the tests will fail!
 #
 # Default set of databases to test:
-dbs=sqlite,derby,hsqldb,h2
-# Can also specify: mssql,jtds,postgres,pgsql
-#
-while test "x$1" != "x"
-do
-    dbs=${dbs},$1
-    shift
-done
+dbs="derby h2 hsqldb sqlite"
 
 # Start with clean databases each time to avoid slowdown
 rm -rf clojure_test_*
@@ -51,6 +47,5 @@ rm -rf clojure_test_*
 versions="1.7 1.8 1.9 master"
 for v in $versions
 do
-  echo "\nRunning tests for Clojure $v"
-  TEST_DBS=$dbs time clj -A:test -A:$v -A:runner
+  TEST_DBS="$dbs $*" time clj -A:test -A:$v -A:runner
 done

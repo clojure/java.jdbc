@@ -131,7 +131,7 @@ Developer Information
 
 * Then run the tests with the <tt>TEST_DBS</tt> environment variable:
 
-        $ TEST_DBS=mysql,postgres mvn test
+        $ TEST_DBS="mysql postgres" mvn test
 
 * Also see the `run-tests.sh` shell script which uses the `clj` CLI and `deps.edn` for multi-version testing!
 
