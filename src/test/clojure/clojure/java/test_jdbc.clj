@@ -146,41 +146,63 @@
 ;; necessary for it to do its job, and populate it as needed...
 
 (defn- derby? [db]
-  (if (string? db)
-    (re-find #"derby:" db)
-    (= "derby" (or (:subprotocol db) (:dbtype db)))))
+  (cond (string? db)
+        (re-find #"derby:" db)
+        (:connection-uri db)
+        (re-find #"derby:" (:connection-uri db))
+        :else
+        (= "derby" (or (:subprotocol db) (:dbtype db)))))
 
 (defn- hsqldb? [db]
-  (if (string? db)
-    (re-find #"hsqldb:" db)
-    (#{"hsql" "hsqldb"} (or (:subprotocol db) (:dbtype db)))))
+  (cond (string? db)
+        (re-find #"hsqldb:" db)
+        (:connection-uri db)
+        (re-find #"hsqldb:" (:connection-uri db))
+        :else
+        (#{"hsql" "hsqldb"} (or (:subprotocol db) (:dbtype db)))))
 
 (defn- mssql? [db]
-  (if (string? db)
-    (re-find #"sqlserver" db)
-    (#{"jtds" "jtds:sqlserver" "mssql" "sqlserver"}
-     (or (:subprotocol db) (:dbtype db)))))
+  (cond (string? db)
+        (re-find #"sqlserver" db)
+        (:connection-uri db)
+        (re-find #"sqlserver" (:connection-uri db))
+        :else
+        (#{"jtds" "jtds:sqlserver" "mssql" "sqlserver"}
+          (or (:subprotocol db) (:dbtype db)))))
 
 (defn- mysql? [db]
-  (if (string? db)
-    (re-find #"mysql:" db)
-    (= "mysql" (or (:subprotocol db) (:dbtype db)))))
+  (cond (string? db)
+        (re-find #"mysql:" db)
+        (:connection-uri db)
+        (re-find #"mysql:" (:connection-uri db))
+        :else
+        (= "mysql" (or (:subprotocol db) (:dbtype db)))))
 
 (defn- postgres? [db]
-  (if (string? db)
-    (or (re-find #"postgres" db) (re-find #"pgsql"))
-    (or (re-find #"postgres" (or (:subprotocol db) (:dbtype db)))
-        (re-find #"pgsql" (or (:subprotocol db) (:dbtype db))))))
+  (cond (string? db)
+        (or (re-find #"postgres" db) (re-find #"pgsql" db))
+        (:connection-uri db)
+        (or (re-find #"postgres" (:connection-uri db))
+            (re-find #"pgsql" (:connection-uri db)))
+        :else
+        (or (re-find #"postgres" (or (:subprotocol db) (:dbtype db)))
+            (re-find #"pgsql" (or (:subprotocol db) (:dbtype db))))))
 
 (defn- pgsql? [db]
-  (if (string? db)
-    (re-find #"pgsql")
-    (re-find #"pgsql" (or (:subprotocol db) (:dbtype db)))))
+  (cond (string? db)
+        (re-find #"pgsql" db)
+        (:connection-uri db)
+        (re-find #"pgsql" (:connection-uri db))
+        :else
+        (re-find #"pgsql" (or (:subprotocol db) (:dbtype db)))))
 
 (defn- sqlite? [db]
-  (if (string? db)
-    (re-find #"sqlite:" db)
-    (= "sqlite" (or (:subprotocol db) (:dbtype db)))))
+  (cond (string? db)
+        (re-find #"sqlite:" db)
+        (:connection-uri db)
+        (re-find #"sqlite:" (:connection-uri db))
+        :else
+        (= "sqlite" (or (:subprotocol db) (:dbtype db)))))
 
 (defmulti create-test-table
   "Create a standard test table. Uses db-do-commands.
@@ -980,8 +1002,9 @@
              (sql/query db ["SELECT * FROM fruit"])))
       (is (= [{:ID (generated-key db 1) :NAME "Apple" :APPEARANCE nil :GRADE nil :COST nil}]
              (sql/query db ["SELECT * FROM fruit"] {:identifiers str/upper-case})))
-      (is (= [{:ID (generated-key db 1) :NAME "Apple" :APPEARANCE nil :GRADE nil :COST nil}]
-             (sql/query (assoc db :identifiers str/upper-case) ["SELECT * FROM fruit"])))
+      (when (map? db)
+        (is (= [{:ID (generated-key db 1) :NAME "Apple" :APPEARANCE nil :GRADE nil :COST nil}]
+               (sql/query (assoc db :identifiers str/upper-case) ["SELECT * FROM fruit"]))))
       (is (= [{:fruit/id (generated-key db 1) :fruit/name "Apple" :fruit/appearance nil
                :fruit/grade nil :fruit/cost nil}]
              (sql/query db ["SELECT * FROM fruit"] {:qualifier "fruit"})))
@@ -991,9 +1014,10 @@
       (is (= [{:name "Apple"}]
              (sql/query db ["SELECT name FROM fruit"]
                         {:identifiers (comp keyword str/lower-case)})))
-      (is (= [{:fruit/id (generated-key db 1) :fruit/name "Apple" :fruit/appearance nil
-               :fruit/grade nil :fruit/cost nil}]
-             (sql/query (assoc db :qualifier "fruit") ["SELECT * FROM fruit"])))
+      (when (map? db)
+        (is (= [{:fruit/id (generated-key db 1) :fruit/name "Apple" :fruit/appearance nil
+                 :fruit/grade nil :fruit/cost nil}]
+               (sql/query (assoc db :qualifier "fruit") ["SELECT * FROM fruit"]))))
       (is (= [{:id (generated-key db 1) :name "Apple" :appearance nil :grade nil :cost nil}]
              (with-open [con (sql/get-connection db)]
                (sql/query db [(sql/prepare-statement con "SELECT * FROM fruit")]))))
