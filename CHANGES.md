@@ -1,3 +1,7 @@
+Changes coming in 0.7.6
+
+* Switched local test infrastructure over to CLI and `deps.edn` (from Leiningen) as an example of multi-version testing without a "build tool".
+
 Changes in 0.7.5
 
 * Add support for `:return-keys` in `execute!` and `:multi?` in `db-do-prepared-return-keys` [JDBC-163](https://dev.clojure.org/jira/browse/JDBC-163).
