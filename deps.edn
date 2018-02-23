@@ -1,4 +1,4 @@
-;; You can run clojure.java.jdbc tests with: clj -A:test -A:runner
+;; You can run clojure.java.jdbc tests with: clj -A:test:runner
 ;; You can also specify an alias to select which version of Clojure to test
 ;; against: :1.7 :1.8 :1.9 :master
 

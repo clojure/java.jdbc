@@ -12,7 +12,7 @@
 
   Here's how to run these tests:
 
-  $ clj -A:test -A:perf
+  $ clj -A:test:perf
   Clojure 1.9.0
   user=> (p/calibrate)
   ...
