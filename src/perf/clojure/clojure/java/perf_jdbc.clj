@@ -10,9 +10,20 @@
 (ns clojure.java.perf-jdbc
   "Performance tests for parts of clojure.java.jdbc.
 
-  Start a REPL with `lein perf repl`
-  Require this namespace and then run `(calibrate)`
-  followed by `(test-dummy)` and `(test-h2)`
+  Here's how to run these tests:
+
+  $ clj -A:test -A:perf
+  Clojure 1.9.0
+  user=> (p/calibrate)
+  ...
+  nil
+  user=> (p/test-dummy)
+  ...
+  nil
+  user=> (p/test-h2)
+  ...
+  nil
+  user=>
 
   These test compare the raw performance (against an in-memory H2 database)
   for hand-crafted Java JDBC calls and various `query` and `reducible-query`

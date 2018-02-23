@@ -1,5 +1,6 @@
 *.jar
 .classpath
+.cpcache
 .project
 .settings
 /.lein-failures

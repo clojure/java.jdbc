@@ -133,6 +133,8 @@ Developer Information
 
         $ TEST_DBS=mysql,postgres mvn test
 
+* Also see the `run-tests.sh` shell script which uses the `clj` CLI and `deps.edn` for multi-version testing!
+
 Change Log
 ====================
 
