@@ -50,6 +50,8 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
            (java.util Hashtable Map Properties)
            (javax.sql DataSource)))
 
+(set! *warn-on-reflection* true)
+
 (defn as-sql-name
   "Given a naming strategy function and a keyword or string, return
    a string per that naming strategy.

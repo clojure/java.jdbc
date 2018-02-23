@@ -17,6 +17,8 @@
   (:require [clojure.spec.alpha :as s]
             [clojure.java.jdbc :as sql]))
 
+(set! *warn-on-reflection* true)
+
 ;; basic java.sql types -- cannot be generated!
 
 (s/def ::connection #(instance? java.sql.Connection %))
