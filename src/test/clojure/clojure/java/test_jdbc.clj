@@ -145,64 +145,34 @@
 ;; We start with all tables dropped and each test has to create the tables
 ;; necessary for it to do its job, and populate it as needed...
 
+(defn- string->type [db]
+  (last (re-find #"^(jdbc:)?([^:]+):" db)))
+
+(defn- db-type [db]
+  (or (:subprotocol db) (:dbtype db)
+      (and (string? db) (string->type db))
+      (and (:connection-uri db) (string->type (:connection-uri db)))))
+
 (defn- derby? [db]
-  (cond (string? db)
-        (re-find #"derby:" db)
-        (:connection-uri db)
-        (re-find #"derby:" (:connection-uri db))
-        :else
-        (= "derby" (or (:subprotocol db) (:dbtype db)))))
+  (= "derby" (db-type db)))
 
 (defn- hsqldb? [db]
-  (cond (string? db)
-        (re-find #"hsqldb:" db)
-        (:connection-uri db)
-        (re-find #"hsqldb:" (:connection-uri db))
-        :else
-        (#{"hsql" "hsqldb"} (or (:subprotocol db) (:dbtype db)))))
+  (#{"hsql" "hsqldb"} (db-type db)))
 
 (defn- mssql? [db]
-  (cond (string? db)
-        (re-find #"sqlserver" db)
-        (:connection-uri db)
-        (re-find #"sqlserver" (:connection-uri db))
-        :else
-        (#{"jtds" "jtds:sqlserver" "mssql" "sqlserver"}
-          (or (:subprotocol db) (:dbtype db)))))
+  (#{"jtds" "jtds:sqlserver" "mssql" "sqlserver"} (db-type db)))
 
 (defn- mysql? [db]
-  (cond (string? db)
-        (re-find #"mysql:" db)
-        (:connection-uri db)
-        (re-find #"mysql:" (:connection-uri db))
-        :else
-        (= "mysql" (or (:subprotocol db) (:dbtype db)))))
+  (= "mysql" (db-type db)))
 
 (defn- postgres? [db]
-  (cond (string? db)
-        (or (re-find #"postgres" db) (re-find #"pgsql" db))
-        (:connection-uri db)
-        (or (re-find #"postgres" (:connection-uri db))
-            (re-find #"pgsql" (:connection-uri db)))
-        :else
-        (or (re-find #"postgres" (or (:subprotocol db) (:dbtype db)))
-            (re-find #"pgsql" (or (:subprotocol db) (:dbtype db))))))
+  (#{"postgres" "pgsql"} (db-type db)))
 
 (defn- pgsql? [db]
-  (cond (string? db)
-        (re-find #"pgsql" db)
-        (:connection-uri db)
-        (re-find #"pgsql" (:connection-uri db))
-        :else
-        (re-find #"pgsql" (or (:subprotocol db) (:dbtype db)))))
+  (= "pgsql" (db-type db)))
 
 (defn- sqlite? [db]
-  (cond (string? db)
-        (re-find #"sqlite:" db)
-        (:connection-uri db)
-        (re-find #"sqlite:" (:connection-uri db))
-        :else
-        (= "sqlite" (or (:subprotocol db) (:dbtype db)))))
+  (= "sqlite" (db-type db)))
 
 (defmulti create-test-table
   "Create a standard test table. Uses db-do-commands.
@@ -267,7 +237,7 @@
            "mysql://clojure_test:clojure_test@localhost:3306/clojure_test")))))
 
 (defn- returned-key [db k]
-  (case (or (:subprotocol db) (:dbtype db))
+  (case (db-type db)
     "derby"  {(keyword "1") nil}
     ("hsql" "hsqldb") nil
     "h2"     nil
@@ -281,12 +251,12 @@
     k))
 
 (defn- select-key [db]
-  (case (or (:subprotocol db) (:dbtype db))
+  (case (db-type db)
     ("postgres" "postgresql" "pgsql") :id
     identity))
 
 (defn- generated-key [db k]
-  (case (or (:subprotocol db) (:dbtype db))
+  (case (db-type db)
     "derby" 0
     ("hsql" "hsqldb") 0
     "h2" 0
@@ -296,7 +266,7 @@
     k))
 
 (defn- float-or-double [db v]
-  (case (or (:subprotocol db) (:dbtype db))
+  (case (db-type db)
     "derby" (Float. v)
     "h2" (Float. v)
     ("jtds" "jtds:sqlserver") (Float. v)
@@ -405,7 +375,7 @@
 (deftest test-do-prepared1e
   (doseq [db (test-specs)]
     ;; Derby/SQL Server does not have auto-generated id column which we're testing here
-    (when-not (#{"derby" "jtds" "jtds:sqlserver"} (or (:subprotocol db) (:dbtype db)))
+    (when-not (#{"derby" "jtds" "jtds:sqlserver"} (db-type db))
       (create-test-table :fruit db)
       (with-open [con (sql/get-connection db)]
         (let [stmt (sql/prepare-statement con "INSERT INTO fruit ( name, appearance, cost, grade ) VALUES ( 'test', 'test', 1, 1.0 )"
@@ -578,7 +548,7 @@
 (deftest execute-with-prepared-statement-return-keys
   (doseq [db (test-specs)]
     ;; Derby/SQL Server does not have auto-generated id column which we're testing here
-    (when-not (#{"derby" "jtds" "jtds:sqlserver"} (or (:subprotocol db) (:dbtype db)))
+    (when-not (#{"derby" "jtds" "jtds:sqlserver"} (db-type db))
       (create-test-table :fruit db)
       (sql/with-db-connection [conn db]
         (let [connection (:connection conn)
@@ -938,14 +908,13 @@
                            {:return-keys true
                             :multi? true}))
            new-keys (map (select-key db)
-                         (if (#{"jtds" "jtds:sqlserver"}
-                               (or (:subprotocol db) (:dbtype db)))
+                         (if (#{"jtds" "jtds:sqlserver"} (db-type db))
                            (do
                              (is (thrown? java.sql.BatchUpdateException
                                           (execute-multi-insert db)))
                              [])
                            (execute-multi-insert db)))]
-       (case (or (:subprotocol db) (:dbtype db))
+       (case (db-type db)
          ;; SQLite only returns the last key inserted in a batch
          "sqlite" (is (= [(returned-key db 2)] new-keys))
          ;; Derby returns a single row count
