@@ -26,6 +26,7 @@
 (s/def ::prepared-statement #(instance? java.sql.PreparedStatement %))
 (s/def ::result-set #(instance? java.sql.ResultSet %))
 (s/def ::result-set-metadata #(instance? java.sql.ResultSetMetaData %))
+(s/def ::uri #(instance? java.net.URI %))
 
 ;; database specification (connection description)
 
@@ -73,6 +74,7 @@
 (s/def ::db-spec-jndi (s/keys :req-un [::name]
                               :opt-un [::environment]))
 (s/def ::db-spec-string string?)
+(s/def ::db-spec-uri ::uri)
 (s/def ::db-spec (s/or :connection ::db-spec-connection
                        :friendly   ::db-spec-friendly
                        :raw        ::db-spec-raw
@@ -80,7 +82,8 @@
                        :factory    ::db-spec-factory
                        :datasource ::db-spec-data-source
                        :jndi       ::db-spec-jndi
-                       :uri        ::db-spec-string))
+                       :uri-str    ::db-spec-string
+                       :uri-obj    ::db-spec-uri))
 
 ;; naming
 
