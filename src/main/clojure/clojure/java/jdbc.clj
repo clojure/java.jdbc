@@ -137,7 +137,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
 
 (extend-protocol Connectable
   String
-  (add-connection [s connection] {:connection connection :level 0 :connection-string s})
+  (add-connection [s connection] {:connection connection :level 0 :connection-uri s})
   (get-level [_] 0)
 
   clojure.lang.Associative
