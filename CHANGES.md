@@ -1,5 +1,9 @@
 Changes coming in 0.7.6
 
+* Add missing spec for `db-spec` being a `java.net.URI` object.
+* Fix `add-connection` handling of string `db-spec` (becomes `:connection-uri`, not `:connection-string`).
+* Update tests so they work properly with string `db-spec` test databases.
+* Ensure no reflection warnings are present.
 * Switched local test infrastructure over to CLI and `deps.edn` (from Leiningen) as an example of multi-version testing without a "build tool".
 
 Changes in 0.7.5
