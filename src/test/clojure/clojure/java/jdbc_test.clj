@@ -20,7 +20,7 @@
 ;;  seancorfield (gmail)
 ;;  Migrated from clojure.contrib.test-sql 17 April 2011
 
-(ns clojure.java.test-jdbc
+(ns clojure.java.jdbc-test
   (:require [clojure.test :refer :all]
             [clojure.java.jdbc :as sql]
             [clojure.string :as str]))
@@ -125,7 +125,7 @@
   "Return a sequence of db-spec maps that should be used for tests"
   []
   (for [db test-databases]
-    @(ns-resolve 'clojure.java.test-jdbc (symbol (str (name db) "-db")))))
+    @(ns-resolve 'clojure.java.jdbc-test (symbol (str (name db) "-db")))))
 
 (defn- clean-up
   "Attempt to drop any test tables before we start a test."

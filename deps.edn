@@ -31,6 +31,6 @@
            :runner
            {:extra-deps {com.cognitect/test-runner
                          {:git/url "https://github.com/cognitect-labs/test-runner"
-                          :sha "637c14437ba31c92a9168a65b1a787ad8713919c"}}
+                          :sha "5f2b5c2efb444df76fb5252102b33f542ebf7f58"}}
             :main-opts ["-m" "cognitect.test-runner"
                         "-d" "src/test/clojure"]}}}

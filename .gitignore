@@ -6,6 +6,7 @@
 /.lein-failures
 /.lein-repl-history
 /.nrepl-port
+/build.boot
 /clojure_test_*
 bin
 classes

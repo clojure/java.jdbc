@@ -18,7 +18,7 @@
 ;;  seancorfield (gmail)
 ;;  Migrated from clojure.contrib.test-sql 17 April 2011
 
-(ns clojure.java.test-utilities
+(ns clojure.java.jdbc.utilities-test
   (:use clojure.test)
   (:require [clojure.java.jdbc :as sql]))
 
