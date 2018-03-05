@@ -420,7 +420,7 @@
                                 [4 "Orange" "juicy" 139 88.6]])]
       (is (= '(1 1 1 1) r)))
     (is (= 4 (sql/query db ["SELECT * FROM fruit"] {:result-set-fn count})))
-    (is (= 4 (sql/with-db-connection [con db]
+    (is (= 4 (sql/with-db-connection [con db {}]
                (sql/query con (sql/prepare-statement (sql/db-connection con) "SELECT * FROM fruit") {:result-set-fn count}))))
     (when-not (pgsql? db)
       ;; maxRows does not appear to be supported on Impossibl pgsql?
@@ -840,7 +840,7 @@
 (deftest test-metadata-managed
   (doseq [db (test-specs)]
     (create-test-table :fruit db)
-    (sql/with-db-metadata [metadata db]
+    (sql/with-db-metadata [metadata db {}]
       (let [table-info (sql/metadata-query (.getTables metadata
                                                        nil nil nil
                                                        (into-array ["TABLE" "VIEW"])))]

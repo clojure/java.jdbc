@@ -276,15 +276,16 @@
         :args (s/cat :binding ::transaction-binding
                      :body    (s/* any?)))
 
-(s/def ::simple-binding (s/spec (s/cat :con-db  simple-symbol?
-                                       :db-spec any?)))
+(s/def ::connection-binding (s/spec (s/cat :con-db  simple-symbol?
+                                           :db-spec any?
+                                           :opts    (s/? any?))))
 
 (s/fdef sql/with-db-connection
-        :args (s/cat :binding ::simple-binding
+        :args (s/cat :binding ::connection-binding
                      :body    (s/* any?)))
 
 (s/fdef sql/with-db-metadata
-        :args (s/cat :binding ::simple-binding
+        :args (s/cat :binding ::connection-binding
                      :body    (s/* any?)))
 
 (s/fdef sql/metadata-result
