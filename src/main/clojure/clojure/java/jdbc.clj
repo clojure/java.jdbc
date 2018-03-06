@@ -804,7 +804,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
   (with-db-connection [con-db db-spec opts]
     ... con-db ...)"
   [binding & body]
-  `(let [db-spec# ~(second binding) opts# (or ~(second (rest binding)) {})]
+  `(let [db-spec# ~(second binding) opts# ~(or (second (rest binding)) {})]
      (with-open [con# (get-connection db-spec# opts#)]
        (let [~(first binding) (add-connection db-spec# con#)]
          ~@body))))
@@ -816,7 +816,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
    (with-db-metadata [md db-spec opts]
      ... md ...)"
   [binding & body]
-  `(let [db-spec# ~(second binding) opts# (or ~(second (rest binding)) {})]
+  `(let [db-spec# ~(second binding) opts# ~(or (second (rest binding)) {})]
      (with-open [con# (get-connection db-spec# opts#)]
        (let [~(first binding) (.getMetaData con#)]
          ~@body))))
