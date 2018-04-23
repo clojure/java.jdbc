@@ -30,7 +30,7 @@
 
 ;; database specification (connection description)
 
-(s/def ::subprotocol-base  #{"derby" "h2" "hsqldb" "jtds:sqlserver" "mysql"
+(s/def ::subprotocol-base  #{"derby" "h2" "h2:mem" "hsqldb" "jtds:sqlserver" "mysql"
                              "oracle:oci" "oracle:thin" "pgsql" "postgresql"
                              "redshift" "sqlite" "sqlserver"})
 (s/def ::subprotocol-alias #{"hsql" "jtds" "mssql" "oracle" "postgres"})

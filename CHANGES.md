@@ -1,5 +1,6 @@
 Changes coming in 0.7.6
 
+* Add built-in support for H2 in-memory database (`:dbtype "h2:mem"`).
 * Add missing spec for `db-spec` being a `java.net.URI` object.
 * Fix `add-connection` handling of string `db-spec` (becomes `:connection-uri`, not `:connection-string`).
 * Fix specs for `with-db-*` functions, to support options in the binding form [JDBC-165](https://dev.clojure.org/jira/browse/JDBC-165).

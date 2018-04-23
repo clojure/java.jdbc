@@ -77,8 +77,9 @@
 (def hsqldb-db {:dbtype "hsql"
                 :dbname "clojure_test_hsqldb"})
 
-(def h2-db {:dbtype "h2"
-            :dbname "./clojure_test_h2"})
+;; test with new (0.7.6) in-memory H2 database
+(def h2-db {:dbtype "h2:mem"
+            :dbname "clojure_test_h2"})
 
 (def sqlite-db {:dbtype "sqlite"
                 :dbname "clojure_test_sqlite"})
@@ -240,7 +241,7 @@
   (case (db-type db)
     "derby"  {(keyword "1") nil}
     ("hsql" "hsqldb") nil
-    "h2"     nil
+    ("h2" "h2:mem") nil
     "mysql"  {:generated_key k}
     nil      (if (mysql? db) ; string-based tests
                {:generated_key k}
@@ -259,7 +260,7 @@
   (case (db-type db)
     "derby" 0
     ("hsql" "hsqldb") 0
-    "h2" 0
+    ("h2" "h2:mem") 0
     ("jtds" "jtds:sqlserver") 0
     ("mssql" "sqlserver") 0
     "sqlite" 0
@@ -268,7 +269,7 @@
 (defn- float-or-double [db v]
   (case (db-type db)
     "derby" (Float. v)
-    "h2" (Float. v)
+    ("h2" "h2:mem") (Float. v)
     ("jtds" "jtds:sqlserver") (Float. v)
     ("mssql" "sqlserver") (Float. v)
     ("postgres" "postgresql" "pgsql") (Float. v)
@@ -920,7 +921,7 @@
          ;; Derby returns a single row count
          "derby"  (is (= [(returned-key db 1)] new-keys))
          ;; H2 returns nothing useful
-         "h2"     (is (= [] new-keys))
+         ("h2" "h2:mem") (is (= [] new-keys))
          ;; HSQL returns nothing useful
          "hsql"   (is (= [] new-keys))
          ;; MS SQL returns row counts

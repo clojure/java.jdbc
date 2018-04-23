@@ -153,6 +153,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
   The subprotocols map below provides aliases for dbtype."
   {"derby"          "org.apache.derby.jdbc.EmbeddedDriver"
    "h2"             "org.h2.Driver"
+   "h2:mem"         "org.h2.Driver"
    "hsqldb"         "org.hsqldb.jdbcDriver"
    "jtds:sqlserver" "net.sourceforge.jtds.jdbc.Driver"
    "mysql"          "com.mysql.jdbc.Driver"
@@ -335,13 +336,16 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
                                 "sqlserver"      1433
                                 nil))
            db-sep (if (= "sqlserver" subprotocol) ";DATABASENAME=" "/")
-           url (if (#{"derby" "h2" "hsqldb" "sqlite"} subprotocol)
-                 (str "jdbc:" subprotocol ":" dbname)
-                 (str "jdbc:" subprotocol ":"
-                      (host-prefixes subprotocol "//")
-                      host
-                      (when port (str ":" port))
-                      db-sep dbname))
+           url (cond (= "h2:mem" dbtype)
+                     (str "jdbc:" subprotocol ":" dbname ";DB_CLOSE_DELAY=-1")
+                     (#{"derby" "h2" "hsqldb" "sqlite"} subprotocol)
+                     (str "jdbc:" subprotocol ":" dbname)
+                     :else
+                     (str "jdbc:" subprotocol ":"
+                          (host-prefixes subprotocol "//")
+                          host
+                          (when port (str ":" port))
+                          db-sep dbname))
            etc (dissoc db-spec :dbtype :dbname)]
        (if-let [class-name (or classname (classnames subprotocol))]
          (do
