@@ -546,19 +546,39 @@
     (is (= "Pear" (sql/query db ["SELECT * FROM fruit WHERE cost = ?" 99]
                              {:row-fn :name :result-set-fn first})))))
 
-(deftest execute-with-prepared-statement-return-keys
+(deftest execute-with-prepared-statement-with-return-keys
   (doseq [db (test-specs)]
     ;; Derby/SQL Server does not have auto-generated id column which we're testing here
     (when-not (#{"derby" "jtds" "jtds:sqlserver"} (db-type db))
       (create-test-table :fruit db)
       (sql/with-db-connection [conn db]
         (let [connection (:connection conn)
+              ;; although we ask for keys to come back, execute! cannot see into
+              ;; the PreparedStatement so it doesn't know to call things in a
+              ;; different way, so we get affected row counts instead!
               prepared-statement (sql/prepare-statement connection (str "INSERT INTO fruit ( name, appearance, cost ) "
                                                                         "VALUES ( ?, ?, ? )")
                                                         {:return-keys ["id"]})]
           ;; what is returned is affected row counts due to how execute! works
           (is (= [1] (sql/execute! db [prepared-statement "Apple" "Green" 75])))
           (is (= [1] (sql/execute! db [prepared-statement "Pear" "Yellow" 99])))))
+      (is (= 2 (sql/query db ["SELECT * FROM fruit"] {:result-set-fn count})))
+      (is (= "Pear" (sql/query db ["SELECT * FROM fruit WHERE cost = ?" 99]
+                               {:row-fn :name :result-set-fn first}))))))
+
+(deftest execute-with-return-keys-option
+  (doseq [db (test-specs)]
+    ;; Derby/SQL Server does not have auto-generated id column which we're testing here
+    (when-not (#{"derby" "jtds" "jtds:sqlserver"} (db-type db))
+      (create-test-table :fruit db)
+      (sql/with-db-connection [conn db]
+        (let [connection (:connection conn)
+              sql-stmt (str "INSERT INTO fruit ( name, appearance, cost ) "
+                            "VALUES ( ?, ?, ? )")]
+          (is (= (returned-key db 1) (sql/execute! db [sql-stmt "Apple" "Green" 75]
+                                                   {:return-keys ["id"]})))
+          (is (= (returned-key db 2) (sql/execute! db [sql-stmt "Pear" "Yellow" 99]
+                                                   {:return-keys ["id"]})))))
       (is (= 2 (sql/query db ["SELECT * FROM fruit"] {:result-set-fn count})))
       (is (= "Pear" (sql/query db ["SELECT * FROM fruit WHERE cost = ?" 99]
                                {:row-fn :name :result-set-fn first}))))))

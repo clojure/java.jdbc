@@ -938,12 +938,15 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
      (db-do-prepared-return-keys db true transaction? sql-params)
      (db-do-prepared-return-keys db transaction? sql-params {})))
   ([db transaction? sql-params opts]
-   (let [opts (merge (when (map? db) db) opts)]
+   (let [opts (merge (when (map? db) db) opts)
+         return-keys (or (:return-keys opts) true)]
      (if-let [con (db-find-connection db)]
        (let [[sql & params] (if (sql-stmt? sql-params) (vector sql-params) (vec sql-params))]
          (if (instance? PreparedStatement sql)
            (db-do-execute-prepared-return-keys db sql params (assoc opts :transaction? transaction?))
-           (with-open [^PreparedStatement stmt (prepare-statement con sql (assoc opts :return-keys true))]
+           (with-open [^PreparedStatement stmt (prepare-statement
+                                                 con sql
+                                                 (assoc opts :return-keys return-keys))]
              (db-do-execute-prepared-return-keys db stmt params (assoc opts :transaction? transaction?)))))
        (with-open [con (get-connection db opts)]
          (db-do-prepared-return-keys (add-connection db con) transaction? sql-params opts))))))
