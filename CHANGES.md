@@ -1,4 +1,4 @@
-Changes coming in 0.7.6
+Changes in 0.7.6
 
 * `execute!` now supports `:return-keys` as a vector of column names, rather than just a simple Boolean value, for drivers that support that [JDBC-166](https://dev.clojure.org/jira/browse/JDBC-166).
 * Add built-in support for H2 in-memory database (`:dbtype "h2:mem"`).
