@@ -1,7 +1,7 @@
 <html>
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Index - java.jdbc 0.7.4-SNAPSHOT API documentation</title>
+    <title>Index - java.jdbc 0.7.7-SNAPSHOT API documentation</title>
     <link rel="icon" href="static/favicon.png" />
     <link rel="shortcut icon" href="static/favicon.png" />
     <link rel="stylesheet" href="static/clojure.css" type="text/css" media="all" />
@@ -25,7 +25,7 @@ namespace.
       <div id="leftcolumn"><div style="text-align: center;"></div>
 <div class="menu">
   <div class="WikiCustomNav WikiElement wiki">
-    <span class="toc-header"><span id="project-name">java.jdbc</span> <span id="version">0.7.4-SNAPSHOT</span> API</span><br />
+    <span class="toc-header"><span id="project-name">java.jdbc</span> <span id="version">0.7.7-SNAPSHOT</span> API</span><br />
     <ul>
       <li><a href="index.html" class="wiki_link">Overview</a></li>
       <li><a href="api-index.html" class="wiki_link">API Index</a></li>
@@ -41,7 +41,7 @@ namespace.
 	  <div class="contentBox"><div class="innerContentBox">
               <div class="wiki wikiPage" id="content_view">
                 <div id="right-sidebar"></div>
-                <div id="content-tag"><h1 id="overview">Index of Public Functions and Variables - <span id="header-project">java.jdbc</span> <span id="header-version">0.7.4-SNAPSHOT</span><span id="header-status-block"> (<span id="header-status">in development</span>)</span></h1>
+                <div id="content-tag"><h1 id="overview">Index of Public Functions and Variables - <span id="header-project">java.jdbc</span> <span id="header-version">0.7.7-SNAPSHOT</span><span id="header-status-block"> (<span id="header-status">in development</span>)</span></h1>
 This page has an alphabetical index of all the documented functions and variables
 in <span class="project-name-span">java.jdbc</span>.
 
@@ -89,6 +89,7 @@ Shortcuts:<br />
 </span></span><span id="section-content"> <a href="index.html#:clojure.java.jdbc.spec/concurrency">::concurrency</a><span id="line-content">                spec          clojure.java.jdbc.spec (set (keys (deref (var result-set-concurrency)...
 </span></span><span id="section-content"> <a href="index.html#:clojure.java.jdbc.spec/conditional?">::conditional?</a><span id="line-content">               spec          clojure.java.jdbc.spec (or :b boolean? :s string? :f fn?).
 </span></span><span id="section-content"> <a href="index.html#:clojure.java.jdbc.spec/connection">::connection</a><span id="line-content">                 spec          clojure.java.jdbc.spec (instance? java.sql.Connection %).
+</span></span><span id="section-content"> <a href="index.html#:clojure.java.jdbc.spec/connection-binding">::connection-binding</a><span id="line-content">         spec          clojure.java.jdbc.spec (cat :con-db simple-symbol? :db-spec any? :opt...
 </span></span><span id="section-content"> <a href="index.html#:clojure.java.jdbc.spec/connection-options">::connection-options</a><span id="line-content">         spec          clojure.java.jdbc.spec (keys :req-un [] :opt-un [:clojure.java.jdbc.s...
 </span></span><span id="section-content"> <a href="index.html#:clojure.java.jdbc.spec/connection-uri">::connection-uri</a><span id="line-content">             spec          clojure.java.jdbc.spec string?.
 </span></span><span id="section-content"> <a href="index.html#clojure.java.jdbc/create-table-ddl">create-table-ddl</a><span id="line-content">             function      clojure.java.jdbc  Given a table name and a vector of column specs, r...
@@ -116,6 +117,7 @@ Shortcuts:<br />
 </span></span><span id="section-content"> <a href="index.html#:clojure.java.jdbc.spec/db-spec-jndi">::db-spec-jndi</a><span id="line-content">               spec          clojure.java.jdbc.spec (keys :req-un [:clojure.java.jdbc.spec/name] :...
 </span></span><span id="section-content"> <a href="index.html#:clojure.java.jdbc.spec/db-spec-raw">::db-spec-raw</a><span id="line-content">                spec          clojure.java.jdbc.spec (keys :req-un [:clojure.java.jdbc.spec/connect...
 </span></span><span id="section-content"> <a href="index.html#:clojure.java.jdbc.spec/db-spec-string">::db-spec-string</a><span id="line-content">             spec          clojure.java.jdbc.spec string?.
+</span></span><span id="section-content"> <a href="index.html#:clojure.java.jdbc.spec/db-spec-uri">::db-spec-uri</a><span id="line-content">                spec          clojure.java.jdbc.spec (instance? java.net.URI %).
 </span></span><span id="section-content"> <a href="index.html#clojure.java.jdbc/db-transaction*">db-transaction*</a><span id="line-content">              function      clojure.java.jdbc  Evaluates func as a transaction on the open databa...
 </span></span><span id="section-content"> <a href="index.html#clojure.java.jdbc/db-unset-rollback-only!">db-unset-rollback-only!</a><span id="line-content">      function      clojure.java.jdbc  Marks the outermost transaction such that it will ...
 </span></span><span id="section-content"> <a href="index.html#:clojure.java.jdbc.spec/dbname">::dbname</a><span id="line-content">                     spec          clojure.java.jdbc.spec string?.
@@ -258,7 +260,6 @@ Shortcuts:<br />
   <h2 id="S"><span id="section-head">S</span></h2>
   <pre>
 <span id="section-content"> <a href="index.html#clojure.java.jdbc/set-parameter">set-parameter</a><span id="line-content">                function      clojure.java.jdbc  Convert a Clojure value into a SQL value and store...
-</span></span><span id="section-content"> <a href="index.html#:clojure.java.jdbc.spec/simple-binding">::simple-binding</a><span id="line-content">             spec          clojure.java.jdbc.spec (cat :con-db simple-symbol? :db-spec any?).
 </span></span><span id="section-content"> <a href="index.html#:clojure.java.jdbc.spec/sql-params">::sql-params</a><span id="line-content">                 spec          clojure.java.jdbc.spec (or :sql :clojure.java.jdbc.spec/sql-stmt :sql...
 </span></span><span id="section-content"> <a href="index.html#:clojure.java.jdbc.spec/sql-stmt">::sql-stmt</a><span id="line-content">                   spec          clojure.java.jdbc.spec (or :sql string? :stmt :clojure.java.jdbc.spec...
 </span></span><span id="section-content"> <a href="index.html#clojure.java.jdbc/sql-value">sql-value</a><span id="line-content">                    function      clojure.java.jdbc  Convert a Clojure value into a SQL value..
@@ -266,7 +267,7 @@ Shortcuts:<br />
 </span></span><span id="section-content"> <a href="index.html#:clojure.java.jdbc.spec/subname">::subname</a><span id="line-content">                    spec          clojure.java.jdbc.spec string?.
 </span></span><span id="section-content"> <a href="index.html#:clojure.java.jdbc.spec/subprotocol">::subprotocol</a><span id="line-content">                spec          clojure.java.jdbc.spec string?.
 </span></span><span id="section-content"> <a href="index.html#:clojure.java.jdbc.spec/subprotocol-alias">::subprotocol-alias</a><span id="line-content">          spec          clojure.java.jdbc.spec #{"mssql" "oracle" "postgres" "jtds" "hsql"}.
-</span></span><span id="section-content"> <a href="index.html#:clojure.java.jdbc.spec/subprotocol-base">::subprotocol-base</a><span id="line-content">           spec          clojure.java.jdbc.spec #{"mysql" "oracle:thin" "pgsql" "oracle:oci" "...
+</span></span><span id="section-content"> <a href="index.html#:clojure.java.jdbc.spec/subprotocol-base">::subprotocol-base</a><span id="line-content">           spec          clojure.java.jdbc.spec #{"h2:mem" "mysql" "oracle:thin" "pgsql" "orac...
 </span></span>
   </pre>
 </div><div id="index-body">
@@ -283,6 +284,7 @@ Shortcuts:<br />
   <h2 id="U"><span id="section-head">U</span></h2>
   <pre>
 <span id="section-content"> <a href="index.html#clojure.java.jdbc/update!">update!</a><span id="line-content">                      function      clojure.java.jdbc  Given a database connection, a table name, a map o...
+</span></span><span id="section-content"> <a href="index.html#:clojure.java.jdbc.spec/uri">::uri</a><span id="line-content">                        spec          clojure.java.jdbc.spec (instance? java.net.URI %).
 </span></span><span id="section-content"> <a href="index.html#:clojure.java.jdbc.spec/user">::user</a><span id="line-content">                       spec          clojure.java.jdbc.spec string?.
 </span></span><span id="section-content"> <a href="index.html#:clojure.java.jdbc.spec/username">::username</a><span id="line-content">                   spec          clojure.java.jdbc.spec string?.
 </span></span>
@@ -331,7 +333,7 @@ Shortcuts:<br />
           </div>
 	</div>
 	<div id="foot">
-	  <div id="copyright" style="text-align: center;">Copyright 2007-2017 by Rich Hickey and the various contributors</div>
+	  <div id="copyright" style="text-align: center;">Copyright 2007-2018 by Rich Hickey and the various contributors</div>
 	</div>
       </div>
       <div id="DesignedBy">Logo &amp; site design by <a href="http://www.tomhickey.com" title="Visit Tom Hickey's website.">Tom Hickey</a>.<br />
