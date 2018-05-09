@@ -24,7 +24,7 @@ Support
 Releases and Dependency Information
 ========================================
 
-Latest stable release: 0.7.5 -- requires Clojure 1.7 or later!
+Latest stable release: 0.7.6 -- requires Clojure 1.7 or later!
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22java.jdbc%22)
 
@@ -32,14 +32,14 @@ Latest stable release: 0.7.5 -- requires Clojure 1.7 or later!
 
 [Leiningen](https://github.com/technomancy/leiningen) dependency information:
 ```clojure
-[org.clojure/java.jdbc "0.7.5"]
+[org.clojure/java.jdbc "0.7.6"]
 ```
 [Maven](http://maven.apache.org/) dependency information:
 ```xml
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>java.jdbc</artifactId>
-  <version>0.7.5</version>
+  <version>0.7.6</version>
 </dependency>
 ```
 _Note: Earlier versions of Clojure are supported by older versions of `clojure.java.jdbc`: e.g., version 0.6.1 supports Clojure 1.4 and later._
@@ -137,6 +137,16 @@ Developer Information
 
 Change Log
 ====================
+
+* Release 0.7.6 on 2018-04-24
+  * `execute!` now supports `:return-keys` as a vector of column names, rather than just a simple Boolean value, for drivers that support that [JDBC-166](https://dev.clojure.org/jira/browse/JDBC-166).
+  * Add built-in support for H2 in-memory database (`:dbtype "h2:mem"`).
+  * Add missing spec for `db-spec` being a `java.net.URI` object.
+  * Fix `add-connection` handling of string `db-spec` (becomes `:connection-uri`, not `:connection-string`).
+  * Fix specs for `with-db-*` functions, to support options in the binding form [JDBC-165](https://dev.clojure.org/jira/browse/JDBC-165).
+  * Update tests so they work properly with string `db-spec` test databases.
+  * Ensure no reflection warnings are present.
+  * Switched local test infrastructure over to CLI and `deps.edn` (from Leiningen) as an example of multi-version testing without a "build tool".
 
 * Release 0.7.5 on 2017-12-29
   * Add support for `:return-keys` in `execute!` and `:multi?` in `db-do-prepared-return-keys` [JDBC-163](https://dev.clojure.org/jira/browse/JDBC-163).
