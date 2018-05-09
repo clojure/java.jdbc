@@ -1,3 +1,7 @@
+Changes coming in 0.7.7
+
+* `get-connection` provides much better feedback if you accidentally call a function that expects a `db-spec` but pass a `java.sql.Connection` object instead (which is only required for `prepare-statement`).
+
 Changes in 0.7.6
 
 * `execute!` now supports `:return-keys` as a vector of column names, rather than just a simple Boolean value, for drivers that support that [JDBC-166](https://dev.clojure.org/jira/browse/JDBC-166).
