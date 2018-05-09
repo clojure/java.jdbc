@@ -395,6 +395,16 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
                               name)
                          db-spec)))
 
+     ;; passing a raw Connection object to a function expecting a db-spec is
+     ;; usually a confusion over how/when to use get-connection and deserves
+     ;; a custom error message:
+     (instance? java.sql.Connection db-spec)
+     (let [^String msg (str "db-spec is a raw Connection object!\n"
+                            "Did you call get-connection in the wrong context?\n"
+                            "You should only call that to pass a Connection into prepare-statement.\n"
+                            "(and don't forget to close it via with-open or .close)")]
+       (throw (IllegalArgumentException. msg)))
+
      :else
      (let [^String msg (format "db-spec %s is missing a required parameter" db-spec)]
        (throw (IllegalArgumentException. msg))))))
