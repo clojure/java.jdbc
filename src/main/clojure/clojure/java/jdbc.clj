@@ -1,4 +1,4 @@
-;;  Copyright (c) 2008-2017 Sean Corfield, Stephen C. Gilardi. All rights reserved.
+;;  Copyright (c) 2008-2018 Sean Corfield, Stephen C. Gilardi. All rights reserved.
 ;;  The use and distribution terms for this software are covered by
 ;;  the Eclipse Public License 1.0
 ;;  (http://opensource.org/licenses/eclipse-1.0.php) which can be
@@ -228,8 +228,22 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
 
 (defn get-connection
   "Creates a connection to a database. db-spec is usually a map containing connection
-  parameters but can also be a URI or a String. The various possibilities are described
-  below:
+  parameters but can also be a URI or a String.
+
+  The only time you should call this function is when you need a Connection for
+  prepare-statement -- no other public functions in clojure.java.jdbc accept a
+  raw Connection object: they all expect a db-spec (either a raw db-spec or one
+  obtained via with-db-connection or with-db-transaction).
+
+  The correct usage of get-connection for prepare-statement is:
+
+      (with-open [conn (jdbc/get-connection db-spec)]
+        ... (jdbc/prepare-statement conn sql-statement options) ...)
+
+  Any connection obtained via calling get-connection directly must be closed
+  explicitly (via with-open or a direct call to .close on the Connection object).
+
+  The various possibilities are described below:
 
   DriverManager (preferred):
     :dbtype      (required) a String, the type of the database (the jdbc subprotocol)
@@ -1006,6 +1020,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
   "Given a db-spec, a SQL statement (or a prepared statement), a set of
   parameters, a result set processing function and options, execute the query."
   [db sql params func opts]
+  #_(println "\nquery" sql params)
   (if (instance? PreparedStatement sql)
     (let [^PreparedStatement stmt sql]
       (execute-query-with-params
