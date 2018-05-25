@@ -1059,13 +1059,20 @@
       (is (= rows inserted)))))
 
 (deftest insert-two-by-map-and-query-as-arrays
+  ;; this test also serves to illustrate qualified keyword usage
   (doseq [db (test-specs)]
-    (create-test-table :fruit db)
-    (let [new-keys (map (select-key db) (sql/insert-multi! db :fruit [{:name "Apple"} {:name "Pear"}]))
+    ;; qualifier on table name ignored by default
+    (create-test-table :table/fruit db)
+    (let [new-keys (map (select-key db)
+                        ;; insert ignores namespace qualifier by default
+                        (sql/insert-multi! db :table/fruit
+                                           [{:fruit/name "Apple"}
+                                            {:fruit/name "Pear"}]))
           rows (sql/query db ["SELECT * FROM fruit ORDER BY name"]
-                          {:as-arrays? :cols-as-is})]
+                          {:as-arrays? :cols-as-is
+                           :qualifier "fruit"})]
       (is (= [(returned-key db 1) (returned-key db 2)] new-keys))
-      (is (= [[:id :name :appearance :cost :grade]
+      (is (= [[:fruit/id :fruit/name :fruit/appearance :fruit/cost :fruit/grade]
               [(generated-key db 1) "Apple" nil nil nil]
               [(generated-key db 2) "Pear" nil nil nil]] rows)))))
 
