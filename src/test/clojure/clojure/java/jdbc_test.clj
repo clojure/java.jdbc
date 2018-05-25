@@ -574,11 +574,14 @@
       (sql/with-db-connection [conn db]
         (let [connection (:connection conn)
               sql-stmt (str "INSERT INTO fruit ( name, appearance, cost ) "
-                            "VALUES ( ?, ?, ? )")]
-          (is (= (returned-key db 1) (sql/execute! db [sql-stmt "Apple" "Green" 75]
-                                                   {:return-keys ["id"]})))
-          (is (= (returned-key db 2) (sql/execute! db [sql-stmt "Pear" "Yellow" 99]
-                                                   {:return-keys ["id"]})))))
+                            "VALUES ( ?, ?, ? )")
+              selector (select-key db)]
+          (is (= (returned-key db 1)
+                 (selector (sql/execute! db [sql-stmt "Apple" "Green" 75]
+                                         {:return-keys ["id"]}))))
+          (is (= (returned-key db 2)
+                 (selector (sql/execute! db [sql-stmt "Pear" "Yellow" 99]
+                                         {:return-keys ["id"]}))))))
       (is (= 2 (sql/query db ["SELECT * FROM fruit"] {:result-set-fn count})))
       (is (= "Pear" (sql/query db ["SELECT * FROM fruit WHERE cost = ?" 99]
                                {:row-fn :name :result-set-fn first}))))))
