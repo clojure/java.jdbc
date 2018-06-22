@@ -849,28 +849,31 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
        (let [~(first binding) (.getMetaData con#)]
          ~@body))))
 
+(defn- process-result-set
+  "Given a Java ResultSet and options, produce a processed result-set-seq,
+  honoring as-arrays?, result-set-fn, and row-fn from opts."
+  [rset opts]
+  (let [{:keys [as-arrays? result-set-fn row-fn]}
+        (merge {:row-fn identity} opts)
+        result-set-fn (or result-set-fn (if as-arrays? vec doall))]
+    (if as-arrays?
+      ((^:once fn* [rs]
+         (result-set-fn (cons (first rs)
+                              (map row-fn (rest rs)))))
+       (result-set-seq rset opts))
+      (result-set-fn (map row-fn (result-set-seq rset opts))))))
+
 (defn metadata-result
   "If the argument is a java.sql.ResultSet, turn it into a result-set-seq,
   else return it as-is. This makes working with metadata easier.
   Also accepts an option map containing :identifiers, :keywordize?, :qualifier,
-  :as-arrays?, :row-fn,and :result-set-fn to control how the ResultSet is
+  :as-arrays?, :row-fn, and :result-set-fn to control how the ResultSet is
   transformed and returned. See query for more details."
   ([rs-or-value] (metadata-result rs-or-value {}))
   ([rs-or-value opts]
-   (let [{:keys [as-arrays? result-set-fn row-fn] :as opts}
-         (merge {:identifiers str/lower-case
-                 :keywordize? true
-                 :read-columns dft-read-columns
-                 :row-fn identity} opts)
-         result-set-fn (or result-set-fn (if as-arrays? vec doall))]
-     (if (instance? java.sql.ResultSet rs-or-value)
-       ((^{:once true} fn* [rs]
-         (result-set-fn (if as-arrays?
-                          (cons (first rs)
-                                (map row-fn (rest rs)))
-                          (map row-fn rs))))
-        (result-set-seq rs-or-value opts))
-       rs-or-value))))
+   (if (instance? java.sql.ResultSet rs-or-value)
+     (process-result-set rs-or-value opts)
+     rs-or-value)))
 
 (defmacro metadata-query
   "Given a Java expression that extracts metadata (in the context of with-db-metadata),
@@ -911,9 +914,12 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
 
   Supports :multi? which causes a full result set sequence of keys to be
   returned, and assumes the param-group is a sequence of parameter lists,
-  rather than a single sequence of parameters."
+  rather than a single sequence of parameters.
+
+  Also supports :row-fn and, if :multi? is truthy, :result-set-fn"
   [db ^PreparedStatement stmt param-group opts]
-  (let [{:keys [transaction? multi?] :as opts} (merge (when (map? db) db) opts)
+  (let [{:keys [as-arrays? multi? row-fn transaction?] :as opts}
+        (merge {:row-fn identity} (when (map? db) db) opts)
         exec-and-return-keys
         (^{:once true} fn* []
          (let [counts (if multi?
@@ -921,10 +927,16 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
                         (.executeUpdate stmt))]
            (try
              (let [rs (.getGeneratedKeys stmt)
-                   rss (result-set-seq rs opts)
-                   result (if multi?
-                            (doall rss)
-                            (first rss))]
+                   result (cond multi?
+                                (process-result-set rs opts)
+                                as-arrays?
+                                ((^:once fn* [rs]
+                                   (list (first rs)
+                                         (row-fn (second rs))))
+                                 ;; not quite: as-arrays? will yield entire rs?
+                                 (result-set-seq rs opts))
+                                :else
+                                (row-fn (first (result-set-seq rs opts))))]
                ;; sqlite (and maybe others?) requires
                ;; record set to be closed
                (.close rs)
@@ -1096,13 +1108,8 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
   See also prepare-statement for additional options."
   ([db sql-params] (query db sql-params {}))
   ([db sql-params opts]
-   (let [{:keys [as-arrays? explain? explain-fn result-set-fn row-fn] :as opts}
-         (merge {:explain-fn println :identifiers str/lower-case
-                 :keywordize? true
-                 :read-columns dft-read-columns :row-fn identity}
-                (when (map? db) db)
-                opts)
-         result-set-fn (or result-set-fn (if as-arrays? vec doall))
+   (let [{:keys [explain? explain-fn] :as opts}
+         (merge {:explain-fn println} (when (map? db) db) opts)
          [sql & params] (if (sql-stmt? sql-params) (vector sql-params) (vec sql-params))]
      (when-not (sql-stmt? sql)
        (let [^Class sql-class (class sql)
@@ -1122,15 +1129,8 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
                   (dissoc :explain? :result-set-fn :row-fn)
                   (assoc :result-set-fn explain-fn))))
      (db-query-with-resultset* db sql params
-                               (if as-arrays?
-                                 (^{:once true} fn* [rset]
-                                  ((^{:once true} fn* [rs]
-                                    (result-set-fn (cons (first rs)
-                                                         (map row-fn (rest rs)))))
-                                   (result-set-seq rset opts)))
-                                 (^{:once true} fn* [rset]
-                                  (result-set-fn (map row-fn
-                                                      (result-set-seq rset opts)))))
+                               (^:once fn* [rset]
+                                 (process-result-set rset opts))
                               opts))))
 
 (defn- get-rs-columns
@@ -1409,7 +1409,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
                         db-do-prepared)
          execute-helper (^{:once true} fn* [db]
                          (db-do-helper db transaction? sql-params opts))]
-     (if-let [con (db-find-connection db)]
+     (if (db-find-connection db)
        (execute-helper db)
        (with-open [con (get-connection db opts)]
          (execute-helper (add-connection db con)))))))
@@ -1442,7 +1442,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
    inserts), run a prepared statement on each and return any generated keys.
    Note: we are eager so an unrealized lazy-seq cannot escape from the connection."
   [db stmts opts]
-  (doall (map (fn [row] (db-do-prepared-return-keys db false row opts)) stmts)))
+  (doall (map (fn [stmt] (db-do-prepared-return-keys db false stmt opts)) stmts)))
 
 (defn- insert-helper
   "Given a (connected) database connection, a transaction flag and some SQL statements
@@ -1506,7 +1506,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
                           (when-not (map? row)
                             (throw (IllegalArgumentException. "insert! / insert-multi! called with a non-map row")))
                           (insert-single-row-sql table row entities)) rows)]
-    (if-let [con (db-find-connection db)]
+    (if (db-find-connection db)
       (insert-helper db transaction? sql-params opts)
       (with-open [con (get-connection db opts)]
         (insert-helper (add-connection db con) transaction? sql-params opts)))))
@@ -1519,7 +1519,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
   (let [{:keys [entities transaction?] :as opts}
         (merge {:entities identity :transaction? true} (when (map? db) db) opts)
         sql-params (insert-multi-row-sql table cols values entities)]
-    (if-let [con (db-find-connection db)]
+    (if (db-find-connection db)
       (db-do-prepared db transaction? sql-params (assoc opts :multi? true))
       (with-open [con (get-connection db opts)]
         (db-do-prepared (add-connection db con) transaction? sql-params
