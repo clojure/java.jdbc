@@ -47,5 +47,9 @@ rm -rf clojure_test_*
 versions="1.7 1.8 1.9 master"
 for v in $versions
 do
-  TEST_DBS="$dbs $*" time clj -A:test:runner:$v
+  TEST_DBS="$dbs $*" clj -A:test:runner:$v
+  if test $? -ne 0
+  then
+    exit $?
+  fi
 done
