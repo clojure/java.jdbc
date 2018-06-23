@@ -933,7 +933,6 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
                                 ((^:once fn* [rs]
                                    (list (first rs)
                                          (row-fn (second rs))))
-                                 ;; not quite: as-arrays? will yield entire rs?
                                  (result-set-seq rs opts))
                                 :else
                                 (row-fn (first (result-set-seq rs opts))))]
@@ -943,7 +942,8 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
                result)
              (catch Exception _
                ;; assume generated keys is unsupported and return counts instead:
-               counts))))]
+               (let [result-set-fn (or (:result-set-fn opts) doall)]
+                 (result-set-fn (map row-fn counts)))))))]
     (if multi?
       (doseq [params param-group]
         ((:set-parameters opts dft-set-parameters) stmt params)
@@ -1442,7 +1442,25 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
    inserts), run a prepared statement on each and return any generated keys.
    Note: we are eager so an unrealized lazy-seq cannot escape from the connection."
   [db stmts opts]
-  (doall (map (fn [stmt] (db-do-prepared-return-keys db false stmt opts)) stmts)))
+  (let [{:keys [as-arrays? result-set-fn]} (merge (when (map? db) db) opts)
+        per-statement (fn [stmt]
+                        (db-do-prepared-return-keys db false stmt opts))]
+    (if as-arrays?
+      (let [rs (map per-statement stmts)]
+        (cond (apply = (map first rs))
+              ;; all the columns are the same, rearrange to cols + rows format
+              ((or result-set-fn vec)
+               (cons (ffirst rs)
+                     (map second rs)))
+              result-set-fn
+              (throw (ex-info (str "Cannot apply result-set-fn to"
+                                   " non-homogeneous generated keys array") rs))
+              :else
+              ;; non-non-homogeneous generated keys array - return as-is
+              rs))
+      (if result-set-fn
+        (result-set-fn (map per-statement stmts))
+        (seq (mapv per-statement stmts))))))
 
 (defn- insert-helper
   "Given a (connected) database connection, a transaction flag and some SQL statements

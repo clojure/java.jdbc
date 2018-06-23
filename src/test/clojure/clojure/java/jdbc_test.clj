@@ -572,16 +572,16 @@
     (when-not (#{"derby" "jtds" "jtds:sqlserver"} (db-type db))
       (create-test-table :fruit db)
       (sql/with-db-connection [conn db]
-        (let [connection (:connection conn)
-              sql-stmt (str "INSERT INTO fruit ( name, appearance, cost ) "
+        (let [sql-stmt (str "INSERT INTO fruit ( name, appearance, cost ) "
                             "VALUES ( ?, ?, ? )")
               selector (select-key db)]
           (is (= (returned-key db 1)
                  (selector (sql/execute! db [sql-stmt "Apple" "Green" 75]
                                          {:return-keys ["id"]}))))
           (is (= (returned-key db 2)
-                 (selector (sql/execute! db [sql-stmt "Pear" "Yellow" 99]
-                                         {:return-keys ["id"]}))))))
+                 (sql/execute! db [sql-stmt "Pear" "Yellow" 99]
+                               {:return-keys ["id"]
+                                :row-fn selector})))))
       (is (= 2 (sql/query db ["SELECT * FROM fruit"] {:result-set-fn count})))
       (is (= "Pear" (sql/query db ["SELECT * FROM fruit WHERE cost = ?" 99]
                                {:row-fn :name :result-set-fn first}))))))
@@ -960,6 +960,44 @@
                    (returned-key db 2)]
                   new-keys)))))))
 
+(deftest insert-two-via-execute-result-set-fn
+   (doseq [db (test-specs)]
+     (create-test-table :fruit db)
+     (let [execute-multi-insert
+           (fn [db]
+             (sql/execute! db [(str "INSERT INTO fruit ( name )"
+                                    " VALUES ( ? )")
+                               ["Apple"]
+                               ["Orange"]]
+                           {:return-keys true
+                            :multi? true
+                            :result-set-fn count}))
+           n (if (#{"jtds" "jtds:sqlserver"} (db-type db))
+               (do
+                 (is (thrown? java.sql.BatchUpdateException
+                              (execute-multi-insert db)))
+                 0)
+               (execute-multi-insert db))]
+       (case (db-type db)
+         ;; SQLite only returns the last key inserted in a batch
+         "sqlite" (is (= 1 n))
+         ;; Derby returns a single row count
+         "derby"  (is (= 1 n))
+         ;; H2 returns nothing useful
+         ("h2" "h2:mem") (is (= 0 n))
+         ;; HSQL returns nothing useful
+         "hsql"   (is (= 0 n))
+         ;; MS SQL returns row counts (we still apply result-set-fn)
+         "mssql"  (is (= 2 n))
+         ;; jTDS disallows batch updates returning keys (handled above)
+         ("jtds" "jtds:sqlserver")
+         (is (= 0 n))
+         ;; otherwise expect two rows with the correct keys
+         (do
+           (when-not (= 2 n)
+             (println "FAIL FOR" db))
+           (is (= 2 n)))))))
+
 (deftest insert-one-row
   (doseq [db (test-specs)]
     (create-test-table :fruit db)
@@ -970,6 +1008,12 @@
   (doseq [db (test-specs)]
     (create-test-table :fruit db)
     (let [new-keys (map (select-key db) (sql/insert! db :fruit {:name "Apple"} {}))]
+      (is (= [(returned-key db 1)] new-keys)))))
+
+(deftest insert-one-row-opts-row-fn
+  (doseq [db (test-specs)]
+    (create-test-table :fruit db)
+    (let [new-keys (sql/insert! db :fruit {:name "Apple"} {:row-fn (select-key db)})]
       (is (= [(returned-key db 1)] new-keys)))))
 
 (deftest insert-one-col-val
@@ -1033,6 +1077,19 @@
       (is (= [(returned-key db 1) (returned-key db 2)] new-keys))
       (is (= [{:id (generated-key db 1) :name "Apple" :appearance nil :grade nil :cost nil}
               {:id (generated-key db 2) :name "Pear" :appearance nil :grade nil :cost nil}] rows)))))
+
+(deftest insert-two-by-map-row-fn
+  (doseq [db (test-specs)]
+    (create-test-table :fruit db)
+    (let [new-keys (sql/insert-multi! db :fruit [{:name "Apple"} {:name "Pear"}]
+                                      {:row-fn (select-key db)})]
+      (is (= [(returned-key db 1) (returned-key db 2)] new-keys)))))
+
+(deftest insert-two-by-map-result-set-fn
+  (doseq [db (test-specs)]
+    (create-test-table :fruit db)
+    (is (= 2 (sql/insert-multi! db :fruit [{:name "Apple"} {:name "Pear"}]
+                                {:result-set-fn count})))))
 
 (deftest insert-identifiers-respected-1
   (doseq [db (filter postgres? (test-specs))]
