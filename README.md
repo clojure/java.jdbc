@@ -24,7 +24,7 @@ Support
 Releases and Dependency Information
 ========================================
 
-Latest stable release: 0.7.6 -- requires Clojure 1.7 or later!
+Latest stable release: 0.7.7 -- requires Clojure 1.7 or later!
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22java.jdbc%22)
 
@@ -32,14 +32,14 @@ Latest stable release: 0.7.6 -- requires Clojure 1.7 or later!
 
 [Leiningen](https://github.com/technomancy/leiningen) dependency information:
 ```clojure
-[org.clojure/java.jdbc "0.7.6"]
+[org.clojure/java.jdbc "0.7.7"]
 ```
 [Maven](http://maven.apache.org/) dependency information:
 ```xml
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>java.jdbc</artifactId>
-  <version>0.7.6</version>
+  <version>0.7.7</version>
 </dependency>
 ```
 _Note: Earlier versions of Clojure are supported by older versions of `clojure.java.jdbc`: e.g., version 0.6.1 supports Clojure 1.4 and later._
@@ -137,6 +137,10 @@ Developer Information
 
 Change Log
 ====================
+
+* Release 0.7.7 on 2018-06-23
+ * Support `:as-arrays?`, `:result-set-fn`, and `:row-fn` in operations that return generated keys as a result set (`execute!`, `insert!`, and `insert-multi!`) [JDBC-169](https://dev.clojure.org/jira/browse/JDBC-169).
+ * `get-connection` provides much better feedback if you accidentally call a function that expects a `db-spec` but pass a `java.sql.Connection` object instead (which is only required for `prepare-statement`).
 
 * Release 0.7.6 on 2018-04-24
   * `execute!` now supports `:return-keys` as a vector of column names, rather than just a simple Boolean value, for drivers that support that [JDBC-166](https://dev.clojure.org/jira/browse/JDBC-166).
