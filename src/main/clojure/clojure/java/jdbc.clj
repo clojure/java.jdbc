@@ -1396,7 +1396,9 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
 
   If :return-keys is provided, db-do-prepared-return-keys will be called
   instead of db-do-prepared, and the result will be a sequence of maps
-  containing the generated keys.
+  containing the generated keys. If present, :row-fn will be applied. If :multi?
+  then :result-set-fn will also be applied if present. :as-arrays? may also be
+  specified (which will affect what :result-set-fn is passed).
 
   If there are no parameters specified, executeUpdate will be used, otherwise
   executeBatch will be used. This may affect what SQL you can run via execute!"
