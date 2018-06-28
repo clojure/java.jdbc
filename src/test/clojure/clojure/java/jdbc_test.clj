@@ -241,7 +241,7 @@
   (case (db-type db)
     "derby"  {(keyword "1") nil}
     ("hsql" "hsqldb") nil
-    ("h2" "h2:mem") nil
+    ("h2" "h2:mem") {:id 0}
     "mysql"  {:generated_key k}
     nil      (if (mysql? db) ; string-based tests
                {:generated_key k}
@@ -381,7 +381,9 @@
       (with-open [con (sql/get-connection db)]
         (let [stmt (sql/prepare-statement con "INSERT INTO fruit ( name, appearance, cost, grade ) VALUES ( 'test', 'test', 1, 1.0 )"
                                           {:return-keys ["id"]})]
-          (is (= (returned-key db 1) ((select-key db) (sql/db-do-prepared-return-keys db stmt))))))
+          ;; HSQLDB returns the named key if you ask
+          (is (= (if (hsqldb? db) {:id 0} (returned-key db 1))
+                 ((select-key db) (sql/db-do-prepared-return-keys db stmt))))))
       (is (= 1 (sql/query db ["SELECT * FROM fruit"] {:result-set-fn count}))))))
 
 (deftest test-do-prepared2
@@ -575,10 +577,12 @@
         (let [sql-stmt (str "INSERT INTO fruit ( name, appearance, cost ) "
                             "VALUES ( ?, ?, ? )")
               selector (select-key db)]
-          (is (= (returned-key db 1)
+          ;; HSQLDB returns the named key if you ask
+          (is (= (if (hsqldb? db) {:id 0} (returned-key db 1))
                  (selector (sql/execute! db [sql-stmt "Apple" "Green" 75]
                                          {:return-keys ["id"]}))))
-          (is (= (returned-key db 2)
+          ;; HSQLDB returns the named key if you ask
+          (is (= (if (hsqldb? db) {:id 0} (returned-key db 2))
                  (sql/execute! db [sql-stmt "Pear" "Yellow" 99]
                                {:return-keys ["id"]
                                 :row-fn selector})))))
@@ -943,8 +947,9 @@
          "sqlite" (is (= [(returned-key db 2)] new-keys))
          ;; Derby returns a single row count
          "derby"  (is (= [(returned-key db 1)] new-keys))
-         ;; H2 returns nothing useful
-         ("h2" "h2:mem") (is (= [] new-keys))
+         ;; H2 returns dummy keys
+         ("h2" "h2:mem")
+         (is (= [(returned-key db 1) (returned-key db 2)] new-keys))
          ;; HSQL returns nothing useful
          "hsql"   (is (= [] new-keys))
          ;; MS SQL returns row counts
@@ -983,8 +988,8 @@
          "sqlite" (is (= 1 n))
          ;; Derby returns a single row count
          "derby"  (is (= 1 n))
-         ;; H2 returns nothing useful
-         ("h2" "h2:mem") (is (= 0 n))
+         ;; H2 returns (zero) keys now
+         ("h2" "h2:mem") (is (= 2 n))
          ;; HSQL returns nothing useful
          "hsql"   (is (= 0 n))
          ;; MS SQL returns row counts (we still apply result-set-fn)

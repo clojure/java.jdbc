@@ -6,17 +6,15 @@
  :aliases {:test
            {:extra-paths ["src/test/clojure"]
             :extra-deps {org.clojure/test.check {:mvn/version "0.9.0"}
-                         ;; Note: 1.12.1.1 is used in pom.xml for Java 6/7 compat
-                         org.apache.derby/derby {:mvn/version "10.13.1.1"}
-                         org.hsqldb/hsqldb {:mvn/version "2.3.4"}
-                         ;; Note: 1.4.191 is used in pom.xml for Java 6 compat
-                         com.h2database/h2 {:mvn/version "1.4.193"}
+                         org.apache.derby/derby {:mvn/version "10.14.2.0"}
+                         org.hsqldb/hsqldb {:mvn/version "2.4.1"}
+                         com.h2database/h2 {:mvn/version "1.4.197"}
                          net.sourceforge.jtds/jtds {:mvn/version "1.3.1"}
                          ;; Note: Tests fail with 6.0.2+ driver
                          mysql/mysql-connector-java {:mvn/version "5.1.41"}
-                         org.postgresql/postgresql {:mvn/version "9.4.1212.jre7"}
+                         org.postgresql/postgresql {:mvn/version "42.2.2.jre7"}
                          com.impossibl.pgjdbc-ng/pgjdbc-ng {:mvn/version "0.7.1"}
-                         org.xerial/sqlite-jdbc {:mvn/version "3.16.1"}
+                         org.xerial/sqlite-jdbc {:mvn/version "3.23.1"}
                          ;; Note: Assumes Java 8; there's a .jre7 version as well
                          com.microsoft.sqlserver/mssql-jdbc {:mvn/version "6.2.2.jre8"}}}
            :1.7 {:override-deps {org.clojure/clojure {:mvn/version "1.7.0"}}}
