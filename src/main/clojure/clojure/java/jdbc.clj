@@ -32,9 +32,7 @@ data. Results can be processed using any standard sequence operations.
 For most operations, Java's PreparedStatement is used so your SQL and
 parameters can be represented as simple vectors where the first element
 is the SQL string, with ? for each parameter, and the remaining elements
-are the parameter values to be substituted. In general, operations return
-the number of rows affected, except for a single record insert where any
-generated keys are returned (as a map).
+are the parameter values to be substituted.
 
 For more documentation, see:
 
