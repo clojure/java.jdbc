@@ -831,9 +831,12 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
     ... con-db ...)"
   [binding & body]
   `(let [db-spec# ~(second binding) opts# ~(or (second (rest binding)) {})]
-     (with-open [con# (get-connection db-spec# opts#)]
-       (let [~(first binding) (add-connection db-spec# con#)]
-         ~@body))))
+     (if (db-find-connection db-spec#)
+       (let [~(first binding) db-spec#]
+         ~@body)
+       (with-open [con# (get-connection db-spec# opts#)]
+         (let [~(first binding) (add-connection db-spec# con#)]
+           ~@body)))))
 
 (defmacro with-db-metadata
   "Evaluates body in the context of an active connection with metadata bound
@@ -843,9 +846,12 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
      ... md ...)"
   [binding & body]
   `(let [db-spec# ~(second binding) opts# ~(or (second (rest binding)) {})]
-     (with-open [con# (get-connection db-spec# opts#)]
+     (if-let [con# (db-find-connection db-spec#)]
        (let [~(first binding) (.getMetaData con#)]
-         ~@body))))
+         ~@body)
+       (with-open [con# (get-connection db-spec# opts#)]
+         (let [~(first binding) (.getMetaData con#)]
+           ~@body)))))
 
 (defn- process-result-set
   "Given a Java ResultSet and options, produce a processed result-set-seq,

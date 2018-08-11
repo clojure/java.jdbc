@@ -139,8 +139,8 @@ Change Log
 ====================
 
 * Release 0.7.7 on 2018-06-23
- * Support `:as-arrays?`, `:result-set-fn`, and `:row-fn` in operations that return generated keys as a result set (`execute!`, `insert!`, and `insert-multi!`) [JDBC-169](https://dev.clojure.org/jira/browse/JDBC-169).
- * `get-connection` provides much better feedback if you accidentally call a function that expects a `db-spec` but pass a `java.sql.Connection` object instead (which is only required for `prepare-statement`).
+  * Support `:as-arrays?`, `:result-set-fn`, and `:row-fn` in operations that return generated keys as a result set (`execute!`, `insert!`, and `insert-multi!`) [JDBC-169](https://dev.clojure.org/jira/browse/JDBC-169).
+  * `get-connection` provides much better feedback if you accidentally call a function that expects a `db-spec` but pass a `java.sql.Connection` object instead (which is only required for `prepare-statement`).
 
 * Release 0.7.6 on 2018-04-24
   * `execute!` now supports `:return-keys` as a vector of column names, rather than just a simple Boolean value, for drivers that support that [JDBC-166](https://dev.clojure.org/jira/browse/JDBC-166).
