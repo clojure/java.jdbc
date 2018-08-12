@@ -1,5 +1,6 @@
 Changes coming in 0.7.8
 
+* Support multiple JDBC driver class names (MySQL introduced a new driver class name with its 6.x connector) [JDBC-172](https://dev.clojure.org/jira/browse/JDBC-172).
 * Allow `with-db-connection` and `with-db-metadata` to nest [JDBC-171](https://dev.clojure.org/jira/browse/JDBC-171).
 
 Changes in 0.7.7
