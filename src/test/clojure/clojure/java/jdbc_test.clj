@@ -590,6 +590,16 @@
       (is (= "Pear" (sql/query db ["SELECT * FROM fruit WHERE cost = ?" 99]
                                {:row-fn :name :result-set-fn first}))))))
 
+(deftest test-nested-with-connection
+  (doseq [db (test-specs)]
+    (create-test-table :fruit db)
+    (sql/with-db-connection [conn1 db]
+      (sql/query conn1 "select * from fruit")
+      (sql/with-db-connection [conn2 conn1]
+        (sql/query conn2 "select * from fruit"))
+      ;; JDBC-171 bug: this blows up because with-db-connection won't nest
+      (is (= [] (sql/query conn1 "select * from fruit"))))))
+
 (deftest test-update-values
   (doseq [db (test-specs)]
     (create-test-table :fruit db)
@@ -876,7 +886,27 @@
         (is (= "fruit" (-> table-info
                            first
                            :table_name
-                           clojure.string/lower-case)))))))
+                           clojure.string/lower-case)))))
+    (sql/with-db-connection [conn db]
+      (sql/with-db-metadata [metadata conn {}]
+        (let [table-info (sql/metadata-query (.getTables metadata
+                                                         nil nil nil
+                                                         (into-array ["TABLE" "VIEW"])))]
+          (is (not= [] table-info))
+          (is (= "fruit" (-> table-info
+                             first
+                             :table_name
+                             clojure.string/lower-case)))))
+      ;; JDBC-171 this used to blow up because the connnection is closed
+      (sql/with-db-metadata [metadata conn {}]
+        (let [table-info (sql/metadata-query (.getTables metadata
+                                                         nil nil nil
+                                                         (into-array ["TABLE" "VIEW"])))]
+          (is (not= [] table-info))
+          (is (= "fruit" (-> table-info
+                             first
+                             :table_name
+                             clojure.string/lower-case))))))))
 
 (deftest test-metadata-managed-computed
   (doseq [db (test-specs)]
