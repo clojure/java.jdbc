@@ -148,13 +148,19 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
 
 (def ^:private classnames
   "Map of subprotocols to classnames. dbtype specifies one of these keys.
-  The subprotocols map below provides aliases for dbtype."
+
+  The subprotocols map below provides aliases for dbtype.
+
+  Most databases have just a single class name for their driver but we
+  support a sequence of class names to try in order to allow for drivers
+  that change their names over time (e.g., MySQL)."
   {"derby"          "org.apache.derby.jdbc.EmbeddedDriver"
    "h2"             "org.h2.Driver"
    "h2:mem"         "org.h2.Driver"
    "hsqldb"         "org.hsqldb.jdbcDriver"
    "jtds:sqlserver" "net.sourceforge.jtds.jdbc.Driver"
-   "mysql"          "com.mysql.jdbc.Driver"
+   "mysql"          ["com.mysql.cj.jdbc.Driver"
+                     "com.mysql.jdbc.Driver"]
    "oracle:oci"     "oracle.jdbc.OracleDriver"
    "oracle:thin"    "oracle.jdbc.OracleDriver"
    "postgresql"     "org.postgresql.Driver"
@@ -223,6 +229,30 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
   (when (and connection (contains? opts :read-only?))
     (.setReadOnly connection (boolean (:read-only? opts))))
   connection)
+
+(defn- get-driver-connection
+  "Common logic for loading the DriverManager and the designed JDBC driver
+  class and obtaining the appropriate Connection object."
+  [classname subprotocol db-spec url etc opts error-msg]
+  (if-let [class-name (or classname (classnames subprotocol))]
+    (do
+      ;; force DriverManager to be loaded
+      (DriverManager/getLoginTimeout)
+      (if (string? class-name)
+        (clojure.lang.RT/loadClassForName class-name)
+        (loop [[clazz & more] class-name]
+          (when-let [load-failure
+                     (try
+                       (clojure.lang.RT/loadClassForName clazz)
+                       nil
+                       (catch Exception e
+                         e))]
+            (if (seq more)
+              (recur more)
+              (throw load-failure))))))
+    (throw (ex-info error-msg db-spec)))
+  (-> (DriverManager/getConnection url (as-properties etc))
+      (modify-connection opts)))
 
 (defn get-connection
   "Creates a connection to a database. db-spec is usually a map containing connection
@@ -359,28 +389,18 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
                           (when port (str ":" port))
                           db-sep dbname))
            etc (dissoc db-spec :dbtype :dbname)]
-       (if-let [class-name (or classname (classnames subprotocol))]
-         (do
-           ;; force DriverManager to be loaded
-           (DriverManager/getLoginTimeout)
-           (clojure.lang.RT/loadClassForName class-name))
-         (throw (ex-info (str "Unknown dbtype: " dbtype) db-spec)))
-       (-> (DriverManager/getConnection url (as-properties etc))
-           (modify-connection opts)))
+       (get-driver-connection classname subprotocol db-spec
+                              url etc opts
+                              (str "Unknown dbtype: " dbtype)))
 
      (and subprotocol subname)
      (let [;; allow aliases for subprotocols
            subprotocol (subprotocols subprotocol subprotocol)
            url (format "jdbc:%s:%s" subprotocol subname)
            etc (dissoc db-spec :classname :subprotocol :subname)]
-       (if-let [class-name (or classname (classnames subprotocol))]
-         (do
-           ;; force DriverManager to be loaded
-           (DriverManager/getLoginTimeout)
-           (clojure.lang.RT/loadClassForName class-name))
-         (throw (ex-info (str "Unknown subprotocol: " subprotocol) db-spec)))
-       (-> (DriverManager/getConnection url (as-properties etc))
-           (modify-connection opts)))
+       (get-driver-connection classname subprotocol db-spec
+                              url etc opts
+                              (str "Unknown subprotocol: " subprotocol)))
 
      name
      (or (when-available javax.naming.InitialContext
