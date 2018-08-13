@@ -24,7 +24,7 @@ Support
 Releases and Dependency Information
 ========================================
 
-Latest stable release: 0.7.7 -- requires Clojure 1.7 or later!
+Latest stable release: 0.7.8 -- requires Clojure 1.7 or later!
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22java.jdbc%22)
 
@@ -32,14 +32,14 @@ Latest stable release: 0.7.7 -- requires Clojure 1.7 or later!
 
 [Leiningen](https://github.com/technomancy/leiningen) dependency information:
 ```clojure
-[org.clojure/java.jdbc "0.7.7"]
+[org.clojure/java.jdbc "0.7.8"]
 ```
 [Maven](http://maven.apache.org/) dependency information:
 ```xml
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>java.jdbc</artifactId>
-  <version>0.7.7</version>
+  <version>0.7.8</version>
 </dependency>
 ```
 _Note: Earlier versions of Clojure are supported by older versions of `clojure.java.jdbc`: e.g., version 0.6.1 supports Clojure 1.4 and later._
