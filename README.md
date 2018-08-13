@@ -138,6 +138,10 @@ Developer Information
 Change Log
 ====================
 
+* Release 0.7.8 on 2018-08-13
+  * Support multiple JDBC driver class names (MySQL introduced a new driver class name with its 6.x connector) [JDBC-172](https://dev.clojure.org/jira/browse/JDBC-172).
+  * Allow `with-db-connection` and `with-db-metadata` to nest [JDBC-171](https://dev.clojure.org/jira/browse/JDBC-171).
+
 * Release 0.7.7 on 2018-06-23
   * Support `:as-arrays?`, `:result-set-fn`, and `:row-fn` in operations that return generated keys as a result set (`execute!`, `insert!`, and `insert-multi!`) [JDBC-169](https://dev.clojure.org/jira/browse/JDBC-169).
   * `get-connection` provides much better feedback if you accidentally call a function that expects a `db-spec` but pass a `java.sql.Connection` object instead (which is only required for `prepare-statement`).
