@@ -171,17 +171,34 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
 
 (def ^:private subprotocols
   "Map of schemes to subprotocols. Used to provide aliases for dbtype."
-  {"hsql"     "hsqldb"
-   "jtds"     "jtds:sqlserver"
-   "mssql"    "sqlserver"
-   "oracle"   "oracle:thin"
-   "postgres" "postgresql"})
+  {"hsql"       "hsqldb"
+   "jtds"       "jtds:sqlserver"
+   "mssql"      "sqlserver"
+   "oracle"     "oracle:thin"
+   "oracle:sid" "oracle:thin"
+   "postgres"   "postgresql"})
 
 (def ^:private host-prefixes
   "Map of subprotocols to non-standard host-prefixes.
   Anything not listed is assumed to use //."
   {"oracle:oci"  "@"
    "oracle:thin" "@"})
+
+(def ^:private ports
+  "Map of subprotocols to ports."
+  {"jtds:sqlserver" 1433
+   "mysql"          3306
+   "oracle:oci"     1521
+   "oracle:sid"     1521
+   "oracle:thin"    1521
+   "postgresql"     5432
+   "sqlserver"      1433})
+
+(def ^:private dbname-separators
+  "Map of schemes to separators. The default is / but a couple are different."
+  {"mssql"      ";DATABASENAME="
+   "sqlserver"  ";DATABASENAME="
+   "oracle:sid" ":"})
 
 (defn- parse-properties-uri [^URI uri]
   (let [host (.getHost uri)
@@ -369,15 +386,8 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
      (let [;; allow aliases for dbtype
            subprotocol (subprotocols dbtype dbtype)
            host (or host "127.0.0.1")
-           port (or port (condp = subprotocol
-                                "jtds:sqlserver" 1433
-                                "mysql"          3306
-                                "oracle:oci"     1521
-                                "oracle:thin"    1521
-                                "postgresql"     5432
-                                "sqlserver"      1433
-                                nil))
-           db-sep (if (= "sqlserver" subprotocol) ";DATABASENAME=" "/")
+           port (or port (ports subprotocol))
+           db-sep (dbname-separators dbtype "/")
            url (cond (= "h2:mem" dbtype)
                      (str "jdbc:" subprotocol ":" dbname ";DB_CLOSE_DELAY=-1")
                      (#{"derby" "h2" "hsqldb" "sqlite"} subprotocol)
