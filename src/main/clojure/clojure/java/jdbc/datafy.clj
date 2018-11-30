@@ -57,11 +57,16 @@
          {`p/nav (fn [coll k v]
                    (let [[table fk cardinality] (schema k)]
                      (if fk
-                       (if (= :many cardinality)
-                         (datafy-result-set db-spec opts
-                                            (jdbc/find-by-keys db-spec table {fk v}))
-                         (datafy-row db-spec opts
-                                     (jdbc/get-by-id db-spec table v fk)))
+                       (try
+                         (if (= :many cardinality)
+                           (datafy-result-set db-spec opts
+                                              (jdbc/find-by-keys db-spec table {fk v}))
+                           (datafy-row db-spec opts
+                                       (jdbc/get-by-id db-spec table v fk)))
+                         (catch Exception _
+                           ;; assume an exception means we just cannot
+                           ;; navigate anywhere, so return just the value
+                           v))
                        v)))})))
 
 (defn- datafy-row [db-spec opts row]
