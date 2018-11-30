@@ -14,10 +14,32 @@
 (ns
     ^{:author "Sean Corfield",
       :doc "Variants of 'query' functions from clojure.java.jdbc that support
-           the new clojure.datafy functionality in Clojure 1.10."}
+           the new clojure.datafy functionality in Clojure 1.10.
+
+           The whole schema/column lookup piece is very likely to change!
+
+           Currently, the :schema option for a 'query' function is a mapping
+           from column name to a tuple of table name, key column, and optionally
+           the cardinality (:one -- the default -- or :many). The cardinality
+           determines whether navigation should produce a single row (hash map)
+           or a result set.
+
+           One of the problems is that the general case -- query -- doesn't
+           have any concept of an associated table name (and may of course
+           join across multiple tables), so there's no good way to take the
+           table name into account when mapping a column to another table.
+
+           For find-by-keys and get-by-id, you do have the starting table
+           name so you could map [table1 column1] to [table2 column2] and have
+           table-specific mappings.
+
+           The obvious, logical thing would be to use SQL metadata to figure
+           out actual foreign key constraints but not everyone uses them, for
+           a variety of reasons. For folks who do use them, they can build
+           their schema structure from the database, and pass the relevant
+           part of it to the functions below (via :schema in options)."}
   clojure.java.jdbc.datafy
   (:require [clojure.core.protocols :as p]
-            [clojure.datafy :as d]
             [clojure.java.jdbc :as jdbc]))
 
 (declare datafy-result-set)
@@ -137,12 +159,3 @@
   ([db sql-params opts]
    (datafy-result-set db opts
                       (jdbc/query db sql-params opts))))
-
-(comment
-  (def db-spec {:dbtype "derby" :dbname "datafy" :create true})
-  (jdbc/db-do-commands db-spec (jdbc/create-table-ddl :fruit [[:id :int] [:name "varchar(256)"]]))
-  (jdbc/db-do-commands db-spec (jdbc/create-table-ddl :fruit2 [[:fruitid :int] [:name "varchar(256)"]]))
-  (jdbc/insert! db-spec :fruit {:id 1 :name "First fruit"})
-  (jdbc/insert! db-spec :fruit2 {:fruitid 1 :name "First fruit"})
-  (jdbc/insert! db-spec :fruit {:id 2 :name "Second fruit"})
-  (jdbc/insert! db-spec :fruit2 {:fruitid 2 :name "More fruit"}))
