@@ -1,4 +1,4 @@
-;;  Copyright (c) 2008-2018 Sean Corfield, Stephen C. Gilardi. All rights reserved.
+;;  Copyright (c) 2018 Sean Corfield. All rights reserved.
 ;;  The use and distribution terms for this software are covered by
 ;;  the Eclipse Public License 1.0
 ;;  (http://opensource.org/licenses/eclipse-1.0.php) which can be
