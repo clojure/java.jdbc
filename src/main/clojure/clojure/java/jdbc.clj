@@ -1076,7 +1076,6 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
   "Given a db-spec, a SQL statement (or a prepared statement), a set of
   parameters, a result set processing function and options, execute the query."
   [db sql params func opts]
-  #_(println "\nquery" sql params)
   (if (instance? PreparedStatement sql)
     (let [^PreparedStatement stmt sql]
       (execute-query-with-params
