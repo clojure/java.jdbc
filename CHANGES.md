@@ -1,3 +1,7 @@
+Changes coming in 0.7.9
+
+* Support Oracle SID style URLs (`dbtype` can be `oracle:sid` which maps to `oracle:thin` and uses `:` as the separator before the `dbname` value) [JDBC-173](https://dev.clojure.org/jira/browse/JDBC-173).
+
 Changes in 0.7.8
 
 * Support multiple JDBC driver class names (MySQL introduced a new driver class name with its 6.x connector) [JDBC-172](https://dev.clojure.org/jira/browse/JDBC-172).
