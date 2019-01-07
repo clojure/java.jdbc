@@ -958,7 +958,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
         (^{:once true} fn* []
          (let [counts (if multi?
                         (.executeBatch stmt)
-                        (.executeUpdate stmt))]
+                        (vector (.executeUpdate stmt)))]
            (try
              (let [rs (.getGeneratedKeys stmt)
                    result (cond multi?

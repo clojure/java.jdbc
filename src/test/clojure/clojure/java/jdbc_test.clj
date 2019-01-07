@@ -68,7 +68,8 @@
 (def mysql-db {:dbtype   "mysql"
                :dbname   "clojure_test"
                :user     "clojure_test"
-               :password "clojure_test"})
+               :password "clojure_test"
+               :useSSL   false})
 
 (def derby-db {:dbtype "derby"
                :dbname "clojure_test_derby"

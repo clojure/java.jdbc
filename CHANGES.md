@@ -1,5 +1,6 @@
 Changes coming in 0.7.9
 
+* Fix behavior of multi-inserts when database does not support generated keys [JDBC-176](https://dev.clojure.org/jira/browse/JDBC-176).
 * Support Oracle SID style URLs (`dbtype` can be `oracle:sid` which maps to `oracle:thin` and uses `:` as the separator before the `dbname` value) [JDBC-173](https://dev.clojure.org/jira/browse/JDBC-173).
 
 Changes in 0.7.8
