@@ -14,6 +14,8 @@
 
   $ clj -A:test:perf
   Clojure 1.9.0
+  user=> (require '[clojure.java.perf-jdbc :as p])
+  nil
   user=> (p/calibrate)
   ...
   nil
@@ -140,11 +142,16 @@
       (assert (= "Apple" (select db)))
       (cc/quick-bench (select db)))
 
+    (println "Basic select first rs...")
+    (let [db db]
+      (cc/quick-bench (sql/query db ["SELECT * FROM fruit WHERE appearance = ?" "red"]
+                                 {:result-set-fn first :qualifier "fruit"})))
+
     (println "Select with prepared statement...")
     (let [con (:connection db)]
       (with-open [ps (sql/prepare-statement con "SELECT * FROM fruit WHERE appearance = ?")]
         (assert (= "Apple" (select-p db ps)))
-        (cc/quick-bench (select db))))
+        (cc/quick-bench (select-p db ps))))
 
     (println "Reducible query...")
     (let [db db
