@@ -24,7 +24,7 @@ Support
 Releases and Dependency Information
 ========================================
 
-Latest stable release: 0.7.8 -- requires Clojure 1.7 or later!
+Latest stable release: 0.7.9 -- requires Clojure 1.7 or later!
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22java.jdbc%22)
 
@@ -32,14 +32,14 @@ Latest stable release: 0.7.8 -- requires Clojure 1.7 or later!
 
 [Leiningen](https://github.com/technomancy/leiningen) dependency information:
 ```clojure
-[org.clojure/java.jdbc "0.7.8"]
+[org.clojure/java.jdbc "0.7.9"]
 ```
 [Maven](http://maven.apache.org/) dependency information:
 ```xml
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>java.jdbc</artifactId>
-  <version>0.7.8</version>
+  <version>0.7.9</version>
 </dependency>
 ```
 _Note: Earlier versions of Clojure are supported by older versions of `clojure.java.jdbc`: e.g., version 0.6.1 supports Clojure 1.4 and later._
@@ -137,6 +137,12 @@ Developer Information
 
 Change Log
 ====================
+
+* Release 0.7.9 on 2019-02-21
+  * Fix behavior of multi-inserts when database does not support generated keys [JDBC-176](https://dev.clojure.org/jira/browse/JDBC-176).
+  * Added _highly experimental_ support for `datafy`/`nav` (in `clojure.java.jdbc.datafy` namespace). This includes a convention-based approach to foreign keys with some assistance from a `:schema` option. This is subject to change and is provided mostly for informational purposes, as an example of the new functionality in Clojure 1.10. This includes a fix for the conventions from [JDBC-175](https://dev.clojure.org/jira/browse/JDBC-175).
+  * Add note about rewriting batched operations to `insert-multi!` for some drivers [JDBC-174](https://dev.clojure.org/jira/browse/JDBC-174).
+  * Support Oracle SID style URLs (`dbtype` can be `oracle:sid` which maps to `oracle:thin` and uses `:` as the separator before the `dbname` value) [JDBC-173](https://dev.clojure.org/jira/browse/JDBC-173).
 
 * Release 0.7.8 on 2018-08-13
   * Support multiple JDBC driver class names (MySQL introduced a new driver class name with its 6.x connector) [JDBC-172](https://dev.clojure.org/jira/browse/JDBC-172).
