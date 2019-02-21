@@ -1,4 +1,4 @@
-;;  Copyright (c) 2008-2018 Sean Corfield, Stephen C. Gilardi. All rights reserved.
+;;  Copyright (c) 2008-2019 Sean Corfield, Stephen C. Gilardi. All rights reserved.
 ;;  The use and distribution terms for this software are covered by
 ;;  the Eclipse Public License 1.0
 ;;  (http://opensource.org/licenses/eclipse-1.0.php) which can be
@@ -1612,9 +1612,16 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
   When inserting rows as a sequence of lists of column values, the result is
   a sequence of the counts of rows affected (a sequence of 1's), if available.
   Yes, that is singularly unhelpful. Thank you getUpdateCount and executeBatch!
-  A single database operation is used to insert all the rows at once. This may
-  be much faster than inserting a sequence of rows (which performs an insert for
-  each map in the sequence).
+  A single database operation should be used to insert all the rows at once.
+  This may be much faster than inserting a sequence of rows (which performs an
+  insert for each map in the sequence).
+
+  Note: some database drivers need to be told to rewrite the SQL for this to
+  be performed as a single, batched operation. In particular, PostgreSQL
+  requires :reWriteBatchedInserts true and My SQL requires
+  :rewriteBatchedStatement true (both non-standard JDBC options, of course!).
+  These options should be passed into the driver when the connection is
+  created (however that is done in your program).
 
   The :transaction? option specifies whether to run in a transaction or not.
   The default is true (use a transaction). The :entities option specifies how

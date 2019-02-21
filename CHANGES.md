@@ -1,6 +1,8 @@
-Changes coming in 0.7.9
+Changes in 0.7.9
 
 * Fix behavior of multi-inserts when database does not support generated keys [JDBC-176](https://dev.clojure.org/jira/browse/JDBC-176).
+* Added _highly experimental_ support for `datafy`/`nav` (in `clojure.java.jdbc.datafy` namespace). This includes a convention-based approach to foreign keys with some assistance from a `:schema` option. This is subject to change and is provided mostly for informational purposes, as an example of the new functionality in Clojure 1.10. This includes a fix for the conventions from [JDBC-175](https://dev.clojure.org/jira/browse/JDBC-175).
+* Add note about rewriting batched operations to `insert-multi!` for some drivers [JDBC-174](https://dev.clojure.org/jira/browse/JDBC-174).
 * Support Oracle SID style URLs (`dbtype` can be `oracle:sid` which maps to `oracle:thin` and uses `:` as the separator before the `dbname` value) [JDBC-173](https://dev.clojure.org/jira/browse/JDBC-173).
 
 Changes in 0.7.8
