@@ -21,7 +21,7 @@
 ;;  Migrated from clojure.contrib.test-sql 17 April 2011
 
 (ns clojure.java.jdbc-test
-  (:require [clojure.test :refer :all]
+  (:require [clojure.test :refer [deftest is use-fixtures]]
             [clojure.java.jdbc :as sql]
             [clojure.string :as str]))
 
@@ -887,27 +887,27 @@
         (is (= "fruit" (-> table-info
                            first
                            :table_name
-                           clojure.string/lower-case)))))
-    (sql/with-db-connection [conn db]
-      (sql/with-db-metadata [metadata conn {}]
-        (let [table-info (sql/metadata-query (.getTables metadata
-                                                         nil nil nil
-                                                         (into-array ["TABLE" "VIEW"])))]
-          (is (not= [] table-info))
-          (is (= "fruit" (-> table-info
-                             first
-                             :table_name
-                             clojure.string/lower-case)))))
-      ;; JDBC-171 this used to blow up because the connnection is closed
-      (sql/with-db-metadata [metadata conn {}]
-        (let [table-info (sql/metadata-query (.getTables metadata
-                                                         nil nil nil
-                                                         (into-array ["TABLE" "VIEW"])))]
-          (is (not= [] table-info))
-          (is (= "fruit" (-> table-info
-                             first
-                             :table_name
-                             clojure.string/lower-case))))))))
+                           clojure.string/lower-case))))
+     (sql/with-db-connection [conn db]
+       (sql/with-db-metadata [metadata conn {}]
+         (let [table-info (sql/metadata-query (.getTables metadata
+                                                          nil nil nil
+                                                          (into-array ["TABLE" "VIEW"])))]
+           (is (not= [] table-info))
+           (is (= "fruit" (-> table-info
+                              first
+                              :table_name
+                              clojure.string/lower-case)))))
+       ;; JDBC-171 this used to blow up because the connnection is closed
+       (sql/with-db-metadata [metadata conn {}]
+         (let [table-info (sql/metadata-query (.getTables metadata
+                                                          nil nil nil
+                                                          (into-array ["TABLE" "VIEW"])))]
+           (is (not= [] table-info))
+           (is (= "fruit" (-> table-info
+                              first
+                              :table_name
+                              clojure.string/lower-case)))))))))
 
 (deftest test-metadata-managed-computed
   (doseq [db (test-specs)]
@@ -1253,6 +1253,22 @@
       (is (= [{:id (generated-key db 1) :name "Apple" :appearance "rosy" :cost nil :grade nil}
               {:id (generated-key db 3) :name "Orange" :appearance "round" :cost nil :grade nil}
               {:id (generated-key db 2) :name "Pear" :appearance "yellow" :cost nil :grade nil}] rows)))))
+
+(deftest test-create-table-ddl
+  (is (re-find #"`foo` int default 0"
+               (sql/create-table-ddl :table
+                                     [[:foo :int :default 0]]
+                                     {:entities (sql/quoted :mysql)}))))
+
+(comment
+   db (sql/create-table-ddl
+       table
+       [[:id :int "PRIMARY KEY AUTO_INCREMENT"]
+        [:name "VARCHAR(32)"]
+        [:appearance "VARCHAR(32)"]
+        [:cost :int]
+        [:grade :real]]
+       {:table-spec "ENGINE=InnoDB"}))
 
 (deftest test-resultset-read-column
   (extend-protocol sql/IResultSetReadColumn

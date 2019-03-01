@@ -1,4 +1,4 @@
-;;  Copyright (c) 2016-2017 Sean Corfield. All rights reserved.
+;;  Copyright (c) 2016-2019 Sean Corfield. All rights reserved.
 ;;  The use and distribution terms for this software are covered by
 ;;  the Eclipse Public License 1.0
 ;;  (http://opensource.org/licenses/eclipse-1.0.php) which can be
@@ -407,7 +407,9 @@
                      :opts         (s/? ::exec-sql-options))
         :ret  ::execute-result)
 
-(s/def ::column-spec (s/cat :col ::identifier :spec (s/* (s/or :kw keyword? :str string?))))
+(s/def ::column-spec (s/cat :col ::identifier :spec (s/* (s/or :kw keyword?
+                                                               :str string?
+                                                               :num number?))))
 
 (s/fdef sql/create-table-ddl
         :args (s/cat :table ::identifier

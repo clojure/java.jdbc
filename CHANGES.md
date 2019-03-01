@@ -1,3 +1,7 @@
+Changes coming in 0.7.10
+
+* Relax restriction on `create-table-ddl` column specs to allow numbers (as well as keywords and strings) [JDBC-177](https://dev.clojure.org/jira/browse/JDBC-177).
+
 Changes in 0.7.9
 
 * Fix behavior of multi-inserts when database does not support generated keys [JDBC-176](https://dev.clojure.org/jira/browse/JDBC-176).

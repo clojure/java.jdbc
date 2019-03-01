@@ -1692,10 +1692,11 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
          entities       (:entities   opts identity)
          table-name     (as-sql-name entities table)
          table-spec-str (or (and table-spec (str " " table-spec)) "")
+         stringify      (fn [x] (if (keyword? x) (name x) (str x)))
          spec-to-string (fn [spec]
                           (try
                             (str/join " " (cons (as-sql-name entities (first spec))
-                                                (map name (rest spec))))
+                                                (map stringify (rest spec))))
                             (catch Exception _
                               (throw (IllegalArgumentException.
                                       "column spec is not a sequence of keywords / strings")))))]
