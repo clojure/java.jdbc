@@ -2,6 +2,7 @@
 .classpath
 .cpcache
 .project
+.rebl
 .settings
 /.lein-failures
 /.lein-repl-history
