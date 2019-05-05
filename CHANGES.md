@@ -1,5 +1,6 @@
 Changes coming in 0.7.10
 
+* Clean up `db-spec` options that are passed to the JDBC connection manager as properties [JDBC-178](https://dev.clojure.org/jira/browse/JDBC-178).
 * Relax restriction on `create-table-ddl` column specs to allow numbers (as well as keywords and strings) [JDBC-177](https://dev.clojure.org/jira/browse/JDBC-177).
 
 Changes in 0.7.9

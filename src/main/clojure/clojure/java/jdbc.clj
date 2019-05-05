@@ -398,7 +398,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
                           host
                           (when port (str ":" port))
                           db-sep dbname))
-           etc (dissoc db-spec :dbtype :dbname)]
+           etc (dissoc db-spec :dbtype :dbname :host :port :classname)]
        (get-driver-connection classname subprotocol db-spec
                               url etc opts
                               (str "Unknown dbtype: " dbtype)))
