@@ -45,7 +45,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
            (java.sql BatchUpdateException DriverManager
                      PreparedStatement ResultSet ResultSetMetaData
                      SQLException Statement Types)
-           (java.util Hashtable Map Properties)
+           (java.util Hashtable Locale Map Properties)
            (javax.sql DataSource)))
 
 (set! *warn-on-reflection* true)
@@ -535,6 +535,13 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
         :else
         identifiers))
 
+(defn- lower-case
+  "Converts a string to lower case in the US locale to avoid problems in
+  locales where the lower case version of a character is not a valid SQL
+  entity name (e.g., Turkish)."
+  [^String s]
+  (.toLowerCase s (Locale/US)))
+
 (defn result-set-seq
   "Creates and returns a lazy sequence of maps corresponding to the rows in the
   java.sql.ResultSet rs. Loosely based on clojure.core/resultset-seq but it
@@ -551,7 +558,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
   ([rs] (result-set-seq rs {}))
   ([^ResultSet rs {:keys [as-arrays? identifiers keywordize?
                           qualifier read-columns]
-                   :or {identifiers str/lower-case
+                   :or {identifiers lower-case
                         keywordize? true
                         read-columns dft-read-columns}}]
    (let [rsmeta (.getMetaData rs)
@@ -1213,7 +1220,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
   Compiled with Clojure 1.7 or later -- uses clojure.lang.IReduce
   Note: :as-arrays? is not accepted here."
   [^ResultSet rs {:keys [identifiers keywordize? qualifier read-columns]
-                  :or {identifiers str/lower-case
+                  :or {identifiers lower-case
                        keywordize? true
                        read-columns dft-read-columns}}]
   (let [rsmeta (.getMetaData rs)
@@ -1312,7 +1319,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
   ([db sql-params] (reducible-query db sql-params {}))
   ([db sql-params opts]
    (let [{:keys [identifiers keywordize? qualifier read-columns] :as opts}
-         (merge {:identifiers str/lower-case :keywordize? true
+         (merge {:identifiers lower-case :keywordize? true
                  :read-columns dft-read-columns}
                 (when (map? db) db)
                 opts)
@@ -1551,7 +1558,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
   map, insert the rows into the database."
   [db table rows opts]
   (let [{:keys [entities transaction?] :as opts}
-        (merge {:entities identity :identifiers str/lower-case
+        (merge {:entities identity :identifiers lower-case
                 :keywordize? true :transaction? true}
                (when (map? db) db)
                opts)

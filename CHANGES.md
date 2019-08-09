@@ -1,5 +1,6 @@
 Changes coming in 0.7.10
 
+* Use a US-locale `lower-case` function to avoid problems in certain locales (e.g., Turkish). A similar issue has been fixed recently in both HoneySQL and `next.jdbc`.
 * Clean up `db-spec` options that are passed to the JDBC connection manager as properties [JDBC-178](https://clojure.atlassian.net/browse/JDBC-178).
 * Relax restriction on `create-table-ddl` column specs to allow numbers (as well as keywords and strings) [JDBC-177](https://clojure.atlassian.net/browse/JDBC-177).
 
