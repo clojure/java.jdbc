@@ -5,7 +5,7 @@
 {:paths ["src/main/clojure"]
  :aliases {:test
            {:extra-paths ["src/test/clojure"]
-            :extra-deps {org.clojure/test.check {:mvn/version "0.9.0"}
+            :extra-deps {org.clojure/test.check {:mvn/version "0.10.0"}
                          org.apache.derby/derby {:mvn/version "10.14.2.0"}
                          org.hsqldb/hsqldb {:mvn/version "2.4.1"}
                          com.h2database/h2 {:mvn/version "1.4.197"}
