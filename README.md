@@ -1,7 +1,7 @@
 clojure.java.jdbc
 ========================================
 
-A low-level Clojure wrapper for JDBC-based access to databases.
+A low-level Clojure wrapper for JDBC-based access to databases. This project is "Stable" (no longer "Active"). It has effectively been superseded by [seancorfield/next.jdbc](https://github.com/seancorfield/next-jdbc). 
 
 For higher level DSLs and migration libraries that are compatible, see the [documentation](http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html).
 
