@@ -1254,16 +1254,6 @@
               {:id (generated-key db 3) :name "Orange" :appearance "round" :cost nil :grade nil}
               {:id (generated-key db 2) :name "Pear" :appearance "yellow" :cost nil :grade nil}] rows)))))
 
-(comment
-  (def ones (repeat 100 1))
-  (def select-1 (str "select " (str/join ", " ones)))
-  (def select-? (into [(str "select " (str/join ", " (map (fn [_] "?") ones)))] ones))
-  (time (jdbc/execute-one! (-> a :database :pooled-db :datasource) [select-1]))
-  (time (jdbc/execute-one! (-> a :database :pooled-db :datasource) select-?))
-  (require '[clojure.java.jdbc :as j])
-  (time (j/query (-> a :database :pooled-db) [select-1]))
-  (time (j/query (-> a :database :pooled-db) select-?)))
-
 (deftest check-prepared-performance
   (let [ones     (repeat 100 1)
         select-1 [(str "select " (str/join ", " ones))]
