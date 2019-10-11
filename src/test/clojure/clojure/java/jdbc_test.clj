@@ -1254,6 +1254,32 @@
               {:id (generated-key db 3) :name "Orange" :appearance "round" :cost nil :grade nil}
               {:id (generated-key db 2) :name "Pear" :appearance "yellow" :cost nil :grade nil}] rows)))))
 
+(comment
+  (def ones (repeat 100 1))
+  (def select-1 (str "select " (str/join ", " ones)))
+  (def select-? (into [(str "select " (str/join ", " (map (fn [_] "?") ones)))] ones))
+  (time (jdbc/execute-one! (-> a :database :pooled-db :datasource) [select-1]))
+  (time (jdbc/execute-one! (-> a :database :pooled-db :datasource) select-?))
+  (require '[clojure.java.jdbc :as j])
+  (time (j/query (-> a :database :pooled-db) [select-1]))
+  (time (j/query (-> a :database :pooled-db) select-?)))
+
+(deftest check-prepared-performance
+  (let [ones     (repeat 100 1)
+        select-1 [(str "select " (str/join ", " ones))]
+        select-? (into [(str "select "
+                             (str/join ", " (map (fn [_] "?") ones)))]
+                       ones)]
+    (println "\nSanity check on prepared statement parameter performance.")
+    (doseq [db (test-specs)
+            :when (not (or (derby? db) (hsqldb? db)))]
+      (println " " db)
+      (time (dotimes [n 100] (sql/query db select-1)))
+      (time (dotimes [n 100] (sql/query db select-?)))
+      (sql/with-db-connection [con db]
+        (time (dotimes [n 100] (sql/query con select-1)))
+        (time (dotimes [n 100] (sql/query con select-?)))))))
+
 (deftest test-create-table-ddl
   (is (re-find #"`foo` int default 0"
                (sql/create-table-ddl :table
