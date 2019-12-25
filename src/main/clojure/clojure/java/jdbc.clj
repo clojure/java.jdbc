@@ -793,9 +793,10 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
      (if (zero? (get-level db))
        (if-let [con (db-find-connection db)]
          (let [nested-db (inc-level db)
-               auto-commit (.getAutoCommit con)
+               auto-commit   (.getAutoCommit con)
                old-isolation (.getTransactionIsolation con)
-               old-readonly  (.isReadOnly con)]
+               old-readonly  (.isReadOnly con)
+               restore-ac?   (volatile! true)]
            (io!
             (when isolation
               (.setTransactionIsolation con (isolation isolation-levels)))
@@ -805,12 +806,21 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
             (try
               (let [result (func nested-db)]
                 (if (db-is-rollback-only nested-db)
-                  (.rollback con)
+                  (do
+                    ;; per JDBC-179: if the rollback operation fails, we do not
+                    ;; want to try to restore auto-commit...
+                    (vreset! restore-ac? false)
+                    (.rollback con)
+                    (vreset! restore-ac? true))
                   (.commit con))
                 result)
               (catch Throwable t
                 (try
+                  ;; per JDBC-179: if the rollback operation fails, we do not
+                  ;; want to try to restore auto-commit...
+                  (vreset! restore-ac? false)
                   (.rollback con)
+                  (vreset! restore-ac? true)
                   (catch Throwable rb
                     ;; combine both exceptions
                     (throw (ex-info (str "Rollback failed handling \""
@@ -825,9 +835,10 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
                 ;; want those to replace any exception currently being
                 ;; handled -- and if the connection got closed, we just
                 ;; want to ignore exceptions here anyway
-                (try
-                  (.setAutoCommit con auto-commit)
-                  (catch Exception _))
+                (when @restore-ac?
+                  (try ; only restore auto-commit if rollback did not fail
+                    (.setAutoCommit con auto-commit)
+                    (catch Exception _)))
                 (when isolation
                   (try
                     (.setTransactionIsolation con old-isolation)

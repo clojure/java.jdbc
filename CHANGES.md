@@ -1,3 +1,7 @@
+Changes in 0.7.11
+
+* Address edge case in transaction rollback failure [JDBC-179](https://clojure.atlassian.net/browse/JDBC-179).
+
 Changes in 0.7.10
 
 * Use a US-locale `lower-case` function to avoid problems in certain locales (e.g., Turkish). A similar issue has been fixed recently in both HoneySQL and `next.jdbc`.

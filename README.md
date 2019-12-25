@@ -1,7 +1,7 @@
 clojure.java.jdbc
 ========================================
 
-A low-level Clojure wrapper for JDBC-based access to databases. This project is "Stable" (no longer "Active"). It has effectively been superseded by [seancorfield/next.jdbc](https://github.com/seancorfield/next-jdbc). 
+A low-level Clojure wrapper for JDBC-based access to databases. This project is "Stable" (no longer "Active"). It has effectively been superseded by [seancorfield/next.jdbc](https://github.com/seancorfield/next-jdbc).
 
 For higher level DSLs and migration libraries that are compatible, see the [documentation](http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html).
 
@@ -26,7 +26,7 @@ Support
 Releases and Dependency Information
 ========================================
 
-Latest stable release: 0.7.10 -- requires Clojure 1.7 or later!
+Latest stable release: 0.7.11 -- requires Clojure 1.7 or later!
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22java.jdbc%22)
 
@@ -34,14 +34,14 @@ Latest stable release: 0.7.10 -- requires Clojure 1.7 or later!
 
 [Leiningen](https://github.com/technomancy/leiningen) dependency information:
 ```clojure
-[org.clojure/java.jdbc "0.7.10"]
+[org.clojure/java.jdbc "0.7.11"]
 ```
 [Maven](http://maven.apache.org/) dependency information:
 ```xml
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>java.jdbc</artifactId>
-  <version>0.7.10</version>
+  <version>0.7.11</version>
 </dependency>
 ```
 _Note: Earlier versions of Clojure are supported by older versions of `clojure.java.jdbc`: e.g., version 0.6.1 supports Clojure 1.4 and later._
@@ -139,6 +139,9 @@ Developer Information
 
 Change Log
 ====================
+
+* Release 0.7.11 on 2019-12-24
+  * Address edge case in transaction rollback failure [JDBC-179](https://clojure.atlassian.net/browse/JDBC-179).
 
 * Release 0.7.10 on 2019-08-24
   * Use a US-locale `lower-case` function to avoid problems in certain locales (e.g., Turkish). A similar issue has been fixed recently in both HoneySQL and `next.jdbc`.
