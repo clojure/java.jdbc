@@ -32,7 +32,7 @@ Latest stable release: 0.7.11 -- requires Clojure 1.7 or later!
 
 * [Development Snapshot Versions](https://oss.sonatype.org/index.html#nexus-search;gav~org.clojure~java.jdbc~~~)
 
-[CLI/`deps.edn`](https://clojure.org/guides/deps_and_cli) dependency information:
+[CLI/`deps.edn`](https://clojure.org/reference/deps_and_cli) dependency information:
 ```clojure
 org.clojure/java.jdbc {:mvn/version "0.7.11"}
 ```
