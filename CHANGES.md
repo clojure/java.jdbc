@@ -1,3 +1,7 @@
+Changes in 0.7.12
+
+* Make the protocols `ISQLValue`, `ISQLParameter`, and `IResultSetReadColumn` extensible via metadata.
+
 Changes in 0.7.11
 
 * Address edge case in transaction rollback failure [JDBC-179](https://clojure.atlassian.net/browse/JDBC-179).

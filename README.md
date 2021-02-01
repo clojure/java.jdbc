@@ -26,7 +26,7 @@ Support
 Releases and Dependency Information
 ========================================
 
-Latest stable release: 0.7.11 -- requires Clojure 1.7 or later!
+Latest stable release: 0.7.12 -- requires Clojure 1.7 or later!
 
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22java.jdbc%22)
 
@@ -34,18 +34,18 @@ Latest stable release: 0.7.11 -- requires Clojure 1.7 or later!
 
 [CLI/`deps.edn`](https://clojure.org/reference/deps_and_cli) dependency information:
 ```clojure
-org.clojure/java.jdbc {:mvn/version "0.7.11"}
+org.clojure/java.jdbc {:mvn/version "0.7.12"}
 ```
 [Leiningen](https://github.com/technomancy/leiningen) dependency information:
 ```clojure
-[org.clojure/java.jdbc "0.7.11"]
+[org.clojure/java.jdbc "0.7.12"]
 ```
 [Maven](http://maven.apache.org/) dependency information:
 ```xml
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>java.jdbc</artifactId>
-  <version>0.7.11</version>
+  <version>0.7.12</version>
 </dependency>
 ```
 _Note: Earlier versions of Clojure are supported by older versions of `clojure.java.jdbc`: e.g., version 0.6.1 supports Clojure 1.4 and later._
@@ -143,6 +143,9 @@ Developer Information
 
 Change Log
 ====================
+
+* Release 0.7.12 on 2021-02-01
+  * Make the protocols `ISQLValue`, `ISQLParameter`, and `IResultSetReadColumn` extensible via metadata.
 
 * Release 0.7.11 on 2019-12-24
   * Address edge case in transaction rollback failure [JDBC-179](https://clojure.atlassian.net/browse/JDBC-179).

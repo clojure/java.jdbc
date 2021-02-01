@@ -454,7 +454,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
            (vswap! seen assoc input 2)
            (xf result input)))))))
 
-(defprotocol ISQLValue
+(defprotocol ISQLValue :extend-via-metadata true
   "Protocol for creating SQL values from Clojure values. Default
    implementations (for Object and nil) just return the argument,
    but it can be extended to provide custom behavior to support
@@ -468,7 +468,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
   nil
   (sql-value [_] nil))
 
-(defprotocol ISQLParameter
+(defprotocol ISQLParameter :extend-via-metadata true
   "Protocol for setting SQL parameters in statement objects, which
    can convert from Clojure values. The default implementation just
    delegates the conversion to ISQLValue's sql-value conversion and
@@ -495,7 +495,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
       (set-parameter (first values) stmt ix)
       (recur (inc ix) (rest values)))))
 
-(defprotocol IResultSetReadColumn
+(defprotocol IResultSetReadColumn :extend-via-metadata true
   "Protocol for reading objects from the java.sql.ResultSet. Default
    implementations (for Object and nil) return the argument, and the
    Boolean implementation ensures a canonicalized true/false value,
