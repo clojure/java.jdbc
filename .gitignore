@@ -1,6 +1,9 @@
 *.jar
 .classpath
+.clj-kondo/.cache
 .cpcache
+.lsp/.cache
+.portal
 .project
 .rebl
 .settings
