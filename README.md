@@ -113,8 +113,7 @@ Developer Information
 
 * [GitHub project](https://github.com/clojure/java.jdbc)
 * [Bug Tracker](https://clojure.atlassian.net/browse/JDBC)
-* [Continuous Integration](https://build.clojure.org/job/java.jdbc/)
-* [Compatibility Test Matrix](https://build.clojure.org/job/java.jdbc-test-matrix/)
+* [Continuous Integration](https://github.com/clojure/java.jdbc/actions/workflows/test.yml)
 
 * Testing:
   * Currently by default tests run only against Derby and HSQLDB, the in-process databases.
@@ -506,7 +505,7 @@ Change Log
 Copyright and License
 ========================================
 
-Copyright (c) Sean Corfield, Stephen Gilardi, 2011-2014. All rights reserved.  The use and
+Copyright (c) Sean Corfield, Stephen Gilardi, 2011-2023. All rights reserved.  The use and
 distribution terms for this software are covered by the Eclipse Public
 License 1.0 (https://opensource.org/licenses/eclipse-1.0.php) which can
 be found in the file epl-v10.html at the root of this distribution.
