@@ -5,7 +5,7 @@
 {:paths ["src/main/clojure"]
  :aliases {:test
            {:extra-paths ["src/test/clojure"]
-            :extra-deps {org.clojure/test.check {:mvn/version "0.10.0"}
+            :extra-deps {org.clojure/test.check {:mvn/version "1.1.1"}
                          org.apache.derby/derby {:mvn/version "10.14.2.0"}
                          org.hsqldb/hsqldb {:mvn/version "2.4.1"}
                          com.h2database/h2 {:mvn/version "1.4.197"}
@@ -20,10 +20,10 @@
            :1.7 {:override-deps {org.clojure/clojure {:mvn/version "1.7.0"}}}
            :1.8 {:override-deps {org.clojure/clojure {:mvn/version "1.8.0"}}}
            :1.9 {:override-deps {org.clojure/clojure {:mvn/version "1.9.0"}}}
-           :1.10 {:override-deps {org.clojure/clojure {:mvn/version "1.10.0"}}}
-           :master {:override-deps {org.clojure/clojure {:mvn/version "1.11.0-master-SNAPSHOT"}}}
+           :1.10 {:override-deps {org.clojure/clojure {:mvn/version "1.10.3"}}}
+           :master {:override-deps {org.clojure/clojure {:mvn/version "1.12.0-master-SNAPSHOT"}}}
            :perf {:extra-paths ["src/perf/clojure"]
-                  :extra-deps {criterium {:mvn/version "0.4.4"}}
+                  :extra-deps {criterium {:mvn/version "0.4.6"}}
                   :jvm-opts ["-server"
                              "-Xmx4096m"
                              "-Dclojure.compiler.direct-linking=true"]}
