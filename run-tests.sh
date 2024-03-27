@@ -44,10 +44,10 @@ dbs="derby h2 hsqldb sqlite"
 # Start with clean databases each time to avoid slowdown
 rm -rf clojure_test_*
 
-versions="1.7 1.8 1.9 1.10 master"
+versions="1.8 1.9 1.10 1.11 1.12"
 for v in $versions
 do
-  TEST_DBS="$dbs $*" clj -A:test:runner:$v
+  TEST_DBS="$dbs $*" clj -M:test:runner:$v
   if test $? -ne 0
   then
     exit $?

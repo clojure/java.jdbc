@@ -1,3 +1,0 @@
-{:known-macros [clojure.java.jdbc/with-db-connection
-                clojure.java.jdbc/with-db-metadata
-                clojure.java.jdbc/with-db-transaction]}

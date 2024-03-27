@@ -78,7 +78,8 @@
   	<dependency>
   		<groupId>org.hsqldb</groupId>
   		<artifactId>hsqldb</artifactId>
-  		<version>2.4.1</version>
+  		<version>2.7.2</version>
+      <classifier>jdk8</classifier>
   		<scope>test</scope>
   	</dependency>
     <dependency>
@@ -90,13 +91,13 @@
     <dependency>
       <groupId>org.postgresql</groupId>
       <artifactId>postgresql</artifactId>
-      <version>42.2.2.jre7</version>
+      <version>42.7.3</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.xerial</groupId>
       <artifactId>sqlite-jdbc</artifactId>
-      <version>3.41.2.2</version>
+      <version>3.45.2.0</version>
       <scope>test</scope>
     </dependency>
     <dependency>

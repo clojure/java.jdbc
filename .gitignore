@@ -1,4 +1,4 @@
-*.jar
+.calva/repl.calva-repl
 .classpath
 .clj-kondo/.cache
 .cpcache
@@ -7,6 +7,7 @@
 .project
 .rebl
 .settings
+*.jar
 /.lein-failures
 /.lein-repl-history
 /.nrepl-port
@@ -18,5 +19,3 @@ derby.log
 settings.xml
 target
 test-all.sh
-/postgres-down.sh
-/postgres-up.sh

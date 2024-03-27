@@ -540,7 +540,7 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
   locales where the lower case version of a character is not a valid SQL
   entity name (e.g., Turkish)."
   [^String s]
-  (.toLowerCase s (Locale/US)))
+  (.toLowerCase s Locale/US))
 
 (defn result-set-seq
   "Creates and returns a lazy sequence of maps corresponding to the rows in the
@@ -1507,7 +1507,8 @@ http://clojure-doc.org/articles/ecosystem/java_jdbc/home.html"}
                      (map second rs)))
               result-set-fn
               (throw (ex-info (str "Cannot apply result-set-fn to"
-                                   " non-homogeneous generated keys array") rs))
+                                   " non-homogeneous generated keys array")
+                              {:generated-keys rs}))
               :else
               ;; non-non-homogeneous generated keys array - return as-is
               rs))

@@ -974,8 +974,8 @@
                              [])
                            (execute-multi-insert db)))]
        (case (db-type db)
-         ;; SQLite only returns the last key inserted in a batch
-         "sqlite" (is (= [(returned-key db 2)] new-keys))
+         ;; SQLite returns nothing useful now
+         "sqlite" (is (= [] new-keys))
          ;; Derby returns a single row count
          "derby"  (is (= [(returned-key db 1)] new-keys))
          ;; H2 returns dummy keys
@@ -1015,8 +1015,8 @@
                  0)
                (execute-multi-insert db))]
        (case (db-type db)
-         ;; SQLite only returns the last key inserted in a batch
-         "sqlite" (is (= 1 n))
+         ;; SQLite returns nothing useful now
+         "sqlite" (is (= 0 n))
          ;; Derby returns a single row count
          "derby"  (is (= 1 n))
          ;; H2 returns (zero) keys now
@@ -1215,6 +1215,7 @@
         (is (= [1] delete-result))
         (is (= [] rows))))))
 
+#_{:clj-kondo/ignore [:invalid-arity]}
 (deftest illegal-insert-arguments
   (doseq [db (test-specs)]
     (illegal-arg-or-spec "insert!" (sql/insert! db))
@@ -1276,6 +1277,7 @@
                                      [[:foo :int :default 0]]
                                      {:entities (sql/quoted :mysql)}))))
 
+#_{:clj-kondo/ignore [:unresolved-symbol]}
 (comment
    db (sql/create-table-ddl
        table
