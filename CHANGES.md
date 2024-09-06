@@ -1,6 +1,6 @@
 Changes not yet released
 * Update most testing dependencies (and update a couple of tests to match).
-* Drop support for Clojure 1.7.0. Test against 1.8, 1.9, 1.10, 1.11, and 1.12 (RC 1).
+* Drop support for Clojure 1.7.0. Test against 1.8, 1.9, 1.10, 1.11, and 1.12.
 
 Changes in 0.7.12
 
