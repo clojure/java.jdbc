@@ -7,7 +7,7 @@ For higher level DSLs and migration libraries that are compatible, see the [docu
 
 Formerly known as `clojure.contrib.sql`.
 
-This library is mature and stable. It is widely used and its use is described in many books and tutorials. It will continue to get bug fixes and minor releases. Based on my experience using and maintaining this library, I've created a faster, more modern JDBC wrapper called [next.jdbc](https://github.com/seancorfield/next-jdbc). I consider it to be the "next generation" of `clojure.java.jdbc` but it exposes a different API -- a better API, I think.
+This library is mature and stable. It is widely used and its use is described in many books and tutorials. It will only get critical bug fixes (e.g., security). Based on my experience using and maintaining this library, I've created a faster, more modern JDBC wrapper called [next.jdbc](https://github.com/seancorfield/next-jdbc). I consider it to be the "next generation" of `clojure.java.jdbc` but it exposes a different API -- a better API, I think.
 
 Documentation
 ========================================
