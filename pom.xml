@@ -4,6 +4,7 @@
   <artifactId>java.jdbc</artifactId>
   <version>0.7.13-SNAPSHOT</version>
   <name>java.jdbc</name>
+  <description>JDBC utilities for Clojure.</description>
 
   <parent>
     <groupId>org.clojure</groupId>
