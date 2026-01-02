@@ -1,4 +1,6 @@
-Changes not yet released
+Changes in 0.8.0
+
+* Update to latest parent pom and Clojure 1.11.4 as dep
 * Update most testing dependencies (and update a couple of tests to match).
 * Drop support for Clojure 1.7 & 1.8. Test against 1.9, 1.10, 1.11, and 1.12.
 

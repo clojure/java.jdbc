@@ -25,25 +25,25 @@ Support
 Releases and Dependency Information
 ========================================
 
-Latest stable release: 0.7.12 -- requires Clojure 1.7 or later!
+Latest stable release: 0.8.0 -- requires Clojure 1.7 or later!
 
 * [All Released Versions](https://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.clojure%22%20AND%20a%3A%22java.jdbc%22)
 * [Development Snapshot Versions](https://oss.sonatype.org/index.html#nexus-search;gav~org.clojure~java.jdbc~~~)
 
 [CLI/`deps.edn`](https://clojure.org/reference/deps_and_cli) dependency information:
 ```clojure
-org.clojure/java.jdbc {:mvn/version "0.7.12"}
+org.clojure/java.jdbc {:mvn/version "0.8.0"}
 ```
 [Leiningen](https://github.com/technomancy/leiningen) dependency information:
 ```clojure
-[org.clojure/java.jdbc "0.7.12"]
+[org.clojure/java.jdbc "0.8.0"]
 ```
 [Maven](https://maven.apache.org/) dependency information:
 ```xml
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>java.jdbc</artifactId>
-  <version>0.7.12</version>
+  <version>0.8.0</version>
 </dependency>
 ```
 _Note: Earlier versions of Clojure are supported by older versions of `clojure.java.jdbc`: e.g., version 0.6.1 supports Clojure 1.4 and later._
@@ -137,6 +137,11 @@ Developer Information
 
 Change Log
 ====================
+
+* Release 0.8.0 on 2025-01-02
+  * Update to latest parent pom and Clojure 1.11.4 as dep
+  * Update most testing dependencies (and update a couple of tests to match).
+  * Drop support for Clojure 1.7 & 1.8. Test against 1.9, 1.10, 1.11, and 1.12.
 
 * Release 0.7.12 on 2021-02-01
   * Make the protocols `ISQLValue`, `ISQLParameter`, and `IResultSetReadColumn` extensible via metadata.
