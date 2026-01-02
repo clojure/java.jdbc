@@ -1,4 +1,4 @@
-Changes in 0.8.0
+Unreleased changes
 
 * Update to latest parent pom and Clojure 1.11.4 as dep
 * Update most testing dependencies (and update a couple of tests to match).
